@@ -1,0 +1,19 @@
+{
+  "name": "helper",
+  "version": "1.0.0",
+  "description": "Helper Functions",
+  "main": "Helper.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/PhutBot/HelperJs.git"
+  },
+  "author": "PhutBot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PhutBot/HelperJs/issues"
+  },
+  "homepage": "https://github.com/PhutBot/HelperJs#readme"
+}
