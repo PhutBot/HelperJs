@@ -1,17 +1,3 @@
-const Millis = {
-    fromSec: (time) => time * 1000,
-    fromMin: (time) => time * 60 * 1000,
-    fromHrs: (time) => time * 60 * 60 * 1000,
-    fromDay: (time) => time * 24 * 60 * 60 * 1000,
-    fromYrs: (time) => time * 365 * 24 * 60 * 60 * 1000,
-    toSec: (time) => Math.floor(time / 1000),
-    toMin: (time) => Math.floor(time / 1000 / 60),
-    toHrs: (time) => Math.floor(time / 1000 / 60 / 60),
-    toDay: (time) => Math.floor(time / 1000 / 60 / 60 / 24),
-    toYrs: (time) => Math.floor(time / 1000 / 60 / 60 / 24 / 365),
-    inf: (time) => Number.POSITIVE_INFINITY,
-};
-
 function elapsedToStringHelper(elapsed, result, total, fmt, name, from, to, mul=1) {
     if (name in fmt) {
         const value = Math.max(fmt[name], Math.floor(to(elapsed - total)/mul));
@@ -26,7 +12,17 @@ function elapsedToStringHelper(elapsed, result, total, fmt, name, from, to, mul=
 }
 
 module.exports = {
-    Millis,
+    fromSec: (time) => time * 1000,
+    fromMin: (time) => time * 60 * 1000,
+    fromHrs: (time) => time * 60 * 60 * 1000,
+    fromDay: (time) => time * 24 * 60 * 60 * 1000,
+    fromYrs: (time) => time * 365 * 24 * 60 * 60 * 1000,
+    toSec: (time) => Math.floor(time / 1000),
+    toMin: (time) => Math.floor(time / 1000 / 60),
+    toHrs: (time) => Math.floor(time / 1000 / 60 / 60),
+    toDay: (time) => Math.floor(time / 1000 / 60 / 60 / 24),
+    toYrs: (time) => Math.floor(time / 1000 / 60 / 60 / 24 / 365),
+    inf: (time) => Number.POSITIVE_INFINITY,
     elapsedToString: (elapsed, fmt) => {
             let total = 0;
             let result = '';

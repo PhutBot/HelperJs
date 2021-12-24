@@ -153,6 +153,6 @@ class SimpleServer {
 }
 
 module.exports = {
-        request,
-        SimpleServer
-    };
+    request,
+    SimpleServer
+};
