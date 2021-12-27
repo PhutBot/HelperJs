@@ -2,7 +2,7 @@
   "name": "helper-js",
   "version": "1.0.0",
   "description": "Helper Functions",
-  "main": "Helper.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
