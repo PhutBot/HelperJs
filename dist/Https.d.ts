@@ -10,6 +10,7 @@ export function request({ method, hostname, port, uri, query, headers, body, pro
 }): Promise<any>;
 export class SimpleServer {
     constructor(settings?: {});
+    _running: boolean;
     _settings: {
         hostname: string;
         port: number;
@@ -22,6 +23,7 @@ export class SimpleServer {
         POST: {};
     };
     _server: any;
+    get running(): boolean;
     get port(): number;
     get hostname(): string;
     get address(): string;
