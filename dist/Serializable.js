@@ -1,5 +1,4 @@
-"use strict";
-const get = (item, json, type) => {
+export function get(item, json, type) {
     if (!!json && item in json) {
         if (typeof type === 'function') {
             return new type(json[item]);
@@ -9,8 +8,8 @@ const get = (item, json, type) => {
         }
     }
     return null;
-};
-const getArray = (item, json, type) => {
+}
+export function getArray(item, json, type) {
     const result = [];
     if (!!json && item in json && Array.isArray(json[item])) {
         const array = get(item, json);
@@ -24,12 +23,11 @@ const getArray = (item, json, type) => {
         }
     }
     return result;
-};
-const assign = (target, src, item, type) => {
+}
+export function assign(target, src, item, type) {
     target[`_${item}`] = get(item, src, type);
-};
-const assignArray = (target, src, item, type) => {
+}
+export function assignArray(target, src, item, type) {
     target[`_${item}`] = getArray(item, src, type);
-};
-module.exports = { get, getArray, assign, assignArray };
+}
 //# sourceMappingURL=Serializable.js.map

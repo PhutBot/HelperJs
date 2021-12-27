@@ -32,5 +32,5 @@ export class SimpleServer {
     start(): void;
     stop(): void;
 }
-import http = require("http");
+import * as http from "http";
 //# sourceMappingURL=Https.d.ts.map

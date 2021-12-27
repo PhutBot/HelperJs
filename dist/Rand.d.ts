@@ -1,3 +1,6 @@
+export function rFloat(beg: any, end: any): any;
+export function rInt(beg: any, end: any): number;
+export function rString(length: any, format?: string): string;
 export namespace RandomStringFormat {
     const BINARY: string;
     const OCTAL: string;
@@ -8,5 +11,4 @@ export namespace RandomStringFormat {
     const BASE64: string;
     const BASE64_URL: string;
 }
-export function randomString(length: any, format?: string): string;
 //# sourceMappingURL=Rand.d.ts.map

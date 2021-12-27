@@ -1,5 +1,4 @@
-"use strict";
-const RandomStringFormat = {
+export const RandomStringFormat = {
     BINARY: '01',
     OCTAL: '01234567',
     NUMERIC: '0123456789',
@@ -9,7 +8,14 @@ const RandomStringFormat = {
     BASE64: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/',
     BASE64_URL: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+_'
 };
-function randomString(length, format = RandomStringFormat.BASE64_URL) {
+export function rFloat(beg, end) {
+    const diff = end - beg;
+    return Math.random() * diff + beg;
+}
+export function rInt(beg, end) {
+    return Math.floor(rFloat(beg, end));
+}
+export function rString(length, format = RandomStringFormat.BASE64_URL) {
     const fmt = format in RandomStringFormat ? RandomStringFormat(format) : format;
     let result = '';
     for (let i = 0; i < length; ++i) {
@@ -17,8 +23,4 @@ function randomString(length, format = RandomStringFormat.BASE64_URL) {
     }
     return result;
 }
-module.exports = {
-    RandomStringFormat,
-    randomString
-};
 //# sourceMappingURL=Rand.js.map

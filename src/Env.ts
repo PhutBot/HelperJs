@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { Millis } from '.';
+import * as Millis from './Millis';
 
 export class Env {
     static modified:boolean = false;

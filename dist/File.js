@@ -1,17 +1,14 @@
-"use strict";
-const fs = require('fs');
-module.exports = {
-    ReadFileLSV: function (filename) {
-        const content = fs.readFileSync(filename).toString();
-        return content.split('\n')
-            .filter(line => !!line.trim());
-    },
-    WriteFileLSV: function (filename, data) {
-        let content = '';
-        data.forEach(val => {
-            content += `${val}\n`;
-        });
-        fs.writeFileSync(filename, content);
-    }
-};
+import * as fs from 'fs';
+export function ReadFileLSV(filename) {
+    const content = fs.readFileSync(filename).toString();
+    return content.split('\n')
+        .filter(line => !!line.trim());
+}
+export function WriteFileLSV(filename, data) {
+    let content = '';
+    data.forEach(val => {
+        content += `${val}\n`;
+    });
+    fs.writeFileSync(filename, content);
+}
 //# sourceMappingURL=File.js.map
