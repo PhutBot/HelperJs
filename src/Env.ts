@@ -1,21 +1,22 @@
-const fs = require('fs');
+import * as fs from 'fs';
+import { Millis } from '.';
 
-class Env {
-    static modified = false;
-    static vars = [];
-    static filename = null;
+export class Env {
+    static modified:boolean = false;
+    static vars:Array<string> = [];
+    static filename?:string;
 
-    static get(name) {
+    static get(name:string) {
         return process.env[name];
     }
 
-    static set(name, value) {
+    static set(name:string, value:string) {
         if (Env.vars.includes(name))
             Env.modified = true;
         process.env[name] = value;
     }
     
-    static load(file) {
+    static load(file:string) {
         Env.filename = file;
         const filecontent = fs.readFileSync(file).toString();
     
@@ -34,7 +35,7 @@ class Env {
     }
 
     static save() {
-        if (Env.modified) {
+        if (!!Env.filename && Env.modified) {
             let filecontent = '';
             Env.vars.forEach(key => {
                 const value = process.env[key];
@@ -46,20 +47,41 @@ class Env {
         }
     }
 
-    static waitForVar(name, timeout=-1) {
+    static waitForVar(name:string, timeout=-1) {
         return new Promise((resolve, reject) => {
                 let counter = 0;
                 const interval = setInterval(() => {
                     if (!!Env.get(name)) {
                         clearInterval(interval);
                         resolve(Env.get(name));
-                    } else if (timeout > 0 && counter > timer) {
+                    } else if (timeout > 0 && counter > timeout) {
                         reject(`Env.waitForVar - timed out waiting for environment var '${name}'`)
                     }
                     counter += 100;
                 }, 100);
             });
     }
-};
+}
 
-module.exports = Env;
+export class EnvBackedValue {
+    private key:string;
+    private static saveTimeout?:NodeJS.Timeout;
+
+    constructor(key:string) {
+        this.key = key;
+    }
+
+    get() {
+        return Env.get(this.key);
+    }
+
+    set(val:string) {
+        Env.set(this.key, val);
+        if (!EnvBackedValue.saveTimeout) {
+            EnvBackedValue.saveTimeout = setTimeout(() => {
+                    Env.save();
+                    EnvBackedValue.saveTimeout = undefined
+                }, Millis.fromSec(5));
+        }
+    }
+}

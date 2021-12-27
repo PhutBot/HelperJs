@@ -21,6 +21,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnvBackedValue = exports.Env = void 0;
 const fs = __importStar(require("fs"));
+const _1 = require(".");
 class Env {
     static get(name) {
         return process.env[name];
@@ -85,6 +86,12 @@ class EnvBackedValue {
     }
     set(val) {
         Env.set(this.key, val);
+        if (!EnvBackedValue.saveTimeout) {
+            EnvBackedValue.saveTimeout = setTimeout(() => {
+                Env.save();
+                EnvBackedValue.saveTimeout = undefined;
+            }, _1.Millis.fromSec(5));
+        }
     }
 }
 exports.EnvBackedValue = EnvBackedValue;

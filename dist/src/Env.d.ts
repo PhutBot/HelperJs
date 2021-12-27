@@ -10,6 +10,7 @@ export declare class Env {
 }
 export declare class EnvBackedValue {
     private key;
+    private static saveTimeout?;
     constructor(key: string);
     get(): string | undefined;
     set(val: string): void;
