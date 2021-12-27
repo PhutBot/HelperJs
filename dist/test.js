@@ -20,9 +20,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Millis = __importStar(require("./src/Millis"));
-const Env_1 = require("./src/Env");
-Env_1.Env.load('.env');
-const foo = new Env_1.EnvBackedValue('FOO');
+const src_1 = require("./src");
+src_1.Env.load('.env');
+const foo = new src_1.Env.EnvBackedValue('FOO');
 console.log(foo.get());
 foo.set('FOOBAR');
 console.log(foo.get());

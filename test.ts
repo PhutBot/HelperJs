@@ -1,10 +1,10 @@
 import * as Millis from './src/Millis';
-import { Env, EnvBackedValue } from './src/Env';
+import { Env } from './dist/index';
 
 
-Env.load('.env');
+Env.Env.load('.env');
 
-const foo = new EnvBackedValue('FOO');
+const foo = new Env.EnvBackedValue('FOO');
 console.log(foo.get());
 
 foo.set('FOOBAR');

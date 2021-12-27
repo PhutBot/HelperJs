@@ -1,8 +1,8 @@
-const http = require('http');
-const https = require('https');
+import * as http from 'http';
+import * as https from 'https';
 
 // PhutBot PLEASE remember to be careful when debugging this class on stream
-function request({ method, hostname, port, uri, query, headers, body, protocol } = {}) {
+export function request({ method, hostname, port, uri, query, headers, body, protocol } = {}) {
     let path = uri;
     hostname = hostname || 'id.twitch.tv';
     port = port === undefined ? 443 : port;
@@ -60,8 +60,7 @@ function request({ method, hostname, port, uri, query, headers, body, protocol }
         req.end();
     });
 }
-
-class SimpleServer {
+export class SimpleServer {
     constructor(settings = {}) {
         this._running = false;
 
@@ -161,8 +160,3 @@ class SimpleServer {
         });
     }
 }
-
-module.exports = {
-    request,
-    SimpleServer
-};

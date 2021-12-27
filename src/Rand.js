@@ -1,4 +1,4 @@
-const RandomStringFormat = {
+export const RandomStringFormat = {
     BINARY: '01',
     OCTAL: '01234567',
     NUMERIC: '0123456789',
@@ -9,7 +9,16 @@ const RandomStringFormat = {
     BASE64_URL: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+_'
 };
 
-function randomString(length, format=RandomStringFormat.BASE64_URL) {
+export function rFloat(beg, end) {
+    const diff = end - beg;
+    return Math.random() * diff + beg;
+}
+
+export function rInt(beg, end) {
+    return Math.floor(rFloat(beg, end));
+}
+
+export function rString(length, format=RandomStringFormat.BASE64_URL) {
     const fmt = format in RandomStringFormat ? RandomStringFormat(format) : format;
     
     let result = '';
@@ -19,8 +28,3 @@ function randomString(length, format=RandomStringFormat.BASE64_URL) {
 
     return result;
 }
-
-module.exports = {
-    RandomStringFormat,
-    randomString
-};
