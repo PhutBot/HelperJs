@@ -11,7 +11,7 @@ function elapsedToStringHelper(elapsed, result, total, fmt, name, from, to, mul=
     return { result, total };
 }
 
-module.exports = {
+const Millis = {
     fromSec: (time) => time * 1000,
     fromMin: (time) => time * 60 * 1000,
     fromHrs: (time) => time * 60 * 60 * 1000,
@@ -22,7 +22,11 @@ module.exports = {
     toHrs: (time) => Math.floor(time / 1000 / 60 / 60),
     toDay: (time) => Math.floor(time / 1000 / 60 / 60 / 24),
     toYrs: (time) => Math.floor(time / 1000 / 60 / 60 / 24 / 365),
-    inf: (time) => Number.POSITIVE_INFINITY,
+    inf: (time) => Number.POSITIVE_INFINITY
+};
+
+module.exports = {
+    ...Millis,
     elapsedToString: (elapsed, fmt) => {
             let total = 0;
             let result = '';
