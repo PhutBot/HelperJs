@@ -19,16 +19,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Serializable = exports.Rand = exports.Millis = exports.Https = exports.File = exports.Env = void 0;
-const Env = __importStar(require("./Env"));
-exports.Env = Env;
-const File = __importStar(require("./File"));
-exports.File = File;
-const Https = __importStar(require("./Https"));
-exports.Https = Https;
-const Millis = __importStar(require("./Millis"));
-exports.Millis = Millis;
-const Rand = __importStar(require("./Rand"));
-exports.Rand = Rand;
-const Serializable = __importStar(require("./Serializable"));
-exports.Serializable = Serializable;
+exports.WriteFileLSV = exports.ReadFileLSV = void 0;
+const fs = __importStar(require("fs"));
+function ReadFileLSV(filename) {
+    const content = fs.readFileSync(filename).toString();
+    return content.split('\n')
+        .filter(line => !!line.trim());
+}
+exports.ReadFileLSV = ReadFileLSV;
+function WriteFileLSV(filename, data) {
+    let content = '';
+    data.forEach(val => {
+        content += `${val}\n`;
+    });
+    fs.writeFileSync(filename, content);
+}
+exports.WriteFileLSV = WriteFileLSV;
