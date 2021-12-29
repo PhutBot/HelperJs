@@ -1,87 +1,87 @@
 import * as fs from 'fs';
 import * as Millis from './Millis';
 
-export class Env {
-    static modified:boolean = false;
-    static vars:Array<string> = [];
-    static filename?:string;
+let modified:boolean = false;
+let vars:Array<string> = [];
+let filename:string|null = null;
 
-    static get(name:string) {
-        return process.env[name];
-    }
+export function get(name:string) {
+    return process.env[name];
+}
 
-    static set(name:string, value:string) {
-        if (Env.vars.includes(name))
-            Env.modified = true;
-        process.env[name] = value;
-    }
+export function set(name:string, value:string) {
+    if (vars.includes(name))
+        modified = true;
+    process.env[name] = value;
+}
     
-    static load(file:string) {
-        Env.filename = file;
-        const filecontent = fs.readFileSync(file).toString();
+export function load(file:string) {
+    filename = file;
+    const filecontent = fs.readFileSync(file).toString();
+
+    vars = [];
+    filecontent.split('\n')
+        .filter(line => !!line.trim())
+        .forEach(line => {
+            const split = line.indexOf('=');
+            if (split > 0) {
+                const key = line.slice(0, split);
+                const value = line.slice(split+1);
+                vars.push(key);
+                process.env[key] = value;
+            }
+        });
+}
+
+export function save() {
+    if (!!filename && modified) {
+        let filecontent = '';
+        vars.forEach(key => {
+            const value = process.env[key];
+            filecontent += `${key}=${value}\n`;
+        });
     
-        Env.vars = [];
-        filecontent.split('\n')
-            .filter(line => !!line.trim())
-            .forEach(line => {
-                const split = line.indexOf('=');
-                if (split > 0) {
-                    const key = line.slice(0, split);
-                    const value = line.slice(split+1);
-                    Env.vars.push(key);
-                    process.env[key] = value;
-                }
-            });
-    }
-
-    static save() {
-        if (!!Env.filename && Env.modified) {
-            let filecontent = '';
-            Env.vars.forEach(key => {
-                const value = process.env[key];
-                filecontent += `${key}=${value}\n`;
-            });
-        
-            fs.writeFileSync(Env.filename, filecontent);
-            Env.modified = false;
-        }
-    }
-
-    static waitForVar(name:string, timeout=-1) {
-        return new Promise((resolve, reject) => {
-                let counter = 0;
-                const interval = setInterval(() => {
-                    if (!!Env.get(name)) {
-                        clearInterval(interval);
-                        resolve(Env.get(name));
-                    } else if (timeout > 0 && counter > timeout) {
-                        reject(`Env.waitForVar - timed out waiting for environment var '${name}'`)
-                    }
-                    counter += 100;
-                }, 100);
-            });
+        fs.writeFileSync(filename, filecontent);
+        modified = false;
     }
 }
 
+export function waitForVar(name:string, timeout=-1) {
+    return new Promise((resolve, reject) => {
+            let counter = 0;
+            const interval = setInterval(() => {
+                if (!!get(name)) {
+                    clearInterval(interval);
+                    resolve(get(name));
+                } else if (timeout > 0 && counter > timeout) {
+                    reject(`Env.waitForVar - timed out waiting for environment var '${name}'`)
+                }
+                counter += 100;
+            }, 100);
+        });
+}
+
 export class EnvBackedValue {
-    private key:string;
+    public static timeout:number=Millis.fromSec(5);
     private static saveTimeout?:NodeJS.Timeout;
+    
+    private key:string;
 
     constructor(key:string) {
         this.key = key;
     }
 
     get() {
-        return Env.get(this.key);
+        return get(this.key);
     }
 
     set(val:string) {
-        Env.set(this.key, val);
+        set(this.key, val);
         if (!EnvBackedValue.saveTimeout) {
             EnvBackedValue.saveTimeout = setTimeout(() => {
-                    Env.save();
-                    EnvBackedValue.saveTimeout = undefined
-                }, Millis.fromSec(5));
+                save();
+                EnvBackedValue.saveTimeout = undefined;
+            }, EnvBackedValue.timeout);
         }
     }
 }
