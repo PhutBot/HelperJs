@@ -2,7 +2,7 @@
   "name": "helper-js",
   "version": "1.0.0",
   "description": "PhutBot's js helper library",
-  "main": "dist/src/index.js",
+  "main": "index.js",
   "types": "dist/src/index.d.ts",
   "files": [
     "dist"
