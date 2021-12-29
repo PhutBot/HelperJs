@@ -162,6 +162,10 @@ export class SimpleServer {
     }
 
     start() {
+        if (this._running) {
+            return;
+        }
+
         this._server.listen(this.port, this.hostname, () => {
             this._running = true;
             console.log(`[INFO] SimpleServer.start: Server started @ ${this.address}`);
@@ -169,9 +173,14 @@ export class SimpleServer {
     }
 
     stop() {
+        if (!this._running) {
+            return;
+        }
+        
         this._sockets.forEach(socket => {
-                socket.destroy();
-            });
+            socket.destroy();
+        });
+        
         this._server.close(() => {
             this._running = false;
             console.log('[INFO] SimpleServer.stop: Server stopped');
