@@ -3,22 +3,33 @@ import * as https from 'https';
 import { Socket } from 'net';
 import { EnvBackedValue } from './Env';
 
+export enum RequestProtocol {
+    HTTP = 'HTTP',
+    HTTPS = 'HTTPS'
+}
+
+export enum RequestMethod {
+    GET = 'GET',
+    POST = 'POST',
+    ERROR = 'ERROR',
+}
+
 export interface RequestSettings {
-    method?:string;
+    protocol?:RequestProtocol;
+    method?:RequestMethod;
     hostname:string;
     port?:number;
     uri:string;
     query?:object;
     headers?:any;
     body?:string;
-    protocol?:string;
 }
 
 // PhutBot PLEASE remember to be careful when debugging this class on stream
 export function request(settings:RequestSettings) {
     settings = Object.assign({
-        method: 'GET',
-        protocol: 'HTTPS',
+        method: RequestMethod.GET,
+        protocol: RequestProtocol.HTTPS,
         port: 443
     }, settings);
 
@@ -43,7 +54,7 @@ export function request(settings:RequestSettings) {
     }
 
     return new Promise((resolve, reject) => {
-        const proto = settings.protocol === 'HTTP' ? http : https;
+        const proto = settings.protocol === RequestProtocol.HTTP ? http : https;
         const req = proto.request({
             path,
             hostname: settings.hostname,
@@ -90,24 +101,29 @@ export interface ServerSettings {
     port?:number|EnvBackedValue;
 }
 
+export type RequestHandler = (url:URL, req:http.IncomingMessage, res:http.ServerResponse) => void;
+
 export class SimpleServer {
     readonly hostname:string;
     readonly port:number;
 
+    private _server:http.Server;
     private _running:boolean = false;
-    private _errHandlers:Record<string, Function> = {
-        '404': (url:URL, req:http.IncomingMessage, res:http.ServerResponse) => {
-            res.writeHead(404);
-            res.end('Error 404: Page not found');
-        },
-        '500': (url:URL, req:http.IncomingMessage, res:http.ServerResponse) => {
-            res.writeHead(500);
-            res.end('Error 500: Internal server error');
+    private _sockets:Array<Socket> = [];
+    private _handlers:{[key:string]:{[key:string]:RequestHandler}} = {
+        GET: {},
+        POST: {},
+        ERROR: {
+            '404': (url:URL, req:http.IncomingMessage, res:http.ServerResponse) => {
+                res.writeHead(404);
+                res.end('Error 404: Page not found');
+            },
+            '500': (url:URL, req:http.IncomingMessage, res:http.ServerResponse) => {
+                res.writeHead(500);
+                res.end('Error 500: Internal server error');
+            }
         }
     };
-    private _handlers:any = { GET: {}, POST: {} };
-    private _sockets:Array<Socket> = [];
-    private _server:http.Server;
 
     constructor(settings:ServerSettings = {}) {
         this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
@@ -117,7 +133,7 @@ export class SimpleServer {
             const methodName = (req.method ?? 'GET');
             const url = new URL(req.url ?? 'localhost', `http://${req.headers.host}`);
             
-            let handler = this._errHandlers['404'];
+            let handler = this._handlers.ERROR[404];
             try {
                 if (methodName in this._handlers) {
                     const method = this._handlers[methodName];
@@ -126,7 +142,7 @@ export class SimpleServer {
                     }
                 }
             } catch (err) {
-                handler = this._errHandlers['500'];
+                handler = this._handlers.ERROR[500];
                 console.error(`[ERROR] SimpleServer.SimpleServer: 1 - ${err}`);
             }
             
@@ -135,7 +151,7 @@ export class SimpleServer {
             } catch (err) {
                 try {
                     console.error(`[ERROR] SimpleServe.SimpleServer: 2 - ${err}`);
-                    this._errHandlers['500'](url, req, res);
+                    this._handlers.ERROR[500](url, req, res);
                 } catch (err2) {
                     console.error(`[FATAL] SimpleServe.SimpleServer: 3 - ${err2}`);
                     process.exit(1);
@@ -151,10 +167,14 @@ export class SimpleServer {
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
 
-    defineHandler(method:string, path:string, handler:Function) {
+    defineErrHandler(code:number, handler:RequestHandler) {
+        this._handlers.ERROR[`${code}`] = handler;
+    }
+
+    defineHandler(method:RequestMethod, path:string, handler:RequestHandler) {
         if (!(method in this._handlers)) {
             throw 'SimpleServer.defineHandler - unsupported method';
-        } else if (!(path in this._handlers[method])) {
+        } else if (path in this._handlers[method]) {
             throw `SimpleServer.defineHandler - method already has endpoint ${path}`;
         }
         this._handlers[method][path] = handler;
