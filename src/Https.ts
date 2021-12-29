@@ -1,6 +1,7 @@
 import * as http from 'http';
 import * as https from 'https';
 import { Socket } from 'net';
+import { EnvBackedValue } from './Env';
 
 export interface RequestSettings {
     method?:string;
@@ -85,13 +86,15 @@ export function request(settings:RequestSettings) {
 }
 
 export interface ServerSettings {
-    hostname?:string;
-    port?:number;
+    hostname?:string|EnvBackedValue;
+    port?:number|EnvBackedValue;
 }
 
 export class SimpleServer {
+    readonly hostname:string;
+    readonly port:number;
+
     private _running:boolean = false;
-    private _settings:ServerSettings;
     private _errHandlers:Record<string, Function> = {
         '404': (url:URL, req:http.IncomingMessage, res:http.ServerResponse) => {
             res.writeHead(404);
@@ -107,10 +110,8 @@ export class SimpleServer {
     private _server:http.Server;
 
     constructor(settings:ServerSettings = {}) {
-        this._settings = Object.assign({
-            hostname: '0.0.0.0',
-            port: 8080
-        }, settings);
+        this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
+        this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
 
         this._server = http.createServer((req:http.IncomingMessage, res:http.ServerResponse) => {
             const methodName = (req.method ?? 'GET');
@@ -148,8 +149,6 @@ export class SimpleServer {
     }
 
     get running() { return this._running; }
-    get port() { return this._settings.port; }
-    get hostname() { return this._settings.hostname === '0.0.0.0' ? 'localhost' : this._settings.hostname; }
     get address() { return `http://${this.hostname}:${this.port}`; }
 
     defineHandler(method:string, path:string, handler:Function) {

@@ -87,6 +87,14 @@ class EnvBackedValue {
     get() {
         return get(this.key);
     }
+    asInt() {
+        var _a;
+        return Number.parseInt((_a = this.get()) !== null && _a !== void 0 ? _a : '0');
+    }
+    asFloat() {
+        var _a;
+        return Number.parseFloat((_a = this.get()) !== null && _a !== void 0 ? _a : '0');
+    }
     set(val) {
         set(this.key, val);
         if (!EnvBackedValue.saveTimeout) {

@@ -1,3 +1,4 @@
+import { EnvBackedValue } from './Env';
 export interface RequestSettings {
     method?: string;
     hostname: string;
@@ -10,20 +11,19 @@ export interface RequestSettings {
 }
 export declare function request(settings: RequestSettings): Promise<unknown>;
 export interface ServerSettings {
-    hostname?: string;
-    port?: number;
+    hostname?: string | EnvBackedValue;
+    port?: number | EnvBackedValue;
 }
 export declare class SimpleServer {
+    readonly hostname: string;
+    readonly port: number;
     private _running;
-    private _settings;
     private _errHandlers;
     private _handlers;
     private _sockets;
     private _server;
     constructor(settings?: ServerSettings);
     get running(): boolean;
-    get port(): number | undefined;
-    get hostname(): string | undefined;
     get address(): string;
     defineHandler(method: string, path: string, handler: Function): void;
     start(): void;

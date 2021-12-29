@@ -22,6 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SimpleServer = exports.request = void 0;
 const http = __importStar(require("http"));
 const https = __importStar(require("https"));
+const Env_1 = require("./Env");
 // PhutBot PLEASE remember to be careful when debugging this class on stream
 function request(settings) {
     var _a, _b;
@@ -91,6 +92,7 @@ function request(settings) {
 exports.request = request;
 class SimpleServer {
     constructor(settings = {}) {
+        var _a, _b;
         this._running = false;
         this._errHandlers = {
             '404': (url, req, res) => {
@@ -104,10 +106,8 @@ class SimpleServer {
         };
         this._handlers = { GET: {}, POST: {} };
         this._sockets = [];
-        this._settings = Object.assign({
-            hostname: '0.0.0.0',
-            port: 8080
-        }, settings);
+        this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
+        this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
         this._server = http.createServer((req, res) => {
             var _a, _b;
             const methodName = ((_a = req.method) !== null && _a !== void 0 ? _a : 'GET');
@@ -144,8 +144,6 @@ class SimpleServer {
         });
     }
     get running() { return this._running; }
-    get port() { return this._settings.port; }
-    get hostname() { return this._settings.hostname === '0.0.0.0' ? 'localhost' : this._settings.hostname; }
     get address() { return `http://${this.hostname}:${this.port}`; }
     defineHandler(method, path, handler) {
         if (!(method in this._handlers)) {

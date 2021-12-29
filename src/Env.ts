@@ -75,6 +75,14 @@ export class EnvBackedValue {
         return get(this.key);
     }
 
+    asInt() {
+        return Number.parseInt(this.get() ?? '0');
+    }
+
+    asFloat() {
+        return Number.parseFloat(this.get() ?? '0');
+    }
+
     set(val:string) {
         set(this.key, val);
         if (!EnvBackedValue.saveTimeout) {
