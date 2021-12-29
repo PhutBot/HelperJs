@@ -157,12 +157,18 @@ class SimpleServer {
         this._handlers[method][path] = handler;
     }
     start() {
+        if (this._running) {
+            return;
+        }
         this._server.listen(this.port, this.hostname, () => {
             this._running = true;
             console.log(`[INFO] SimpleServer.start: Server started @ ${this.address}`);
         });
     }
     stop() {
+        if (!this._running) {
+            return;
+        }
         this._sockets.forEach(socket => {
             socket.destroy();
         });
