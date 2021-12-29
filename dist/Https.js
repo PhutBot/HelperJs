@@ -90,7 +90,7 @@ function request(settings) {
 }
 exports.request = request;
 class SimpleServer {
-    constructor(settings) {
+    constructor(settings = {}) {
         this._running = false;
         this._errHandlers = {
             '404': (url, req, res) => {

@@ -106,7 +106,7 @@ export class SimpleServer {
     private _sockets:Array<Socket> = [];
     private _server:http.Server;
 
-    constructor(settings:ServerSettings) {
+    constructor(settings:ServerSettings = {}) {
         this._settings = Object.assign({
             hostname: '0.0.0.0',
             port: 8080

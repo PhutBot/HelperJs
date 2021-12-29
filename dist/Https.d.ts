@@ -20,7 +20,7 @@ export declare class SimpleServer {
     private _handlers;
     private _sockets;
     private _server;
-    constructor(settings: ServerSettings);
+    constructor(settings?: ServerSettings);
     get running(): boolean;
     get port(): number | undefined;
     get hostname(): string | undefined;
