@@ -1,12 +1,15 @@
 {
   "name": "helper-js",
   "version": "1.0.0",
-  "description": "Helper Functions",
-  "type": "module",
-  "exports": "./dist/index.js",
-	"types": "./dist/index.d.ts",
+  "description": "PhutBot's js helper library",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "tsc && node test.js"
+    "build": "tsc",
+    "test": "node test/index.ts"
   },
   "repository": {
     "type": "git",
@@ -18,8 +21,14 @@
     "url": "https://github.com/PhutBot/HelperJs/issues"
   },
   "homepage": "https://github.com/PhutBot/HelperJs#readme",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@types/node": "^17.0.5"
+  },
   "devDependencies": {
-    "@types/node": "^17.0.5",
+    "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   }
 }

@@ -1,4 +1,7 @@
-export function get(item, json, type) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.assignArray = exports.assign = exports.getArray = exports.get = void 0;
+function get(item, json, type) {
     if (!!json && item in json) {
         if (typeof type === 'function') {
             return new type(json[item]);
@@ -9,7 +12,8 @@ export function get(item, json, type) {
     }
     return null;
 }
-export function getArray(item, json, type) {
+exports.get = get;
+function getArray(item, json, type) {
     const result = [];
     if (!!json && item in json && Array.isArray(json[item])) {
         const array = get(item, json);
@@ -24,10 +28,12 @@ export function getArray(item, json, type) {
     }
     return result;
 }
-export function assign(target, src, item, type) {
+exports.getArray = getArray;
+function assign(target, src, item, type) {
     target[`_${item}`] = get(item, src, type);
 }
-export function assignArray(target, src, item, type) {
+exports.assign = assign;
+function assignArray(target, src, item, type) {
     target[`_${item}`] = getArray(item, src, type);
 }
-//# sourceMappingURL=Serializable.js.map
+exports.assignArray = assignArray;

@@ -1,36 +1,31 @@
-/// <reference types="node" />
-export function request({ method, hostname, port, uri, query, headers, body, protocol }?: {
-    method: any;
-    hostname: any;
-    port: any;
-    uri: any;
-    query: any;
-    headers: any;
-    body: any;
-    protocol: any;
-}): Promise<any>;
-export class SimpleServer {
-    constructor(settings?: {});
-    _running: boolean;
-    _settings: {
-        hostname: string;
-        port: number;
-    };
-    handler404: (url: any, req: any, res: any) => void;
-    handler500: (url: any, req: any, res: any) => void;
-    _sockets: any[];
-    _handlers: {
-        GET: {};
-        POST: {};
-    };
-    _server: http.Server;
+export interface RequestSettings {
+    method?: string;
+    hostname: string;
+    port?: number;
+    uri: string;
+    query?: object;
+    headers?: any;
+    body?: string;
+    protocol?: string;
+}
+export declare function request(settings: RequestSettings): Promise<unknown>;
+export interface ServerSettings {
+    hostname?: string;
+    port?: number;
+}
+export declare class SimpleServer {
+    private _running;
+    private _settings;
+    private _errHandlers;
+    private _handlers;
+    private _sockets;
+    private _server;
+    constructor(settings: ServerSettings);
     get running(): boolean;
-    get port(): number;
-    get hostname(): string;
+    get port(): number | undefined;
+    get hostname(): string | undefined;
     get address(): string;
-    defineHandler(method: any, path: any, handler: any): void;
+    defineHandler(method: string, path: string, handler: Function): void;
     start(): void;
     stop(): void;
 }
-import * as http from "http";
-//# sourceMappingURL=Https.d.ts.map

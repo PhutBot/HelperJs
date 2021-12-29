@@ -1,3 +1,2 @@
-export function ReadFileLSV(filename: any): string[];
-export function WriteFileLSV(filename: any, data: any): void;
-//# sourceMappingURL=File.d.ts.map
+export declare function ReadFileLSV(filename: string): string[];
+export declare function WriteFileLSV(filename: string, data: Array<string>): void;

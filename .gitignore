@@ -5,6 +5,7 @@
 .*
 !.gitignore
 !.dockerignore
+!.npmignore
 
 # vscode
 .vscode/
