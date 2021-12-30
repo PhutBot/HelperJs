@@ -51,3 +51,4 @@ function elapsedToString(elapsed, fmt) {
     return result;
 }
 exports.elapsedToString = elapsedToString;
+//# sourceMappingURL=Millis.js.map

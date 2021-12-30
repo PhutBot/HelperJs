@@ -37,3 +37,4 @@ function assignArray(target, src, item, type) {
     target[`_${item}`] = getArray(item, src, type);
 }
 exports.assignArray = assignArray;
+//# sourceMappingURL=Serializable.js.map

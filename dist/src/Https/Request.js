@@ -19,10 +19,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SimpleServer = exports.request = exports.RequestMethod = exports.RequestProtocol = void 0;
+exports.request = exports.RequestMethod = exports.RequestProtocol = void 0;
 const http = __importStar(require("http"));
 const https = __importStar(require("https"));
-const Env_1 = require("./Env");
 var RequestProtocol;
 (function (RequestProtocol) {
     RequestProtocol["HTTP"] = "HTTP";
@@ -30,9 +29,11 @@ var RequestProtocol;
 })(RequestProtocol = exports.RequestProtocol || (exports.RequestProtocol = {}));
 var RequestMethod;
 (function (RequestMethod) {
+    RequestMethod["DELETE"] = "DELETE";
     RequestMethod["GET"] = "GET";
+    RequestMethod["PATCH"] = "PATCH";
     RequestMethod["POST"] = "POST";
-    RequestMethod["ERROR"] = "ERROR";
+    RequestMethod["PUT"] = "PUT";
 })(RequestMethod = exports.RequestMethod || (exports.RequestMethod = {}));
 // PhutBot PLEASE remember to be careful when debugging this class on stream
 function request(settings) {
@@ -101,96 +102,4 @@ function request(settings) {
     });
 }
 exports.request = request;
-class SimpleServer {
-    constructor(settings = {}) {
-        var _a, _b;
-        this._running = false;
-        this._sockets = [];
-        this._handlers = {
-            GET: {},
-            POST: {},
-            ERROR: {
-                '404': (url, req, res) => {
-                    res.writeHead(404);
-                    res.end('Error 404: Page not found');
-                },
-                '500': (url, req, res) => {
-                    res.writeHead(500);
-                    res.end('Error 500: Internal server error');
-                }
-            }
-        };
-        this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
-        this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
-        this._server = http.createServer((req, res) => {
-            var _a, _b;
-            const methodName = ((_a = req.method) !== null && _a !== void 0 ? _a : 'GET');
-            const url = new URL((_b = req.url) !== null && _b !== void 0 ? _b : 'localhost', `http://${req.headers.host}`);
-            let handler = this._handlers.ERROR[404];
-            try {
-                if (methodName in this._handlers) {
-                    const method = this._handlers[methodName];
-                    if (url.pathname in method) {
-                        handler = method[url.pathname];
-                    }
-                }
-            }
-            catch (err) {
-                handler = this._handlers.ERROR[500];
-                console.error(`[ERROR] SimpleServer.SimpleServer: 1 - ${err}`);
-            }
-            try {
-                handler(url, req, res);
-            }
-            catch (err) {
-                try {
-                    console.error(`[ERROR] SimpleServe.SimpleServer: 2 - ${err}`);
-                    this._handlers.ERROR[500](url, req, res);
-                }
-                catch (err2) {
-                    console.error(`[FATAL] SimpleServe.SimpleServer: 3 - ${err2}`);
-                    process.exit(1);
-                }
-            }
-        });
-        this._server.on('connection', (socket) => {
-            this._sockets.push(socket);
-        });
-    }
-    get running() { return this._running; }
-    get address() { return `http://${this.hostname}:${this.port}`; }
-    defineErrHandler(code, handler) {
-        this._handlers.ERROR[`${code}`] = handler;
-    }
-    defineHandler(method, path, handler) {
-        if (!(method in this._handlers)) {
-            throw 'SimpleServer.defineHandler - unsupported method';
-        }
-        else if (path in this._handlers[method]) {
-            throw `SimpleServer.defineHandler - method already has endpoint ${path}`;
-        }
-        this._handlers[method][path] = handler;
-    }
-    start() {
-        if (this._running) {
-            return;
-        }
-        this._server.listen(this.port, this.hostname, () => {
-            this._running = true;
-            console.log(`[INFO] SimpleServer.start: Server started @ ${this.address}`);
-        });
-    }
-    stop() {
-        if (!this._running) {
-            return;
-        }
-        this._sockets.forEach(socket => {
-            socket.destroy();
-        });
-        this._server.close(() => {
-            this._running = false;
-            console.log('[INFO] SimpleServer.stop: Server stopped');
-        });
-    }
-}
-exports.SimpleServer = SimpleServer;
+//# sourceMappingURL=Request.js.map
