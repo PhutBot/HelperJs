@@ -24,8 +24,10 @@ server.defineHandler(Https.RequestMethod.GET, '/stop', (req:http.IncomingMessage
     res.writeHead(200);
     res.end('Stopping the server');
     setTimeout(() => {
+        server.unmapDirectory('/dir');
         server.stop();
     }, Millis.fromSec(3));
 });
 
+server.mapDirectory('./www', '/dir');
 server.start();

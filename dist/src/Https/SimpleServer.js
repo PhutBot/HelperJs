@@ -22,16 +22,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SimpleServer = void 0;
 const http = __importStar(require("http"));
 const logger = __importStar(require("npmlog"));
+const fs = __importStar(require("fs"));
 const Env_1 = require("../Env");
+const Request_1 = require("./Request");
 const Error_1 = require("./Error");
 const PathMatcher_1 = require("./PathMatcher");
 class SimpleServer {
     constructor(settings = {}) {
         var _a, _b;
+        this.useCache = true;
+        this.alias2Dir = {};
+        this.dir2Alias = {};
+        this.cachedFiles = {};
         this.sockets = [];
         this.handlers = { DELETE: {}, GET: {}, PATCH: {}, POST: {}, PUT: {} };
-        // private staticHandlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
-        // private wildHandlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
         this.errorHandlers = {};
         this._running = false;
         this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
@@ -59,6 +63,51 @@ class SimpleServer {
     }
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
+    mapDirectory(filePath, alias) {
+        const _alias = PathMatcher_1.PathMatcher.prepPath(alias !== null && alias !== void 0 ? alias : filePath.replace(/^\./, ''));
+        this.dir2Alias[filePath] = _alias;
+        this.alias2Dir[_alias] = filePath;
+        this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (_, res, options) => {
+            const path = options.url.pathname.replace(_alias, this.alias2Dir[_alias]);
+            let file = null;
+            if (this.useCache && path in this.cachedFiles) {
+                file = this.cachedFiles[path];
+            }
+            else if (fs.existsSync(path)) {
+                const stat = fs.lstatSync(path);
+                if (stat.isFile()) {
+                    file = fs.readFileSync(`./${path}`);
+                }
+                else if (stat.isDirectory() && fs.existsSync(`./${path}/index.html`)) {
+                    file = fs.readFileSync(`./${path}/index.html`, 'utf8');
+                }
+                else {
+                    throw new Error('how is this not a file or a directory??');
+                }
+                if (this.useCache) {
+                    this.cachedFiles[path] = file;
+                }
+            }
+            else if (fs.existsSync(path + '.html')) {
+                file = fs.readFileSync(`./${path}.html`, 'utf8');
+                if (this.useCache) {
+                    this.cachedFiles[path] = file;
+                }
+            }
+            if (!file) {
+                throw new Error_1.PageNotFoundError(options.url);
+            }
+            else {
+                res.writeHead(200);
+                res.end(file);
+            }
+        });
+    }
+    unmapDirectory(alias) {
+        this.removeHandler(Request_1.RequestMethod.GET, `${alias}/*`);
+        delete this.dir2Alias[this.alias2Dir[alias]];
+        delete this.alias2Dir[alias];
+    }
     defineHandler(method, path, handler, force = false) {
         const matcher = new PathMatcher_1.PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
@@ -70,11 +119,11 @@ class SimpleServer {
                 return;
             }
         }
+        logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method][path] = { matcher, handler };
     }
     removeHandler(method, path) {
-        const matcher = new PathMatcher_1.PathMatcher(path);
-        delete this.handlers[method][matcher.path];
+        delete this.handlers[method][PathMatcher_1.PathMatcher.prepPath(path)];
     }
     start() {
         if (this._running) {

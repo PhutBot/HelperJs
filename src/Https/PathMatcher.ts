@@ -5,7 +5,7 @@ export class PathMatcher {
     private regex:RegExp;
 
     constructor(path:string) {
-        this.path = prepPath(path);
+        this.path = PathMatcher.prepPath(path);
         this.regex = new RegExp(prepPattern(path), 'g');
         this.isWild = this.path.endsWith('*');
         this.isDynamic = this.path.includes('{') && this.path.includes('}'); // this may need to be a counter
@@ -13,7 +13,7 @@ export class PathMatcher {
 
     match(path:string) {
         this.regex.lastIndex= 0;
-        path = prepPath(path);
+        path = PathMatcher.prepPath(path);
         if (this.path === path) {
             return {
                 isMatch: true,
@@ -43,6 +43,10 @@ export class PathMatcher {
             vars: {}
         };
     }
+
+    static prepPath(path:string) {
+        return fixSlashes(path).replace(/\{([_a-zA-Z][_a-zA-Z0-9]*)\}/g, '{}');
+    }
 }
 
 
@@ -62,8 +66,4 @@ function prepPattern(text:string) {
 
 function fixSlashes(path:string) {
     return `/${path.replace(/^\/+/, '').replace(/\/+$/, '')}`;
-}
-
-function prepPath(path:string) {
-    return fixSlashes(path).replace(/\{([_a-zA-Z][_a-zA-Z0-9]*)\}/g, '{}');
 }

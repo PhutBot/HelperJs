@@ -13,7 +13,7 @@ interface HandlerRecord {
     matcher: PathMatcher;
     handler: RequestHandler;
 }
-export declare type RequestHandler = (req: http.IncomingMessage, res: http.ServerResponse, options?: RequestOptions) => void;
+export declare type RequestHandler = (req: http.IncomingMessage, res: http.ServerResponse, options: RequestOptions) => void;
 export declare type HandlerMap = Record<string | RequestMethod, Record<string, HandlerRecord>>;
 export interface ServerSettings {
     hostname?: string | EnvBackedValue;
@@ -22,6 +22,10 @@ export interface ServerSettings {
 export declare class SimpleServer {
     readonly hostname: string;
     readonly port: number;
+    readonly useCache: boolean;
+    private alias2Dir;
+    private dir2Alias;
+    private cachedFiles;
     private server;
     private sockets;
     private handlers;
@@ -30,6 +34,8 @@ export declare class SimpleServer {
     get running(): boolean;
     get address(): string;
     constructor(settings?: ServerSettings);
+    mapDirectory(filePath: string, alias?: string): void;
+    unmapDirectory(alias: string): void;
     defineHandler(method: string | RequestMethod, path: string, handler: RequestHandler, force?: boolean): void;
     removeHandler(method: string | RequestMethod, path: string): void;
     start(): void;

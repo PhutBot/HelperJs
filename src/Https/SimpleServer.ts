@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as logger from 'npmlog';
+import * as fs from 'fs';
 import { Socket } from 'net';
 import { EnvBackedValue } from '../Env';
 import { RequestMethod } from './Request';
@@ -18,7 +19,7 @@ interface HandlerRecord {
 }
 
 
-export type RequestHandler = (req:http.IncomingMessage, res:http.ServerResponse, options?:RequestOptions) => void;
+export type RequestHandler = (req:http.IncomingMessage, res:http.ServerResponse, options:RequestOptions) => void;
 export type HandlerMap = Record<string|RequestMethod,Record<string,HandlerRecord>>;
 
 export interface ServerSettings {
@@ -29,12 +30,15 @@ export interface ServerSettings {
 export class SimpleServer {
     readonly hostname:string;
     readonly port:number;
+    readonly useCache:boolean = true;
+
+    private alias2Dir:Record<string,string> = {};
+    private dir2Alias:Record<string,string> = {};
+    private cachedFiles:Record<string,string|Buffer> = {};
 
     private server:http.Server;
     private sockets:Array<Socket> = [];
     private handlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
-    // private staticHandlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
-    // private wildHandlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
     private errorHandlers:Record<number,RequestHandler> = {};    
     private _running:boolean = false;
 
@@ -66,6 +70,53 @@ export class SimpleServer {
         });
     }
 
+    mapDirectory(filePath:string, alias?:string) {
+        const _alias = PathMatcher.prepPath(alias ?? filePath.replace(/^\./, ''));
+
+        this.dir2Alias[filePath] = _alias;
+        this.alias2Dir[_alias] = filePath;
+        
+        this.defineHandler(RequestMethod.GET, `${_alias}/*`,
+            (_:http.IncomingMessage, res:http.ServerResponse, options:RequestOptions) => {
+                const path = options.url.pathname.replace(_alias, this.alias2Dir[_alias]);
+                
+                let file = null;
+                if (this.useCache && path in this.cachedFiles) {
+                    file = this.cachedFiles[path];
+                } else if (fs.existsSync(path)) {
+                    const stat = fs.lstatSync(path);
+                    if (stat.isFile()) {
+                        file = fs.readFileSync(`./${path}`);
+                    } else if (stat.isDirectory() && fs.existsSync(`./${path}/index.html`)) {
+                        file = fs.readFileSync(`./${path}/index.html`, 'utf8');
+                    } else {
+                        throw new Error('how is this not a file or a directory??');
+                    }
+                    if (this.useCache) {
+                        this.cachedFiles[path] = file;
+                    }
+                } else if (fs.existsSync(path + '.html')) {
+                    file = fs.readFileSync(`./${path}.html`, 'utf8');
+                    if (this.useCache) {
+                        this.cachedFiles[path] = file;
+                    }
+                }
+                
+                if (!file) {
+                    throw new PageNotFoundError(options.url);
+                } else {
+                    res.writeHead(200);
+                    res.end(file);
+                }
+            });
+    }
+
+    unmapDirectory(alias:string) {
+        this.removeHandler(RequestMethod.GET, `${alias}/*`);
+        delete this.dir2Alias[this.alias2Dir[alias]];
+        delete this.alias2Dir[alias];
+    }
+
     defineHandler(method:string|RequestMethod, path:string, handler:RequestHandler, force:boolean=false) {
         const matcher = new PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
@@ -77,12 +128,12 @@ export class SimpleServer {
             }
         }
         
+        logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method][path] = { matcher, handler };
     }
     
     removeHandler(method:string|RequestMethod, path:string) {
-        const matcher = new PathMatcher(path);
-        delete this.handlers[method][matcher.path];
+        delete this.handlers[method][PathMatcher.prepPath(path)];
     }
 
     start() {

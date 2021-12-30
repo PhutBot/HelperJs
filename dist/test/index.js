@@ -20,8 +20,10 @@ server.defineHandler(src_1.Https.RequestMethod.GET, '/stop', (req, res) => {
     res.writeHead(200);
     res.end('Stopping the server');
     setTimeout(() => {
+        server.unmapDirectory('/dir');
         server.stop();
     }, src_1.Millis.fromSec(3));
 });
+server.mapDirectory('./www', '/dir');
 server.start();
 //# sourceMappingURL=index.js.map

@@ -3,14 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PathMatcher = void 0;
 class PathMatcher {
     constructor(path) {
-        this.path = prepPath(path);
+        this.path = PathMatcher.prepPath(path);
         this.regex = new RegExp(prepPattern(path), 'g');
         this.isWild = this.path.endsWith('*');
         this.isDynamic = this.path.includes('{') && this.path.includes('}'); // this may need to be a counter
     }
     match(path) {
         this.regex.lastIndex = 0;
-        path = prepPath(path);
+        path = PathMatcher.prepPath(path);
         if (this.path === path) {
             return {
                 isMatch: true,
@@ -38,6 +38,9 @@ class PathMatcher {
             vars: {}
         };
     }
+    static prepPath(path) {
+        return fixSlashes(path).replace(/\{([_a-zA-Z][_a-zA-Z0-9]*)\}/g, '{}');
+    }
 }
 exports.PathMatcher = PathMatcher;
 function escapeRegex(text) {
@@ -53,8 +56,5 @@ function prepPattern(text) {
 }
 function fixSlashes(path) {
     return `/${path.replace(/^\/+/, '').replace(/\/+$/, '')}`;
-}
-function prepPath(path) {
-    return fixSlashes(path).replace(/\{([_a-zA-Z][_a-zA-Z0-9]*)\}/g, '{}');
 }
 //# sourceMappingURL=PathMatcher.js.map

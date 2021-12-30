@@ -8,4 +8,5 @@ export declare class PathMatcher {
         isMatch: boolean;
         vars: {};
     };
+    static prepPath(path: string): string;
 }
