@@ -69,7 +69,7 @@ class SimpleServer {
         this.alias2Dir[_alias] = filePath;
         this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (_, res, options) => {
             const path = options.url.pathname.replace(_alias, this.alias2Dir[_alias]);
-            let file = null;
+            let file = null; // TODO: files should only be cached once even if the path is "different"
             if (this.useCache && path in this.cachedFiles) {
                 file = this.cachedFiles[path];
             }
@@ -158,7 +158,7 @@ class SimpleServer {
                 else if (cur.matcher.isWild !== pre.matcher.isWild) {
                     return cur.matcher.isWild ? pre : cur;
                 }
-                else if (cur.matcher.isDynamic !== pre.matcher.isDynamic) { // this may need to be a counter
+                else if (cur.matcher.isDynamic !== pre.matcher.isDynamic) { // TODO: this may need to be a counter
                     return cur.matcher.isDynamic ? pre : cur;
                 }
                 else {

@@ -8,7 +8,7 @@ export class PathMatcher {
         this.path = PathMatcher.prepPath(path);
         this.regex = new RegExp(prepPattern(path), 'g');
         this.isWild = this.path.endsWith('*');
-        this.isDynamic = this.path.includes('{') && this.path.includes('}'); // this may need to be a counter
+        this.isDynamic = this.path.includes('{') && this.path.includes('}'); // TODO: this may need to be a counter
     }
 
     match(path:string) {
