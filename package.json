@@ -2,14 +2,15 @@
   "name": "helper-js",
   "version": "1.0.0",
   "description": "PhutBot's js helper library",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
-    "dist"
+    "dist/src",
+    "dist/test"
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node test/index.ts"
+    "test": "ts-node test/index.ts"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,9 @@
     "test": "test"
   },
   "dependencies": {
-    "@types/node": "^17.0.5"
+    "@types/node": "^17.0.5",
+    "@types/npmlog": "^4.1.4",
+    "npmlog": "^6.0.0"
   },
   "devDependencies": {
     "ts-node": "^10.4.0",
