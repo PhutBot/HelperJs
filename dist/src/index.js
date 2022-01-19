@@ -19,11 +19,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Serializable = exports.Rand = exports.Millis = exports.Https = exports.File = exports.Env = void 0;
+exports.Error = exports.Serializable = exports.Rand = exports.Millis = exports.Https = exports.File = exports.Env = void 0;
 exports.Env = __importStar(require("./Env"));
 exports.File = __importStar(require("./File"));
 exports.Https = __importStar(require("./Https"));
 exports.Millis = __importStar(require("./Millis"));
 exports.Rand = __importStar(require("./Rand"));
 exports.Serializable = __importStar(require("./Serializable"));
+exports.Error = __importStar(require("./Error"));
 //# sourceMappingURL=index.js.map
