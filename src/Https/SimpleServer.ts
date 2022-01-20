@@ -70,18 +70,18 @@ export class SimpleServer {
         });
     }
 
-    mapDirectory(filePath:string, alias?:string) {
-        const _alias = PathMatcher.prepPath(alias ?? filePath.replace(/^\./, ''));
+    mapDirectory(filePath:string, options:{ alias?:string, force?:boolean, cache?:boolean } = {}) {
+        const _alias = PathMatcher.prepPath(options.alias ?? filePath.replace(/^\./, ''));
 
         this.dir2Alias[filePath] = _alias;
         this.alias2Dir[_alias] = filePath;
         
         this.defineHandler(RequestMethod.GET, `${_alias}/*`,
-            (_:http.IncomingMessage, res:http.ServerResponse, options:RequestOptions) => {
-                const path = options.url.pathname.replace(_alias, this.alias2Dir[_alias]);
+            (_:http.IncomingMessage, res:http.ServerResponse, requestOptions:RequestOptions) => {
+                const path = requestOptions.url.pathname.replace(_alias, this.alias2Dir[_alias]);
                 
                 let file = null; // TODO: files should only be cached once even if the path is "different"
-                if (this.useCache && path in this.cachedFiles) {
+                if (this.useCache && !!options.cache && path in this.cachedFiles) {
                     file = this.cachedFiles[path];
                 } else if (fs.existsSync(path)) {
                     const stat = fs.lstatSync(path);
@@ -92,23 +92,23 @@ export class SimpleServer {
                     } else {
                         throw new Error('how is this not a file or a directory??');
                     }
-                    if (this.useCache) {
+                    if (this.useCache && !!options.cache) {
                         this.cachedFiles[path] = file;
                     }
                 } else if (fs.existsSync(path + '.html')) {
                     file = fs.readFileSync(`./${path}.html`, 'utf8');
-                    if (this.useCache) {
+                    if (this.useCache && !!options.cache) {
                         this.cachedFiles[path] = file;
                     }
                 }
                 
                 if (!file) {
-                    throw new PageNotFoundError(options.url);
+                    throw new PageNotFoundError(requestOptions.url);
                 } else {
                     res.writeHead(200);
                     res.end(file);
                 }
-            });
+            }, options);
     }
 
     unmapDirectory(alias:string) {
@@ -117,10 +117,10 @@ export class SimpleServer {
         delete this.alias2Dir[alias];
     }
 
-    defineHandler(method:string|RequestMethod, path:string, handler:RequestHandler, force:boolean=false) {
+    defineHandler(method:string|RequestMethod, path:string, handler:RequestHandler, options:{ force?:boolean } = {}) {
         const matcher = new PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
-            if (force) {
+            if (!!options.force) {
                 logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
             } else {
                 logger.error('SimpleServer', `method already has endpoint ${matcher.path}`);
