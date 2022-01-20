@@ -25,12 +25,13 @@ export type HandlerMap = Record<string|RequestMethod,Record<string,HandlerRecord
 export interface ServerSettings {
     hostname?:string|EnvBackedValue;
     port?:number|EnvBackedValue;
+    useCache?:boolean|EnvBackedValue;
 }
 
 export class SimpleServer {
     readonly hostname:string;
     readonly port:number;
-    readonly useCache:boolean = true;
+    readonly useCache:boolean;
 
     private alias2Dir:Record<string,string> = {};
     private dir2Alias:Record<string,string> = {};
@@ -48,6 +49,7 @@ export class SimpleServer {
     constructor(settings:ServerSettings = {}) {
         this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
+        this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
 
         this.server = http.createServer((req:http.IncomingMessage, res:http.ServerResponse) => {
             const url = new URL(req.url ?? 'localhost', `http://${req.headers.host}`);
