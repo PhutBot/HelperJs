@@ -63,12 +63,13 @@ class SimpleServer {
     }
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
-    mapDirectory(filePath, options = {}) {
+    mapDirectory(dirName, options = {}) {
         var _a;
+        dirName = dirName.endsWith('/') ? dirName : `${dirName}/`;
         options.cache = options.cache === undefined ? true : options.cache;
-        const _alias = PathMatcher_1.PathMatcher.prepPath((_a = options.alias) !== null && _a !== void 0 ? _a : filePath.replace(/^\./, ''));
-        this.dir2Alias[filePath] = _alias;
-        this.alias2Dir[_alias] = filePath;
+        const _alias = PathMatcher_1.PathMatcher.prepPath((_a = options.alias) !== null && _a !== void 0 ? _a : dirName.replace(/^\./, ''));
+        this.dir2Alias[dirName] = _alias;
+        this.alias2Dir[_alias] = dirName;
         this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (_, res, requestOptions) => {
             const path = requestOptions.url.pathname.replace(_alias, this.alias2Dir[_alias]);
             let file = null; // TODO: files should only be cached once even if the path is "different"
@@ -78,6 +79,18 @@ class SimpleServer {
             else if (fs.existsSync(path)) {
                 const stat = fs.lstatSync(path);
                 if (stat.isFile()) {
+                    if (path.endsWith('.html')) {
+                        res.setHeader('content-type', 'text/html');
+                    }
+                    else if (path.endsWith('.js')) {
+                        res.setHeader('content-type', 'application/javascript');
+                    }
+                    else if (path.endsWith('.css')) {
+                        res.setHeader('content-type', 'text/css');
+                    }
+                    else {
+                        res.setHeader('content-type', 'text/plain');
+                    }
                     file = fs.readFileSync(`./${path}`);
                 }
                 else if (stat.isDirectory() && fs.existsSync(`./${path}/index.html`)) {
@@ -91,6 +104,7 @@ class SimpleServer {
                 }
             }
             else if (fs.existsSync(path + '.html')) {
+                res.setHeader('content-type', 'text/html');
                 file = fs.readFileSync(`./${path}.html`, 'utf8');
                 if (this.useCache && !!options.cache) {
                     this.cachedFiles[path] = file;

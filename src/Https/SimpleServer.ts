@@ -72,12 +72,13 @@ export class SimpleServer {
         });
     }
 
-    mapDirectory(filePath:string, options:{ alias?:string, force?:boolean, cache?:boolean } = {}) {
+    mapDirectory(dirName:string, options:{ alias?:string, force?:boolean, cache?:boolean } = {}) {
+        dirName = dirName.endsWith('/') ? dirName : `${dirName}/`;
         options.cache = options.cache === undefined ? true : options.cache;
-        const _alias = PathMatcher.prepPath(options.alias ?? filePath.replace(/^\./, ''));
+        const _alias = PathMatcher.prepPath(options.alias ?? dirName.replace(/^\./, ''));
 
-        this.dir2Alias[filePath] = _alias;
-        this.alias2Dir[_alias] = filePath;
+        this.dir2Alias[dirName] = _alias;
+        this.alias2Dir[_alias] = dirName;
         
         this.defineHandler(RequestMethod.GET, `${_alias}/*`,
             (_:http.IncomingMessage, res:http.ServerResponse, requestOptions:RequestOptions) => {
@@ -89,6 +90,15 @@ export class SimpleServer {
                 } else if (fs.existsSync(path)) {
                     const stat = fs.lstatSync(path);
                     if (stat.isFile()) {
+                        if (path.endsWith('.html')) {
+                            res.setHeader('content-type', 'text/html');
+                        } else if (path.endsWith('.js')) {
+                            res.setHeader('content-type', 'application/javascript');
+                        } else if (path.endsWith('.css')) {
+                            res.setHeader('content-type', 'text/css');
+                        } else {
+                            res.setHeader('content-type', 'text/plain');
+                        }
                         file = fs.readFileSync(`./${path}`);
                     } else if (stat.isDirectory() && fs.existsSync(`./${path}/index.html`)) {
                         file = fs.readFileSync(`./${path}/index.html`, 'utf8');
@@ -99,6 +109,7 @@ export class SimpleServer {
                         this.cachedFiles[path] = file;
                     }
                 } else if (fs.existsSync(path + '.html')) {
+                    res.setHeader('content-type', 'text/html');
                     file = fs.readFileSync(`./${path}.html`, 'utf8');
                     if (this.useCache && !!options.cache) {
                         this.cachedFiles[path] = file;

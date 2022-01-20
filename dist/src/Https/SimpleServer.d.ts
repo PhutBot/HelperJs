@@ -35,7 +35,7 @@ export declare class SimpleServer {
     get running(): boolean;
     get address(): string;
     constructor(settings?: ServerSettings);
-    mapDirectory(filePath: string, options?: {
+    mapDirectory(dirName: string, options?: {
         alias?: string;
         force?: boolean;
         cache?: boolean;
