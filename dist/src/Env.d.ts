@@ -9,6 +9,7 @@ export declare class EnvBackedValue {
     private key;
     constructor(key: string);
     get(): string | undefined;
+    asBool(): boolean;
     asInt(): number;
     asFloat(): number;
     set(val: string): void;

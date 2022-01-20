@@ -29,8 +29,7 @@ const Error_1 = require("./Error");
 const PathMatcher_1 = require("./PathMatcher");
 class SimpleServer {
     constructor(settings = {}) {
-        var _a, _b;
-        this.useCache = true;
+        var _a, _b, _c;
         this.alias2Dir = {};
         this.dir2Alias = {};
         this.cachedFiles = {};
@@ -40,6 +39,7 @@ class SimpleServer {
         this._running = false;
         this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
         this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
+        this.useCache = (_c = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;
         this.server = http.createServer((req, res) => {
             var _a, _b;
             const url = new URL((_a = req.url) !== null && _a !== void 0 ? _a : 'localhost', `http://${req.headers.host}`);
@@ -63,14 +63,16 @@ class SimpleServer {
     }
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
-    mapDirectory(filePath, alias) {
-        const _alias = PathMatcher_1.PathMatcher.prepPath(alias !== null && alias !== void 0 ? alias : filePath.replace(/^\./, ''));
+    mapDirectory(filePath, options = {}) {
+        var _a;
+        options.cache = options.cache === undefined ? true : options.cache;
+        const _alias = PathMatcher_1.PathMatcher.prepPath((_a = options.alias) !== null && _a !== void 0 ? _a : filePath.replace(/^\./, ''));
         this.dir2Alias[filePath] = _alias;
         this.alias2Dir[_alias] = filePath;
-        this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (_, res, options) => {
-            const path = options.url.pathname.replace(_alias, this.alias2Dir[_alias]);
+        this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (_, res, requestOptions) => {
+            const path = requestOptions.url.pathname.replace(_alias, this.alias2Dir[_alias]);
             let file = null; // TODO: files should only be cached once even if the path is "different"
-            if (this.useCache && path in this.cachedFiles) {
+            if (this.useCache && !!options.cache && path in this.cachedFiles) {
                 file = this.cachedFiles[path];
             }
             else if (fs.existsSync(path)) {
@@ -84,34 +86,34 @@ class SimpleServer {
                 else {
                     throw new Error('how is this not a file or a directory??');
                 }
-                if (this.useCache) {
+                if (this.useCache && !!options.cache) {
                     this.cachedFiles[path] = file;
                 }
             }
             else if (fs.existsSync(path + '.html')) {
                 file = fs.readFileSync(`./${path}.html`, 'utf8');
-                if (this.useCache) {
+                if (this.useCache && !!options.cache) {
                     this.cachedFiles[path] = file;
                 }
             }
             if (!file) {
-                throw new Error_1.PageNotFoundError(options.url);
+                throw new Error_1.PageNotFoundError(requestOptions.url);
             }
             else {
                 res.writeHead(200);
                 res.end(file);
             }
-        });
+        }, options);
     }
     unmapDirectory(alias) {
         this.removeHandler(Request_1.RequestMethod.GET, `${alias}/*`);
         delete this.dir2Alias[this.alias2Dir[alias]];
         delete this.alias2Dir[alias];
     }
-    defineHandler(method, path, handler, force = false) {
+    defineHandler(method, path, handler, options = {}) {
         const matcher = new PathMatcher_1.PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
-            if (force) {
+            if (!!options.force) {
                 logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
             }
             else {

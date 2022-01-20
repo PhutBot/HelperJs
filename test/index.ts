@@ -29,5 +29,5 @@ server.defineHandler(Https.RequestMethod.GET, '/stop', (req:http.IncomingMessage
     }, Millis.fromSec(3));
 });
 
-server.mapDirectory('./www', '/dir');
+server.mapDirectory('./www', { alias: '/dir' });
 server.start();

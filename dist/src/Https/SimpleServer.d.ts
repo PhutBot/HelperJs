@@ -18,6 +18,7 @@ export declare type HandlerMap = Record<string | RequestMethod, Record<string, H
 export interface ServerSettings {
     hostname?: string | EnvBackedValue;
     port?: number | EnvBackedValue;
+    useCache?: boolean | EnvBackedValue;
 }
 export declare class SimpleServer {
     readonly hostname: string;
@@ -34,9 +35,15 @@ export declare class SimpleServer {
     get running(): boolean;
     get address(): string;
     constructor(settings?: ServerSettings);
-    mapDirectory(filePath: string, alias?: string): void;
+    mapDirectory(filePath: string, options?: {
+        alias?: string;
+        force?: boolean;
+        cache?: boolean;
+    }): void;
     unmapDirectory(alias: string): void;
-    defineHandler(method: string | RequestMethod, path: string, handler: RequestHandler, force?: boolean): void;
+    defineHandler(method: string | RequestMethod, path: string, handler: RequestHandler, options?: {
+        force?: boolean;
+    }): void;
     removeHandler(method: string | RequestMethod, path: string): void;
     start(): void;
     stop(): void;

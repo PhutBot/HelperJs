@@ -24,6 +24,6 @@ server.defineHandler(src_1.Https.RequestMethod.GET, '/stop', (req, res) => {
         server.stop();
     }, src_1.Millis.fromSec(3));
 });
-server.mapDirectory('./www', '/dir');
+server.mapDirectory('./www', { alias: '/dir' });
 server.start();
 //# sourceMappingURL=index.js.map

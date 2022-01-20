@@ -73,6 +73,7 @@ export class SimpleServer {
     }
 
     mapDirectory(filePath:string, options:{ alias?:string, force?:boolean, cache?:boolean } = {}) {
+        options.cache = options.cache === undefined ? true : options.cache;
         const _alias = PathMatcher.prepPath(options.alias ?? filePath.replace(/^\./, ''));
 
         this.dir2Alias[filePath] = _alias;

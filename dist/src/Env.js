@@ -87,6 +87,11 @@ class EnvBackedValue {
     get() {
         return get(this.key);
     }
+    asBool() {
+        var _a;
+        const str = (_a = this.get()) === null || _a === void 0 ? void 0 : _a.toLowerCase();
+        return str === 'true' || str === 'yes' || str === 'on' || str === '1';
+    }
     asInt() {
         var _a;
         return Number.parseInt((_a = this.get()) !== null && _a !== void 0 ? _a : '0');
