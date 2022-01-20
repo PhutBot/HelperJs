@@ -5,8 +5,8 @@ let modified:boolean = false;
 let vars:Array<string> = [];
 let filename:string|null = null;
 
-export function get(name:string) {
-    return process.env[name];
+export function get(name:string, def?:string) {
+    return process.env[name] ?? def;
 }
 
 export function set(name:string, value:string) {
@@ -66,13 +66,15 @@ export class EnvBackedValue {
     private static saveTimeout?:NodeJS.Timeout;
     
     private key:string;
+    private def?:string;
 
-    constructor(key:string) {
+    constructor(key:string, def?:string) {
         this.key = key;
+        this.def = def;
     }
 
     get() {
-        return get(this.key);
+        return get(this.key, this.def);
     }
 
     asBool() {

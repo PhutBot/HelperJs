@@ -25,8 +25,9 @@ const Millis = __importStar(require("./Millis"));
 let modified = false;
 let vars = [];
 let filename = null;
-function get(name) {
-    return process.env[name];
+function get(name, def) {
+    var _a;
+    return (_a = process.env[name]) !== null && _a !== void 0 ? _a : def;
 }
 exports.get = get;
 function set(name, value) {
@@ -81,11 +82,12 @@ function waitForVar(name, timeout = -1) {
 }
 exports.waitForVar = waitForVar;
 class EnvBackedValue {
-    constructor(key) {
+    constructor(key, def) {
         this.key = key;
+        this.def = def;
     }
     get() {
-        return get(this.key);
+        return get(this.key, this.def);
     }
     asBool() {
         var _a;
