@@ -93,13 +93,20 @@ class SimpleServer {
                     }
                     file = fs.readFileSync(`./${path}`);
                 }
-                else if (stat.isDirectory() && fs.existsSync(`./${path}/index.html`)) {
-                    file = fs.readFileSync(`./${path}/index.html`, 'utf8');
+                else if (stat.isDirectory()) {
+                    if (fs.existsSync(`./${path}/index.html`)) {
+                        res.setHeader('content-type', 'text/html');
+                        file = fs.readFileSync(`./${path}/index.html`, 'utf8');
+                    }
+                    else if (fs.existsSync(`./${path}/index.js`)) {
+                        res.setHeader('content-type', 'application/javascript');
+                        file = fs.readFileSync(`./${path}/index.js`, 'utf8');
+                    }
                 }
                 else {
                     throw new Error('how is this not a file or a directory??');
                 }
-                if (this.useCache && !!options.cache) {
+                if (this.useCache && !!options.cache && !!file) {
                     this.cachedFiles[path] = file;
                 }
             }
