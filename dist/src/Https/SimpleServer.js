@@ -146,6 +146,44 @@ class SimpleServer {
         delete this.dir2Alias[this.alias2Dir[alias]];
         delete this.alias2Dir[alias];
     }
+    mapHandler(clazz) {
+        const decorated = clazz;
+        if (decorated.__decorators.hasOwnProperty('requestMapping')) {
+            if (!!decorated.__decorators.requestMapping.method) {
+                const mapping = decorated.__decorators.requestMapping;
+                this.defineHandler(mapping.method, mapping.location, decorated);
+            }
+            else {
+                Object.entries(Object.getOwnPropertyDescriptors(clazz)).forEach(([name, desc]) => {
+                    if (typeof desc.value === 'function' && desc.value.__decorators.hasOwnProperty('requestMapping')) {
+                        const parentMap = decorated.__decorators.requestMapping;
+                        const mapping = desc.value.__decorators.requestMapping;
+                        const path = [parentMap.location, mapping.location].join('/');
+                        this.defineHandler(mapping.method, path, desc.value);
+                    }
+                });
+            }
+        }
+    }
+    unmapHandler(clazz) {
+        const decorated = clazz;
+        if (decorated.__decorators.hasOwnProperty('requestMapping')) {
+            if (!!decorated.__decorators.requestMapping.method) {
+                const mapping = decorated.__decorators.requestMapping;
+                this.removeHandler(mapping.method, mapping.location);
+            }
+            else {
+                Object.entries(Object.getOwnPropertyDescriptors(clazz)).forEach(([name, desc]) => {
+                    if (typeof desc.value === 'function' && desc.value.__decorators.hasOwnProperty('requestMapping')) {
+                        const parentMap = decorated.__decorators.requestMapping;
+                        const mapping = desc.value.__decorators.requestMapping;
+                        const path = [parentMap.location, mapping.location].join('/');
+                        this.removeHandler(mapping.method, path);
+                    }
+                });
+            }
+        }
+    }
     defineHandler(method, path, handler, options = {}) {
         const matcher = new PathMatcher_1.PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
@@ -158,7 +196,7 @@ class SimpleServer {
             }
         }
         logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
-        this.handlers[method][path] = { matcher, handler };
+        this.handlers[method][matcher.path] = { matcher, handler };
     }
     removeHandler(method, path) {
         delete this.handlers[method][PathMatcher_1.PathMatcher.prepPath(path)];
@@ -195,7 +233,6 @@ class SimpleServer {
     }
     _getHandler(method, url) {
         const path = url.pathname;
-        logger.http('SimpleServer', `${method} - ${path}`);
         const record = Object.values(this.handlers[method])
             .reduce((pre, cur) => {
             if (cur.matcher.match(path).isMatch) {
@@ -215,6 +252,7 @@ class SimpleServer {
             return pre;
         }, null);
         if (!!record) {
+            logger.http('SimpleServer', `${method} - ${path}`);
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,

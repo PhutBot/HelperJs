@@ -41,6 +41,8 @@ export declare class SimpleServer {
         cache?: boolean;
     }): void;
     unmapDirectory(alias: string): void;
+    mapHandler(clazz: Function): void;
+    unmapHandler(clazz: Function): void;
     defineHandler(method: string | RequestMethod, path: string, handler: RequestHandler, options?: {
         force?: boolean;
     }): void;

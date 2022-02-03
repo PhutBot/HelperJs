@@ -55,6 +55,6 @@ function prepPattern(text) {
     return `^${fixCaptureGroups(escapeRegex(fixSlashes(text)))}$`;
 }
 function fixSlashes(path) {
-    return `/${path.replace(/^\/+/, '').replace(/\/+$/, '')}`;
+    return `/${path.replace(/^\/+/, '').replace(/\/+$/, '').replace(/\/\//, '/')}`;
 }
 //# sourceMappingURL=PathMatcher.js.map

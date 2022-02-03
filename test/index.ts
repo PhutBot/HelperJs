@@ -1,5 +1,6 @@
 import * as http from 'http';
 import { Env, Https, Millis } from '../src';
+import { requestMapping } from '../src/Https/decorators';
 
 Env.load('.env');
 const hostname = new Env.EnvBackedValue('HOSTNAME');
@@ -9,6 +10,19 @@ const server = new Https.SimpleServer({
     hostname: hostname,
     port: port
 });
+
+@requestMapping({ location: '/test' })
+class TestHandler {
+    @requestMapping({ location: '/one', method: 'GET' })
+    static getTest(req:http.IncomingMessage, res:http.ServerResponse, opt:any) {
+        res.writeHead(200);
+        res.end('Testing one two');
+    }
+}
+
+server.mapHandler(TestHandler);
+server.mapHandler(TestHandler.getTest);
+server.unmapHandler(TestHandler.getTest);
 
 server.defineHandler(Https.RequestMethod.GET, '/', (req:http.IncomingMessage, res:http.ServerResponse) => {
     res.writeHead(200);

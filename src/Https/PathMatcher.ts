@@ -65,5 +65,5 @@ function prepPattern(text:string) {
 }
 
 function fixSlashes(path:string) {
-    return `/${path.replace(/^\/+/, '').replace(/\/+$/, '')}`;
+    return `/${path.replace(/^\/+/, '').replace(/\/+$/, '').replace(/\/\//, '/')}`;
 }
