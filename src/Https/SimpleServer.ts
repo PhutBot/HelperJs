@@ -157,28 +157,35 @@ export class SimpleServer {
     }
 
     start() {
-        if (this._running) {
-            logger.warn('SimpleServer', `server already started`);
-            return;
-        }
-        
-        this.server.listen(this.port, this.hostname, () => {
-            this._running = true;
-            logger.info('SimpleServer', `server started @ ${this.address}`);
+        return new Promise((res, rej) => {
+            if (this._running) {
+                logger.warn('SimpleServer', 'server already started');
+                rej('server already started');
+                return;
+            }
+            
+            this.server.listen(this.port, this.hostname, () => {
+                this._running = true;
+                logger.info('SimpleServer', `server started @ ${this.address}`);
+                res(true);
+            });
         });
     }
     
     stop() {
-        if (!this._running) {
-            logger.warn('SimpleServer', `server already stopped`);
-            return;
-        }
-        
-        this.sockets.forEach(socket => socket.destroy());
-        
-        this.server.close(() => {
-            logger.info('SimpleServer', 'server stopped');
-            this._running = false;
+        return new Promise((res, rej) => {
+            if (!this._running) {
+                logger.warn('SimpleServer', 'server already stopped');
+                rej('server already stopped');
+            } else {
+                this.sockets.forEach(socket => socket.destroy());
+                this.server.close(() => {
+                    logger.info('SimpleServer', 'server stopped');
+                    this._running = false;
+                    res(true);
+                });
+            }
+            
         });
     }
 

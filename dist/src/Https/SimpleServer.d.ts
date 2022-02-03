@@ -45,8 +45,8 @@ export declare class SimpleServer {
         force?: boolean;
     }): void;
     removeHandler(method: string | RequestMethod, path: string): void;
-    start(): void;
-    stop(): void;
+    start(): Promise<unknown>;
+    stop(): Promise<unknown>;
     _getHandler(method: string | RequestMethod, url: URL): {
         handler: RequestHandler;
         options: {
