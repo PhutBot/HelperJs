@@ -16,20 +16,20 @@ const server = new src_1.Https.SimpleServer({
     port: port
 });
 let TestHandler = class TestHandler {
-    getTest(req, res, opt) {
+    static getTest(req, res, opt) {
         res.writeHead(200);
         res.end('Testing one two');
     }
 };
 __decorate([
     (0, decorators_1.requestMapping)({ location: '/one', method: 'GET' })
-], TestHandler.prototype, "getTest", null);
+], TestHandler, "getTest", null);
 TestHandler = __decorate([
     (0, decorators_1.requestMapping)({ location: '/test' })
 ], TestHandler);
 server.mapHandler(TestHandler);
-// server.mapHandler(TestHandler.getTest);
-// server.unmapHandler(TestHandler.getTest);
+server.mapHandler(TestHandler.getTest);
+server.unmapHandler(TestHandler.getTest);
 server.defineHandler(src_1.Https.RequestMethod.GET, '/', (req, res) => {
     res.writeHead(200);
     res.end('Welcome to phuthub');
