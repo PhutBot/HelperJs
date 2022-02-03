@@ -14,6 +14,12 @@ export enum RequestMethod {
     PUT = 'PUT'
 }
 
+export const RequestMethodsAllowingBody = [
+    RequestMethod.PUT,
+    RequestMethod.POST,
+    RequestMethod.PATCH
+];
+
 export interface RequestSettings {
     protocol?:RequestProtocol;
     method?:RequestMethod;

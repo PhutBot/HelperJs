@@ -41,10 +41,25 @@ class SimpleServer {
         this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
         this.useCache = (_c = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;
         this.server = http.createServer((req, res) => {
-            var _a, _b;
+            var _a;
             const url = new URL((_a = req.url) !== null && _a !== void 0 ? _a : 'localhost', `http://${req.headers.host}`);
             try {
-                const { handler, options } = this._getHandler((_b = req.method) !== null && _b !== void 0 ? _b : 'GET', url);
+                const method = req.method;
+                const { handler, options } = this._getHandler(method, url);
+                if (Request_1.RequestMethodsAllowingBody.includes(method)) {
+                    options.body = () => {
+                        return new Promise((res) => {
+                            let body = '';
+                            req.on('data', (chunk) => body += chunk);
+                            req.on('end', () => {
+                                res({
+                                    text: () => Promise.resolve(body),
+                                    json: () => Promise.resolve(JSON.parse(body)),
+                                });
+                            });
+                        });
+                    };
+                }
                 handler(req, res, options);
             }
             catch (err) {
@@ -203,7 +218,8 @@ class SimpleServer {
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
-                options: { url, vars: match.vars }
+                options: { url, vars: match.vars,
+                    body: () => Promise.resolve({ text: () => Promise.resolve(''), json: () => Promise.resolve(null) }) }
             };
         }
         else {

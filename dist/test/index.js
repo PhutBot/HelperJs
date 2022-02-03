@@ -16,9 +16,23 @@ server.defineHandler(src_1.Https.RequestMethod.GET, '/echo/{location}', (req, re
     res.writeHead(200);
     res.end(options.vars['location']);
 });
-server.defineHandler(src_1.Https.RequestMethod.GET, '/stop', (req, res) => {
+server.defineHandler(src_1.Https.RequestMethod.POST, '/stop', (req, res, opt) => {
     res.writeHead(200);
     res.end('Stopping the server');
+    opt.body()
+        .then((body) => body.json())
+        .then(console.log);
+    setTimeout(() => {
+        server.unmapDirectory('/dir');
+        server.stop();
+    }, src_1.Millis.fromSec(3));
+});
+server.defineHandler('GET', '/stop', (req, res, opt) => {
+    res.writeHead(200);
+    res.end('Stopping the server');
+    opt.body()
+        .then((body) => body.json())
+        .then(console.log);
     setTimeout(() => {
         server.unmapDirectory('/dir');
         server.stop();

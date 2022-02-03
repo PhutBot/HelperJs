@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.request = exports.RequestMethod = exports.RequestProtocol = void 0;
+exports.request = exports.RequestMethodsAllowingBody = exports.RequestMethod = exports.RequestProtocol = void 0;
 const http = __importStar(require("http"));
 const https = __importStar(require("https"));
 var RequestProtocol;
@@ -35,6 +35,11 @@ var RequestMethod;
     RequestMethod["POST"] = "POST";
     RequestMethod["PUT"] = "PUT";
 })(RequestMethod = exports.RequestMethod || (exports.RequestMethod = {}));
+exports.RequestMethodsAllowingBody = [
+    RequestMethod.PUT,
+    RequestMethod.POST,
+    RequestMethod.PATCH
+];
 // PhutBot PLEASE remember to be careful when debugging this class on stream
 function request(settings) {
     var _a, _b;

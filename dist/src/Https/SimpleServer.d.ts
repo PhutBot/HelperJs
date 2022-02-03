@@ -14,7 +14,7 @@ interface HandlerRecord {
     handler: RequestHandler;
 }
 export declare type RequestHandler = (req: http.IncomingMessage, res: http.ServerResponse, options: RequestOptions) => void;
-export declare type HandlerMap = Record<string | RequestMethod, Record<string, HandlerRecord>>;
+export declare type HandlerMap = Record<RequestMethod, Record<string, HandlerRecord>>;
 export interface ServerSettings {
     hostname?: string | EnvBackedValue;
     port?: number | EnvBackedValue;
@@ -47,11 +47,15 @@ export declare class SimpleServer {
     removeHandler(method: string | RequestMethod, path: string): void;
     start(): Promise<unknown>;
     stop(): Promise<unknown>;
-    _getHandler(method: string | RequestMethod, url: URL): {
+    _getHandler(method: RequestMethod, url: URL): {
         handler: RequestHandler;
         options: {
             url: URL;
             vars: {};
+            body: () => Promise<{
+                text: () => Promise<string>;
+                json: () => Promise<null>;
+            }>;
         };
     };
     _handleError(url: URL, req: http.IncomingMessage, res: http.ServerResponse, err: HttpError): void;

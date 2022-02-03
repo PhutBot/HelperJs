@@ -9,6 +9,7 @@ export declare enum RequestMethod {
     POST = "POST",
     PUT = "PUT"
 }
+export declare const RequestMethodsAllowingBody: RequestMethod[];
 export interface RequestSettings {
     protocol?: RequestProtocol;
     method?: RequestMethod;

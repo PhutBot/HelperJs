@@ -3,7 +3,7 @@ import * as logger from 'npmlog';
 import * as fs from 'fs';
 import { Socket } from 'net';
 import { EnvBackedValue } from '../Env';
-import { RequestMethod } from './Request';
+import { RequestMethod, RequestMethodsAllowingBody } from './Request';
 import { HttpError, InternalServerError, PageNotFoundError } from './Error';
 import { PathMatcher } from './PathMatcher';
 
@@ -20,7 +20,7 @@ interface HandlerRecord {
 
 
 export type RequestHandler = (req:http.IncomingMessage, res:http.ServerResponse, options:RequestOptions) => void;
-export type HandlerMap = Record<string|RequestMethod,Record<string,HandlerRecord>>;
+export type HandlerMap = Record<RequestMethod,Record<string,HandlerRecord>>;
 
 export interface ServerSettings {
     hostname?:string|EnvBackedValue;
@@ -54,7 +54,22 @@ export class SimpleServer {
         this.server = http.createServer((req:http.IncomingMessage, res:http.ServerResponse) => {
             const url = new URL(req.url ?? 'localhost', `http://${req.headers.host}`);
             try {
-                const { handler, options } = this._getHandler(req.method ?? 'GET', url);
+                const method = req.method as RequestMethod;
+                const { handler, options } = this._getHandler(method, url);
+                if (RequestMethodsAllowingBody.includes(method)) {
+                    options.body = () => {
+                        return new Promise((res) => {
+                            let body = '';
+                            req.on('data', (chunk) => body += chunk);
+                            req.on('end', () => {
+                                res({
+                                    text: () => Promise.resolve(body),
+                                    json: () => Promise.resolve(JSON.parse(body)),
+                                })
+                            });
+                        });
+                    };
+                }
                 handler(req, res, options);
             } catch (err) {
                 try {
@@ -139,7 +154,7 @@ export class SimpleServer {
 
     defineHandler(method:string|RequestMethod, path:string, handler:RequestHandler, options:{ force?:boolean } = {}) {
         const matcher = new PathMatcher(path);
-        if (matcher.path in this.handlers[method]) {
+        if (matcher.path in this.handlers[method as RequestMethod]) {
             if (!!options.force) {
                 logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
             } else {
@@ -149,11 +164,11 @@ export class SimpleServer {
         }
         
         logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
-        this.handlers[method][path] = { matcher, handler };
+        this.handlers[method as RequestMethod][path] = { matcher, handler };
     }
     
     removeHandler(method:string|RequestMethod, path:string) {
-        delete this.handlers[method][PathMatcher.prepPath(path)];
+        delete this.handlers[method as RequestMethod][PathMatcher.prepPath(path)];
     }
 
     start() {
@@ -189,7 +204,7 @@ export class SimpleServer {
         });
     }
 
-    _getHandler(method:string|RequestMethod, url:URL) {
+    _getHandler(method:RequestMethod, url:URL) {
         const path = url.pathname;
         logger.http('SimpleServer', `${method} - ${path}`);
         
@@ -213,7 +228,8 @@ export class SimpleServer {
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
-                options: { url, vars: match.vars }
+                options: { url, vars: match.vars,
+                    body:() => Promise.resolve({ text: () => Promise.resolve(''), json: () => Promise.resolve(null) }) }
             };
         } else {
             throw new PageNotFoundError(url);
