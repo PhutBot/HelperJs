@@ -62,7 +62,10 @@ function walk(dir, action, options) {
             }
         }
         else {
-            action(dir);
+            if (options.step)
+                yield action(dir);
+            else
+                action(dir);
         }
     });
 }
@@ -92,26 +95,25 @@ function RunTests(dir, root = "./") {
                     ERROR: 0
                 };
                 const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
+                    .filter(desc => !!(0, Metadata_1.getMetadata)(desc.value, '@test') || !!(0, Metadata_1.getMetadata)(desc.value, '@unroll'))
                     .map((desc) => __awaiter(this, void 0, void 0, function* () {
-                    if (!!(0, Metadata_1.getMetadata)(desc.value, '@test') || !!(0, Metadata_1.getMetadata)(desc.value, '@unroll')) {
-                        try {
-                            const test = new module.default();
-                            test.setup();
-                            const result = desc.value.apply(test);
-                            result.forEach((res) => {
-                                fileResults.TOTAL += 1;
-                                fileResults.PASS += res === TestResult.PASS ? 1 : 0;
-                                fileResults.FAIL += res === TestResult.FAIL ? 1 : 0;
-                                fileResults.ERROR += res === TestResult.ERROR ? 1 : 0;
-                                fullResults.TOTAL += 1;
-                                fullResults.PASS += res === TestResult.PASS ? 1 : 0;
-                                fullResults.FAIL += res === TestResult.FAIL ? 1 : 0;
-                                fullResults.ERROR += res === TestResult.ERROR ? 1 : 0;
-                            });
-                        }
-                        catch (err) {
-                            console.error(err);
-                        }
+                    try {
+                        const test = new module.default();
+                        yield test.setup();
+                        const result = yield desc.value.apply(test);
+                        result.forEach((res) => {
+                            fileResults.TOTAL += 1;
+                            fileResults.PASS += res === TestResult.PASS ? 1 : 0;
+                            fileResults.FAIL += res === TestResult.FAIL ? 1 : 0;
+                            fileResults.ERROR += res === TestResult.ERROR ? 1 : 0;
+                            fullResults.TOTAL += 1;
+                            fullResults.PASS += res === TestResult.PASS ? 1 : 0;
+                            fullResults.FAIL += res === TestResult.FAIL ? 1 : 0;
+                            fullResults.ERROR += res === TestResult.ERROR ? 1 : 0;
+                        });
+                    }
+                    catch (err) {
+                        console.error(err);
                     }
                 }));
                 yield Promise.allSettled(promises);

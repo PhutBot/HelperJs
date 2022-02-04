@@ -1,3 +1,3 @@
 export class TestCase {
-    setup() {}
+    async setup() {}
 }

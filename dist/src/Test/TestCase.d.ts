@@ -1,3 +1,3 @@
 export declare class TestCase {
-    setup(): void;
+    setup(): Promise<void>;
 }

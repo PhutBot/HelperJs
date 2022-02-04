@@ -29,7 +29,8 @@ async function walk(dir:string, action:(p:string)=>any, options:WalkOptions) {
             else walk(path.join(dir, file), action, options);
         }
     } else {
-        action(dir);
+        if (options.step) await action(dir);
+        else action(dir);
     }
 }
 
@@ -62,26 +63,25 @@ export async function RunTests(dir:string, root:string="./") {
             };
             
             const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
+                .filter(desc => !!getMetadata(desc.value, '@test') || !!getMetadata(desc.value, '@unroll'))
                 .map(async (desc) => {
-                    if (!!getMetadata(desc.value, '@test') || !!getMetadata(desc.value, '@unroll')) {
-                        try {
-                            const test = new module.default();
-                            test.setup();
-                            const result = desc.value.apply(test);
-                            result.forEach((res:TestResult) => {
-                                fileResults.TOTAL += 1;
-                                fileResults.PASS += res === TestResult.PASS ? 1 : 0;
-                                fileResults.FAIL += res === TestResult.FAIL ? 1 : 0;
-                                fileResults.ERROR += res === TestResult.ERROR ? 1 : 0;
+                    try {
+                        const test = new module.default();
+                        await test.setup();
+                        const result = await desc.value.apply(test);
+                        result.forEach((res:TestResult) => {
+                            fileResults.TOTAL += 1;
+                            fileResults.PASS += res === TestResult.PASS ? 1 : 0;
+                            fileResults.FAIL += res === TestResult.FAIL ? 1 : 0;
+                            fileResults.ERROR += res === TestResult.ERROR ? 1 : 0;
 
-                                fullResults.TOTAL += 1;
-                                fullResults.PASS += res === TestResult.PASS ? 1 : 0;
-                                fullResults.FAIL += res === TestResult.FAIL ? 1 : 0;
-                                fullResults.ERROR += res === TestResult.ERROR ? 1 : 0;
-                            });
-                        } catch (err) {
-                            console.error(err);                                
-                        }
+                            fullResults.TOTAL += 1;
+                            fullResults.PASS += res === TestResult.PASS ? 1 : 0;
+                            fullResults.FAIL += res === TestResult.FAIL ? 1 : 0;
+                            fullResults.ERROR += res === TestResult.ERROR ? 1 : 0;
+                        });
+                    } catch (err) {
+                        console.error(err);                                
                     }
                 });
 

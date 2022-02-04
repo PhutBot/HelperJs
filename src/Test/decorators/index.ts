@@ -7,9 +7,9 @@ export function test() {
     return new DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
             const og = descriptor.value;
-            descriptor.value = (_:any) => {
+            descriptor.value = async (_:any) => {
                 try {
-                    og();
+                    await og();
                     npmlog.info(target.constructor.name, `pass - ${key}`);
                     return [ TestResult.PASS ];
                 } catch (err) {
@@ -31,10 +31,10 @@ export function unroll(cases:object[]) {
     return new DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
             const og = descriptor.value;
-            descriptor.value = (_:any) => {
-                return cases.map((c:any, i:number) => {
+            descriptor.value = async (_:any) => {
+                return await Promise.all(cases.map(async (c:any, i:number) => {
                         try {
-                            og(c);
+                            await og(c);
                             npmlog.info(target.constructor.name, `pass - ${key}_${i}`);
                             return TestResult.PASS;
                         } catch (err) {
@@ -50,7 +50,7 @@ export function unroll(cases:object[]) {
                                 return TestResult.ERROR;
                             }
                         }
-                    });
+                    }));
             };
         }).build();
 }
