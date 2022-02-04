@@ -1,62 +1,84 @@
-import * as http from 'http';
-import { Env, Https, Millis } from '../src';
-import { requestMapping } from '../src/Https/decorators';
+import { RunTests } from "../src/Test/TestRunner";
 
-Env.load('.env');
-const hostname = new Env.EnvBackedValue('HOSTNAME');
-const port = new Env.EnvBackedValue('PORT');
+RunTests('../dist/test', '../../');
 
-const server = new Https.SimpleServer({
-    hostname: hostname,
-    port: port
-});
+// import * as http from 'http';
+// import { Env, Https, Millis } from '../src';
+// import { requestMapping } from '../src/Https/decorators';
 
-@requestMapping({ location: '/test' })
-class TestHandler {
-    @requestMapping({ location: '/one', method: 'GET' })
-    static getTest(req:http.IncomingMessage, res:http.ServerResponse, opt:any) {
-        res.writeHead(200);
-        res.end('Testing one two');
-    }
-}
+// Env.load('.env');
+// const hostname = new Env.EnvBackedValue('HOSTNAME');
+// const port = new Env.EnvBackedValue('PORT');
 
-server.mapHandler(TestHandler);
-server.mapHandler(TestHandler.getTest);
-server.unmapHandler(TestHandler.getTest);
+// const server = new Https.SimpleServer({
+//     hostname: hostname,
+//     port: port
+// });
 
-server.defineHandler(Https.RequestMethod.GET, '/', (req:http.IncomingMessage, res:http.ServerResponse) => {
-    res.writeHead(200);
-    res.end('Welcome to phuthub');
-});
+// @requestMapping({ location: '/test' })
+// class TestHandler {
+//     @requestMapping({ location: '/one', method: 'GET' })
+//     static getTest(request:Https.HttpRequest) {
+//         return Promise.resolve({
+//             statusCode: 200,
+//             body: 'Testing one two'
+//         });
+//     }
+// }
 
-server.defineHandler(Https.RequestMethod.GET, '/echo/{location}', (req:http.IncomingMessage, res:http.ServerResponse, options:any) => {
-    res.writeHead(200);
-    res.end(options.vars['location']);
-});
+// server.mapHandler(TestHandler);
+// server.mapHandler(TestHandler.getTest);
+// server.unmapHandler(TestHandler.getTest);
 
-server.defineHandler(Https.RequestMethod.POST, '/stop', (req:http.IncomingMessage, res:http.ServerResponse, opt:any) => {
-    res.writeHead(200);
-    res.end('Stopping the server');
-    opt.body()
-        .then((body:any) => body.json())
-        .then(console.log);
-    setTimeout(() => {
-        server.unmapDirectory('/dir');
-        server.stop();
-    }, Millis.fromSec(3));
-});
+// server.defineHandler(Https.RequestMethod.GET, '/', async (request) => {
+//     return {
+//         statusCode: 200,
+//         body: 'Welcome to phuthub'
+//     };
+// });
 
-server.defineHandler('GET', '/stop', (req:http.IncomingMessage, res:http.ServerResponse, opt:any) => {
-    res.writeHead(200);
-    res.end('Stopping the server');
-    opt.body()
-        .then((body:any) => body.json())
-        .then(console.log);
-    setTimeout(() => {
-        server.unmapDirectory('/dir');
-        server.stop();
-    }, Millis.fromSec(3));
-});
+// server.defineHandler(Https.RequestMethod.GET, '/echo/{location}', async (request) => {
+//     return {
+//         statusCode: 200,
+//         body: request.pathParams['location']
+//     };
+// });
 
-server.mapDirectory('./www', { alias: '/dir' });
-server.start();
+// server.defineHandler(Https.RequestMethod.POST, '/stop', (request) => new Promise((resolve, reject) => {
+//     request.body()
+//         .then((body) => body.json())
+//         .then((text) => {
+//             console.log(text);
+            
+//             setTimeout(() => {
+//                 server.unmapDirectory('/dir');
+//                 server.stop();
+//             }, Millis.fromSec(3));
+
+//             resolve({
+//                 statusCode: 200,
+//                 body: 'Stopping the server'
+//             });
+//         });
+// }));
+
+// server.defineHandler('GET', '/stop', (request) => new Promise((resolve, reject) => {
+//     request.body()
+//         .then((body) => body.json())
+//         .then((text) => {
+//             console.log(text);
+            
+//             setTimeout(() => {
+//                 server.unmapDirectory('/dir');
+//                 server.stop();
+//             }, Millis.fromSec(3));
+
+//             resolve({
+//                 statusCode: 200,
+//                 body: 'Stopping the server'
+//             });
+//         });
+// }));
+
+// server.mapDirectory('./www', { alias: '/dir' });
+// server.start();
