@@ -23,8 +23,12 @@ export function requestMapping(mapping:RequestMapping) {
 
     return (target:any, key?:string, desc?:TypedPropertyDescriptor<any>) => {
         if (!!key && !!desc) {
-            desc.value.__decorators = desc.value.__decorators || {};
-            desc.value.__decorators['requestMapping'] = mapping;
+            if (desc.value.apply(null) instanceof Promise) {
+                desc.value.__decorators = desc.value.__decorators || {};
+                desc.value.__decorators['requestMapping'] = mapping;
+            } else {
+                throw `${desc.value.name} - functions with the '@requestMapping' decorator must be async or return a Promise`;
+            }
         } else if (typeof target === 'function') {
             delete mapping.method;
             target.__decorators = target.__decorators || {};
