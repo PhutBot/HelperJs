@@ -14,8 +14,13 @@ function requestMapping(mapping) {
     mapping.method = (_b = mapping.method) !== null && _b !== void 0 ? _b : Request_1.RequestMethod.GET;
     return (target, key, desc) => {
         if (!!key && !!desc) {
-            desc.value.__decorators = desc.value.__decorators || {};
-            desc.value.__decorators['requestMapping'] = mapping;
+            if (desc.value.apply(null) instanceof Promise) {
+                desc.value.__decorators = desc.value.__decorators || {};
+                desc.value.__decorators['requestMapping'] = mapping;
+            }
+            else {
+                throw `${desc.value.name} - functions with the '@requestMapping' decorator must be async or return a Promise`;
+            }
         }
         else if (typeof target === 'function') {
             delete mapping.method;

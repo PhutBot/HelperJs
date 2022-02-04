@@ -1,0 +1,67 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.unroll = exports.test = void 0;
+const assert_1 = require("assert");
+const npmlog_1 = __importDefault(require("npmlog"));
+const DecoratorBuilder_1 = require("../../Meta/DecoratorBuilder");
+const TestRunner_1 = require("../TestRunner");
+function test() {
+    return new DecoratorBuilder_1.DecoratorBuilder()
+        .onMethod((target, key, descriptor, meta) => {
+        const og = descriptor.value;
+        descriptor.value = (_) => {
+            try {
+                og();
+                npmlog_1.default.info(target.constructor.name, `pass - ${key}`);
+                return [TestRunner_1.TestResult.PASS];
+            }
+            catch (err) {
+                if (err instanceof assert_1.AssertionError) {
+                    npmlog_1.default.error(target.constructor.name, `fail - ${key}`);
+                    console.error(`${err}`);
+                    return [TestRunner_1.TestResult.FAIL];
+                }
+                else {
+                    npmlog_1.default.error(target.constructor.name, `error - ${key}`);
+                    console.error(err);
+                    return [TestRunner_1.TestResult.ERROR];
+                }
+            }
+        };
+    }).build();
+}
+exports.test = test;
+function unroll(cases) {
+    return new DecoratorBuilder_1.DecoratorBuilder()
+        .onMethod((target, key, descriptor, meta) => {
+        const og = descriptor.value;
+        descriptor.value = (_) => {
+            return cases.map((c, i) => {
+                try {
+                    og(c);
+                    npmlog_1.default.info(target.constructor.name, `pass - ${key}_${i}`);
+                    return TestRunner_1.TestResult.PASS;
+                }
+                catch (err) {
+                    if (err instanceof assert_1.AssertionError) {
+                        npmlog_1.default.warn(target.constructor.name, `fail - ${key}_${i}`);
+                        npmlog_1.default.warn(target.constructor.name, JSON.stringify(c));
+                        console.warn(`${err}`);
+                        return TestRunner_1.TestResult.FAIL;
+                    }
+                    else {
+                        npmlog_1.default.error(target.constructor.name, `error - ${key}_${i}`);
+                        npmlog_1.default.error(target.constructor.name, JSON.stringify(c));
+                        console.error(err);
+                        return TestRunner_1.TestResult.ERROR;
+                    }
+                }
+            });
+        };
+    }).build();
+}
+exports.unroll = unroll;
+//# sourceMappingURL=index.js.map
