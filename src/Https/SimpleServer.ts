@@ -5,21 +5,39 @@ import { Socket } from 'net';
 import { EnvBackedValue } from '../Env';
 import { RequestMethod, RequestMethodsAllowingBody } from './Request';
 import { HttpError, InternalServerError, PageNotFoundError } from './Error';
-import { PathMatcher } from './PathMatcher';
-
-interface RequestOptions {
-    url:URL;
-    argMap?:{};
-    err?:HttpError;
-}
+import { PathParams, PathMatcher } from './PathMatcher';
 
 interface HandlerRecord {
     matcher:PathMatcher;
     handler:RequestHandler;
 }
 
+export class Body {
+    private data:string;
+    constructor(data:string) {this.data = data;}
+    text() { return Promise.resolve(this.data); }
+    json() { return Promise.resolve(JSON.parse(this.data)); }
+}
+export type Headers = Record<string, string[]>;
+export type QueryParams = Record<string, string[]>;
 
-export type RequestHandler = (req:http.IncomingMessage, res:http.ServerResponse, options:RequestOptions) => void;
+export interface HttpRequest {
+    method:RequestMethod;
+    url:URL;
+    path:string;
+    pathParams:PathParams;
+    queryParams:QueryParams;
+    headers:Headers;
+    body:()=>Promise<Body>;
+}
+
+export interface HttpResponse {
+    statusCode:number;
+    headers?:Headers;
+    body?:string;
+}
+
+export type RequestHandler = (request:HttpRequest) => Promise<HttpResponse>;
 export type HandlerMap = Record<RequestMethod,Record<string,HandlerRecord>>;
 
 export interface ServerSettings {
@@ -35,7 +53,7 @@ export class SimpleServer {
 
     private alias2Dir:Record<string,string> = {};
     private dir2Alias:Record<string,string> = {};
-    private cachedFiles:Record<string,string|Buffer> = {};
+    private cachedFiles:Record<string,string> = {};
 
     private server:http.Server;
     private sockets:Array<Socket> = [];
@@ -51,36 +69,7 @@ export class SimpleServer {
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
         this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
 
-        this.server = http.createServer((req:http.IncomingMessage, res:http.ServerResponse) => {
-            const url = new URL(req.url ?? 'localhost', `http://${req.headers.host}`);
-            try {
-                const method = req.method as RequestMethod;
-                const { handler, options } = this._getHandler(method, url);
-                if (RequestMethodsAllowingBody.includes(method)) {
-                    options.body = () => {
-                        return new Promise((res) => {
-                            let body = '';
-                            req.on('data', (chunk) => body += chunk);
-                            req.on('end', () => {
-                                res({
-                                    text: () => Promise.resolve(body),
-                                    json: () => Promise.resolve(JSON.parse(body)),
-                                })
-                            });
-                        });
-                    };
-                }
-                handler(req, res, options);
-            } catch (err) {
-                try {
-                    this._handleError(url, req, res,
-                        (err instanceof HttpError) ? err : new InternalServerError(`${err}`));
-                } catch (fatal) {
-                    logger.error('SimpleServer', `[FATAL ERROR]: ${fatal}`);
-                    throw fatal;
-                }
-            }
-        });
+        this.server = http.createServer(this._rootHandler.bind(this));
 
         this.server.on('connection', (socket:Socket) => {
             this.sockets.push(socket);
@@ -96,54 +85,61 @@ export class SimpleServer {
         this.alias2Dir[_alias] = dirName;
         
         this.defineHandler(RequestMethod.GET, `${_alias}/*`,
-            (_:http.IncomingMessage, res:http.ServerResponse, requestOptions:RequestOptions) => {
-                const path = requestOptions.url.pathname.replace(_alias, this.alias2Dir[_alias]);
+            (request:HttpRequest) => new Promise((resolve, reject) => {
+                const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
+                const headers = {} as Headers;
                 
-                let file = null; // TODO: files should only be cached once even if the path is "different"
+                let contentType = '';
+                let file:string = ''; // TODO: files should only be cached once even if the path is "different"
                 if (this.useCache && !!options.cache && path in this.cachedFiles) {
                     file = this.cachedFiles[path];
                 } else if (fs.existsSync(path)) {
                     const stat = fs.lstatSync(path);
                     if (stat.isFile()) {
                         if (path.endsWith('.html')) {
-                            res.setHeader('content-type', 'text/html');
+                            contentType = 'text/html';
                         } else if (path.endsWith('.js')) {
-                            res.setHeader('content-type', 'application/javascript');
+                            contentType = 'application/javascript';
                         } else if (path.endsWith('.css')) {
-                            res.setHeader('content-type', 'text/css');
+                            contentType = 'text/css';
                         } else {
-                            res.setHeader('content-type', 'text/plain');
+                            contentType = 'text/plain';
                         }
-                        file = fs.readFileSync(`./${path}`);
+                        file = fs.readFileSync(`./${path}`, 'utf8');
                     } else if (stat.isDirectory()) {
                         if (fs.existsSync(`./${path}/index.html`)) {
-                            res.setHeader('content-type', 'text/html');
+                            contentType = 'text/html';
                             file = fs.readFileSync(`./${path}/index.html`, 'utf8');
                         } else if (fs.existsSync(`./${path}/index.js`)) {
-                            res.setHeader('content-type', 'application/javascript');
+                            contentType = 'application/javascript';
                             file = fs.readFileSync(`./${path}/index.js`, 'utf8');
                         }
                     } else {
-                        throw new Error('how is this not a file or a directory??');
+                        reject(new InternalServerError('how is this not a file or a directory??'));
                     }
+                    
                     if (this.useCache && !!options.cache && !!file) {
                         this.cachedFiles[path] = file;
                     }
                 } else if (fs.existsSync(path + '.html')) {
-                    res.setHeader('content-type', 'text/html');
+                    contentType = 'text/html';
                     file = fs.readFileSync(`./${path}.html`, 'utf8');
                     if (this.useCache && !!options.cache) {
                         this.cachedFiles[path] = file;
                     }
                 }
                 
+                headers['content-type'] = [contentType];
                 if (!file) {
-                    throw new PageNotFoundError(requestOptions.url);
+                    reject(new PageNotFoundError(request.url));
                 } else {
-                    res.writeHead(200);
-                    res.end(file);
+                    resolve({
+                        statusCode: 200,
+                        headers,
+                        body: file
+                    });
                 }
-            }, options);
+            }), options);
     }
 
     unmapDirectory(alias:string) {
@@ -265,21 +261,87 @@ export class SimpleServer {
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
-                options: { url, vars: match.vars,
-                    body:() => Promise.resolve({ text: () => Promise.resolve(''), json: () => Promise.resolve(null) }) }
+                pathParams: match.vars
             };
         } else {
             throw new PageNotFoundError(url);
         }
     }
 
-    _handleError(url:URL, req:http.IncomingMessage, res:http.ServerResponse, err:HttpError) {
-        if (err.statusCode in this.errorHandlers) {
-            this.errorHandlers[err.statusCode](req, res, { url, err });
-        } else {
-            logger.error('SimpleServer', `[${err.statusCode}] ${err.message}`);
-            res.writeHead(err.statusCode);
-            res.end(`Error ${err.statusCode}: ${err.description}`);
+    _rootHandler(req:http.IncomingMessage, res:http.ServerResponse) {
+        try {
+            const method = req.method as RequestMethod ?? RequestMethod.GET;
+            const url = new URL(req.url ?? '', this.address);
+            const path = url.pathname;
+
+            const headers:Headers = {};
+            Object.entries(req.headers).forEach(([key, val]) => {
+                headers[key] = headers[key] || [];
+                if (!!val) headers[key].push(...val);
+            });
+            
+            const queryParams:QueryParams = {};
+            for (const [key, val] of url.searchParams.entries()) {
+                queryParams[key] = queryParams[key] || [];
+                queryParams[key].push(val);
+            }
+
+            const { handler, pathParams } = this._getHandler(method, url);
+            handler({
+                    method,
+                    url,
+                    path,
+                    pathParams,
+                    queryParams,
+                    headers,
+                    body: () => new Promise((resolve, reject) => {
+                            let body = '';
+                            req.on('data', (chunk) => {
+                                body += chunk;
+                            });
+                            req.on('end', () => {
+                                resolve(new Body(body));
+                            });
+                            req.on('error', (err) => {
+                                reject(err);
+                            });
+                        })
+                }).then((response:HttpResponse) => {
+                    response.headers = response.headers || {};
+                    if (!response.headers.hasOwnProperty('content-type'))
+                        response.headers['content-type'] = [ 'text/plain' ];
+                    for (const [key, value] of Object.entries(response.headers)) {
+                        res.setHeader(key, value);
+                    }
+                    
+                    res.writeHead(response.statusCode);
+                    res.end(response.body);
+                }).catch((error:any) => {
+                    if (!(error instanceof HttpError)) {
+                        error = new InternalServerError(error instanceof Error
+                            ? error.message : `${error}`);
+                    }
+
+                    const httpError = error as HttpError;
+                    res.writeHead(httpError.statusCode);
+                    res.end(httpError.description);
+                    logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+                    logger.error('SimpleServer', httpError.stack ?? httpError.message);
+                });
+        } catch (error) {
+            if (!(error instanceof HttpError)) {
+                if (error instanceof Error) {
+                    error = new InternalServerError(error.message);
+                } else {
+                    error = new InternalServerError(`${error}`);
+                }
+            }
+
+            const httpError = error as HttpError;
+            res.writeHead(httpError.statusCode);
+            res.end(httpError.description);
+            logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+            logger.error('SimpleServer', httpError.stack ?? httpError.message);
         }
     }
 }

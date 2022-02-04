@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SimpleServer = void 0;
+exports.SimpleServer = exports.Body = void 0;
 const http = __importStar(require("http"));
 const logger = __importStar(require("npmlog"));
 const fs = __importStar(require("fs"));
@@ -27,6 +27,12 @@ const Env_1 = require("../Env");
 const Request_1 = require("./Request");
 const Error_1 = require("./Error");
 const PathMatcher_1 = require("./PathMatcher");
+class Body {
+    constructor(data) { this.data = data; }
+    text() { return Promise.resolve(this.data); }
+    json() { return Promise.resolve(JSON.parse(this.data)); }
+}
+exports.Body = Body;
 class SimpleServer {
     constructor(settings = {}) {
         var _a, _b, _c;
@@ -40,38 +46,7 @@ class SimpleServer {
         this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
         this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
         this.useCache = (_c = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;
-        this.server = http.createServer((req, res) => {
-            var _a;
-            const url = new URL((_a = req.url) !== null && _a !== void 0 ? _a : 'localhost', `http://${req.headers.host}`);
-            try {
-                const method = req.method;
-                const { handler, options } = this._getHandler(method, url);
-                if (Request_1.RequestMethodsAllowingBody.includes(method)) {
-                    options.body = () => {
-                        return new Promise((res) => {
-                            let body = '';
-                            req.on('data', (chunk) => body += chunk);
-                            req.on('end', () => {
-                                res({
-                                    text: () => Promise.resolve(body),
-                                    json: () => Promise.resolve(JSON.parse(body)),
-                                });
-                            });
-                        });
-                    };
-                }
-                handler(req, res, options);
-            }
-            catch (err) {
-                try {
-                    this._handleError(url, req, res, (err instanceof Error_1.HttpError) ? err : new Error_1.InternalServerError(`${err}`));
-                }
-                catch (fatal) {
-                    logger.error('SimpleServer', `[FATAL ERROR]: ${fatal}`);
-                    throw fatal;
-                }
-            }
-        });
+        this.server = http.createServer(this._rootHandler.bind(this));
         this.server.on('connection', (socket) => {
             this.sockets.push(socket);
         });
@@ -85,9 +60,11 @@ class SimpleServer {
         const _alias = PathMatcher_1.PathMatcher.prepPath((_a = options.alias) !== null && _a !== void 0 ? _a : dirName.replace(/^\./, ''));
         this.dir2Alias[dirName] = _alias;
         this.alias2Dir[_alias] = dirName;
-        this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (_, res, requestOptions) => {
-            const path = requestOptions.url.pathname.replace(_alias, this.alias2Dir[_alias]);
-            let file = null; // TODO: files should only be cached once even if the path is "different"
+        this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (request) => new Promise((resolve, reject) => {
+            const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
+            const headers = {};
+            let contentType = '';
+            let file = ''; // TODO: files should only be cached once even if the path is "different"
             if (this.useCache && !!options.cache && path in this.cachedFiles) {
                 file = this.cachedFiles[path];
             }
@@ -95,51 +72,55 @@ class SimpleServer {
                 const stat = fs.lstatSync(path);
                 if (stat.isFile()) {
                     if (path.endsWith('.html')) {
-                        res.setHeader('content-type', 'text/html');
+                        contentType = 'text/html';
                     }
                     else if (path.endsWith('.js')) {
-                        res.setHeader('content-type', 'application/javascript');
+                        contentType = 'application/javascript';
                     }
                     else if (path.endsWith('.css')) {
-                        res.setHeader('content-type', 'text/css');
+                        contentType = 'text/css';
                     }
                     else {
-                        res.setHeader('content-type', 'text/plain');
+                        contentType = 'text/plain';
                     }
-                    file = fs.readFileSync(`./${path}`);
+                    file = fs.readFileSync(`./${path}`, 'utf8');
                 }
                 else if (stat.isDirectory()) {
                     if (fs.existsSync(`./${path}/index.html`)) {
-                        res.setHeader('content-type', 'text/html');
+                        contentType = 'text/html';
                         file = fs.readFileSync(`./${path}/index.html`, 'utf8');
                     }
                     else if (fs.existsSync(`./${path}/index.js`)) {
-                        res.setHeader('content-type', 'application/javascript');
+                        contentType = 'application/javascript';
                         file = fs.readFileSync(`./${path}/index.js`, 'utf8');
                     }
                 }
                 else {
-                    throw new Error('how is this not a file or a directory??');
+                    reject(new Error_1.InternalServerError('how is this not a file or a directory??'));
                 }
                 if (this.useCache && !!options.cache && !!file) {
                     this.cachedFiles[path] = file;
                 }
             }
             else if (fs.existsSync(path + '.html')) {
-                res.setHeader('content-type', 'text/html');
+                contentType = 'text/html';
                 file = fs.readFileSync(`./${path}.html`, 'utf8');
                 if (this.useCache && !!options.cache) {
                     this.cachedFiles[path] = file;
                 }
             }
+            headers['content-type'] = [contentType];
             if (!file) {
-                throw new Error_1.PageNotFoundError(requestOptions.url);
+                reject(new Error_1.PageNotFoundError(request.url));
             }
             else {
-                res.writeHead(200);
-                res.end(file);
+                resolve({
+                    statusCode: 200,
+                    headers,
+                    body: file
+                });
             }
-        }, options);
+        }), options);
     }
     unmapDirectory(alias) {
         this.removeHandler(Request_1.RequestMethod.GET, `${alias}/*`);
@@ -256,22 +237,86 @@ class SimpleServer {
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
-                options: { url, vars: match.vars,
-                    body: () => Promise.resolve({ text: () => Promise.resolve(''), json: () => Promise.resolve(null) }) }
+                pathParams: match.vars
             };
         }
         else {
             throw new Error_1.PageNotFoundError(url);
         }
     }
-    _handleError(url, req, res, err) {
-        if (err.statusCode in this.errorHandlers) {
-            this.errorHandlers[err.statusCode](req, res, { url, err });
+    _rootHandler(req, res) {
+        var _a, _b, _c;
+        try {
+            const method = (_a = req.method) !== null && _a !== void 0 ? _a : Request_1.RequestMethod.GET;
+            const url = new URL((_b = req.url) !== null && _b !== void 0 ? _b : '', this.address);
+            const path = url.pathname;
+            const headers = {};
+            Object.entries(req.headers).forEach(([key, val]) => {
+                headers[key] = headers[key] || [];
+                if (!!val)
+                    headers[key].push(...val);
+            });
+            const queryParams = {};
+            for (const [key, val] of url.searchParams.entries()) {
+                queryParams[key] = queryParams[key] || [];
+                queryParams[key].push(val);
+            }
+            const { handler, pathParams } = this._getHandler(method, url);
+            handler({
+                method,
+                url,
+                path,
+                pathParams,
+                queryParams,
+                headers,
+                body: () => new Promise((resolve, reject) => {
+                    let body = '';
+                    req.on('data', (chunk) => {
+                        body += chunk;
+                    });
+                    req.on('end', () => {
+                        resolve(new Body(body));
+                    });
+                    req.on('error', (err) => {
+                        reject(err);
+                    });
+                })
+            }).then((response) => {
+                response.headers = response.headers || {};
+                if (!response.headers.hasOwnProperty('content-type'))
+                    response.headers['content-type'] = ['text/plain'];
+                for (const [key, value] of Object.entries(response.headers)) {
+                    res.setHeader(key, value);
+                }
+                res.writeHead(response.statusCode);
+                res.end(response.body);
+            }).catch((error) => {
+                var _a;
+                if (!(error instanceof Error_1.HttpError)) {
+                    error = new Error_1.InternalServerError(error instanceof Error
+                        ? error.message : `${error}`);
+                }
+                const httpError = error;
+                res.writeHead(httpError.statusCode);
+                res.end(httpError.description);
+                logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+                logger.error('SimpleServer', (_a = httpError.stack) !== null && _a !== void 0 ? _a : httpError.message);
+            });
         }
-        else {
-            logger.error('SimpleServer', `[${err.statusCode}] ${err.message}`);
-            res.writeHead(err.statusCode);
-            res.end(`Error ${err.statusCode}: ${err.description}`);
+        catch (error) {
+            if (!(error instanceof Error_1.HttpError)) {
+                if (error instanceof Error) {
+                    error = new Error_1.InternalServerError(error.message);
+                }
+                else {
+                    error = new Error_1.InternalServerError(`${error}`);
+                }
+            }
+            const httpError = error;
+            res.writeHead(httpError.statusCode);
+            res.end(httpError.description);
+            logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+            logger.error('SimpleServer', (_c = httpError.stack) !== null && _c !== void 0 ? _c : httpError.message);
         }
     }
 }
