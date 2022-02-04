@@ -1,3 +1,4 @@
+export declare type PathParams = Record<string, string>;
 export declare class PathMatcher {
     readonly path: string;
     readonly isWild: boolean;
@@ -6,7 +7,7 @@ export declare class PathMatcher {
     constructor(path: string);
     match(path: string): {
         isMatch: boolean;
-        vars: {};
+        vars: PathParams;
     };
     static prepPath(path: string): string;
 }

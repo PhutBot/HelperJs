@@ -10,6 +10,7 @@ class PathMatcher {
     }
     match(path) {
         this.regex.lastIndex = 0;
+        path = path.split('?')[0];
         path = PathMatcher.prepPath(path);
         if (this.path === path) {
             return {
@@ -30,7 +31,7 @@ class PathMatcher {
             }
             return {
                 isMatch: true,
-                vars
+                vars: vars
             };
         }
         return {

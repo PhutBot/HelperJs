@@ -1,3 +1,4 @@
+export type PathParams = Record<string, string>;
 export class PathMatcher {
     readonly path:string;
     readonly isWild:boolean;
@@ -13,11 +14,12 @@ export class PathMatcher {
 
     match(path:string) {
         this.regex.lastIndex= 0;
+        path = path.split('?')[0];
         path = PathMatcher.prepPath(path);
         if (this.path === path) {
             return {
                 isMatch: true,
-                vars: {}
+                vars: {} as PathParams
             };
         }
 
@@ -34,13 +36,13 @@ export class PathMatcher {
             }
             return {
                 isMatch: true,
-                vars
+                vars: vars as PathParams
             };
         }
         
         return {
             isMatch: false,
-            vars: {}
+            vars: {} as PathParams
         };
     }
 
