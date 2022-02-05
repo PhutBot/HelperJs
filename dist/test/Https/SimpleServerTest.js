@@ -25,7 +25,7 @@ const Https_1 = require("../../src/Https");
 class SimpleServerTest extends TestCase_1.TestCase {
     constructor() {
         super(...arguments);
-        this.server = new Https_1.SimpleServer({ port: 9999 });
+        this.server = new Https_1.SimpleServer({ port: 9999, loglevel: 'silent' });
     }
     setup() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -68,7 +68,7 @@ class SimpleServerTest extends TestCase_1.TestCase {
     }
     serverStartAndStop() {
         return __awaiter(this, void 0, void 0, function* () {
-            const server = new Https_1.SimpleServer({ port: 9000 });
+            const server = new Https_1.SimpleServer({ port: 9000, loglevel: 'silent' });
             (0, assert_1.default)(!server.running);
             yield server.start();
             (0, assert_1.default)(server.running);

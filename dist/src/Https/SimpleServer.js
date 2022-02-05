@@ -37,7 +37,7 @@ class SimpleServer {
         this.handlers = { DELETE: {}, GET: {}, PATCH: {}, POST: {}, PUT: {} };
         this.errorHandlers = {};
         this._running = false;
-        this.logger = new Log_1.Logger((_a = settings.loglevel) !== null && _a !== void 0 ? _a : 'silent');
+        this.logger = new Log_1.Logger((_a = settings.loglevel) !== null && _a !== void 0 ? _a : 'info');
         this.hostname = (_b = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _b !== void 0 ? _b : '0.0.0.0';
         this.port = (_c = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _c !== void 0 ? _c : 8080;
         this.useCache = (_d = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _d !== void 0 ? _d : true;
@@ -171,7 +171,7 @@ class SimpleServer {
                 return;
             }
         }
-        this.logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
+        this.logger.info('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method][matcher.path] = { matcher, handler };
     }
     removeHandler(method, path) {

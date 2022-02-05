@@ -4,7 +4,7 @@ import { test, unroll } from "../../src/Test/decorators";
 import { request, SimpleServer } from "../../src/Https";
 
 export default class SimpleServerTest extends TestCase {
-    private server = new SimpleServer({ port: 9999 });
+    private server = new SimpleServer({ port: 9999, loglevel: 'silent' });
 
     async setup() {
         await this.server.start();
@@ -55,7 +55,7 @@ export default class SimpleServerTest extends TestCase {
 
     @test()
     async serverStartAndStop() {
-        const server = new SimpleServer({ port: 9000 });
+        const server = new SimpleServer({ port: 9000, loglevel: 'silent' });
         assert(!server.running);
 
         await server.start();

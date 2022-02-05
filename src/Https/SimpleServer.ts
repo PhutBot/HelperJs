@@ -48,7 +48,7 @@ export class SimpleServer {
     get address() { return `http://${this.hostname}:${this.port}`; }
 
     constructor(settings:ServerSettings = {}) {
-        this.logger = new Logger(settings.loglevel ?? 'silent');
+        this.logger = new Logger(settings.loglevel ?? 'info');
         this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
         this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
@@ -181,7 +181,7 @@ export class SimpleServer {
             }
         }
         
-        this.logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
+        this.logger.info('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method as RequestMethod][matcher.path] = { matcher, handler };
     }
     
