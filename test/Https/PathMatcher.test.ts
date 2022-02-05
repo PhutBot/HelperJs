@@ -1,6 +1,6 @@
 import assert from "assert";
 import { TestCase } from "../../src/Test/TestCase";
-import { Test, Unroll } from "../../src/Test/decorators";
+import { Unroll } from "../../src/Test/decorators";
 import { PathMatcher } from "../../src/Https/PathMatcher";
 
 export default class PathMatcherTest extends TestCase {

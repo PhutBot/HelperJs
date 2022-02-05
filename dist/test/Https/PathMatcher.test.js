@@ -61,4 +61,4 @@ __decorate([
     ])
 ], PathMatcherTest.prototype, "notMatch", null);
 exports.default = PathMatcherTest;
-//# sourceMappingURL=PathMatcherTest.js.map
+//# sourceMappingURL=PathMatcher.test.js.map

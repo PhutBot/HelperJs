@@ -114,10 +114,10 @@ class SimpleServerTest extends TestCase_1.TestCase {
             (0, assert_1.default)(!server.running);
             yield server.start();
             (0, assert_1.default)(server.running);
-            yield this.expectError('server already started', server.start, server);
+            yield this.assertError('server already started', server.start, server);
             yield server.stop();
             (0, assert_1.default)(!server.running);
-            yield this.expectError('server already stopped', server.stop, server);
+            yield this.assertError('server already stopped', server.stop, server);
         });
     }
 }
@@ -159,4 +159,4 @@ __decorate([
 Mapping = __decorate([
     (0, decorators_2.RequestMapping)({ location: '/request/mapping' })
 ], Mapping);
-//# sourceMappingURL=SimpleServerTest.js.map
+//# sourceMappingURL=SimpleServer.test.js.map

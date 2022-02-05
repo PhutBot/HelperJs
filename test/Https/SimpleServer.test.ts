@@ -110,11 +110,11 @@ export default class SimpleServerTest extends TestCase {
 
         await server.start();
         assert(server.running);
-        await this.expectError('server already started', server.start, server);
+        await this.assertError('server already started', server.start, server);
 
         await server.stop();
         assert(!server.running);
-        await this.expectError('server already stopped', server.stop, server);
+        await this.assertError('server already stopped', server.stop, server);
     }
 }
 
