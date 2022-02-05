@@ -45,25 +45,66 @@ class SimpleServerTest extends TestCase_1.TestCase {
     }
     handlers({ method, path, statusCode, expect }) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.server.defineHandler(method, path, () => __awaiter(this, void 0, void 0, function* () { return ({ statusCode, body: expect }); }));
-            let response = yield (0, Https_1.request)({
+            const requestObj = {
                 protocol: 'HTTP',
                 method,
                 hostname: this.server.hostname,
                 port: this.server.port,
                 uri: path
-            });
-            (0, assert_1.default)(response.statusCode === statusCode);
+            };
+            this.server.defineHandler(method, path, () => __awaiter(this, void 0, void 0, function* () { return ({ statusCode, body: expect }); }));
+            let response = yield (0, Https_1.request)(requestObj);
             const body = yield (yield response.body()).text();
+            (0, assert_1.default)(response.statusCode === statusCode);
             (0, assert_1.default)(body === expect);
             this.server.removeHandler(method, path);
-            response = yield (0, Https_1.request)({
+            response = yield (0, Https_1.request)(requestObj);
+            (0, assert_1.default)(response.statusCode === 404);
+        });
+    }
+    requestMapping() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requestObj = {
                 protocol: 'HTTP',
-                method,
+                method: 'PUT',
                 hostname: this.server.hostname,
                 port: this.server.port,
-                uri: path
-            });
+                uri: '/request/mapping/test'
+            };
+            this.server.mapHandler(Mapping);
+            let response = yield (0, Https_1.request)(requestObj);
+            const body = yield (yield response.body()).text();
+            (0, assert_1.default)(response.statusCode === 200);
+            (0, assert_1.default)(body === 'request mapping test');
+            this.server.unmapHandler(Mapping);
+            response = yield (0, Https_1.request)(requestObj);
+            (0, assert_1.default)(response.statusCode === 404);
+        });
+    }
+    dirMapping() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requestObj = {
+                protocol: 'HTTP',
+                method: 'GET',
+                hostname: this.server.hostname,
+                port: this.server.port,
+                uri: '/dir'
+            };
+            const requestObj2 = Object.assign(Object.assign({}, requestObj), { uri: '/dir/index.html' });
+            const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
+            this.server.mapDirectory('./www', { alias: '/dir' });
+            let response = yield (0, Https_1.request)(requestObj);
+            let body = yield (yield response.body()).text();
+            (0, assert_1.default)(response.statusCode === 200);
+            (0, assert_1.default)(body === expect);
+            response = yield (0, Https_1.request)(requestObj2);
+            body = yield (yield response.body()).text();
+            (0, assert_1.default)(response.statusCode === 200);
+            (0, assert_1.default)(body === expect);
+            this.server.unmapDirectory('/dir');
+            response = yield (0, Https_1.request)(requestObj);
+            (0, assert_1.default)(response.statusCode === 404);
+            response = yield (0, Https_1.request)(requestObj2);
             (0, assert_1.default)(response.statusCode === 404);
         });
     }
@@ -94,11 +135,28 @@ __decorate([
 ], SimpleServerTest.prototype, "handlers", null);
 __decorate([
     (0, decorators_1.Test)()
+], SimpleServerTest.prototype, "requestMapping", null);
+__decorate([
+    (0, decorators_1.Test)()
+], SimpleServerTest.prototype, "dirMapping", null);
+__decorate([
+    (0, decorators_1.Test)()
 ], SimpleServerTest.prototype, "serverStartAndStop", null);
 exports.default = SimpleServerTest;
 let Mapping = class Mapping {
+    static test() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return {
+                statusCode: 200,
+                body: 'request mapping test'
+            };
+        });
+    }
 };
+__decorate([
+    (0, decorators_2.RequestMapping)({ method: 'PUT', location: '/test' })
+], Mapping, "test", null);
 Mapping = __decorate([
-    (0, decorators_2.RequestMapping)({})
+    (0, decorators_2.RequestMapping)({ location: '/request/mapping' })
 ], Mapping);
 //# sourceMappingURL=SimpleServerTest.js.map

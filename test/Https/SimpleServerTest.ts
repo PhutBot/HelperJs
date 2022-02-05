@@ -30,27 +30,76 @@ export default class SimpleServerTest extends TestCase {
         { method: 'PUT',    path: '/put',    statusCode: 200, expect: 'content' },
     ])
     async handlers({ method, path, statusCode, expect }:any) {
-        this.server.defineHandler(method, path, async () => ({ statusCode, body: expect }));
-        let response = await request({
+        const requestObj = {
             protocol: 'HTTP',
             method,
             hostname: this.server.hostname,
             port: this.server.port,
             uri: path
-        });
-        assert(response.statusCode === statusCode);
+        };
 
+        this.server.defineHandler(method, path, async () => ({ statusCode, body: expect }));
+        let response = await request(requestObj);
         const body = await (await response.body()).text();
+        assert(response.statusCode === statusCode);
         assert(body === expect);
         
         this.server.removeHandler(method, path);
-        response = await request({
+        response = await request(requestObj);
+        assert(response.statusCode === 404);
+    }
+
+    @Test()
+    async requestMapping() {
+        const requestObj = {
             protocol: 'HTTP',
-            method,
+            method: 'PUT',
             hostname: this.server.hostname,
             port: this.server.port,
-            uri: path
-        });
+            uri: '/request/mapping/test'
+        };
+
+        this.server.mapHandler(Mapping);
+        let response = await request(requestObj);
+        const body = await (await response.body()).text();
+        assert(response.statusCode === 200);
+        assert(body === 'request mapping test');
+
+        this.server.unmapHandler(Mapping);
+        response = await request(requestObj);
+        assert(response.statusCode === 404);
+    }
+
+    @Test()
+    async dirMapping() {
+        const requestObj = {
+            protocol: 'HTTP',
+            method: 'GET',
+            hostname: this.server.hostname,
+            port: this.server.port,
+            uri: '/dir'
+        };
+        const requestObj2 = { ...requestObj, uri: '/dir/index.html' };
+        const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
+
+        this.server.mapDirectory('./www', { alias: '/dir' });
+
+        let response = await request(requestObj);
+        let body = await (await response.body()).text();
+        assert(response.statusCode === 200);
+        assert(body === expect);
+
+        response = await request(requestObj2);
+        body = await (await response.body()).text();
+        assert(response.statusCode === 200);
+        assert(body === expect);
+
+        this.server.unmapDirectory('/dir');
+
+        response = await request(requestObj);
+        assert(response.statusCode === 404);
+        
+        response = await request(requestObj2);
         assert(response.statusCode === 404);
     }
 
@@ -69,7 +118,13 @@ export default class SimpleServerTest extends TestCase {
     }
 }
 
-@RequestMapping({ })
+@RequestMapping({ location: '/request/mapping' })
 class Mapping {
-
+    @RequestMapping({ method: 'PUT', location: '/test' })
+    static async test() {
+        return {
+            statusCode: 200,
+            body: 'request mapping test'
+        };
+    }
 }

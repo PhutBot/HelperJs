@@ -5,5 +5,7 @@ export default class SimpleServerTest extends TestCase {
     teardown(): Promise<void>;
     settings(): void;
     handlers({ method, path, statusCode, expect }: any): Promise<void>;
+    requestMapping(): Promise<void>;
+    dirMapping(): Promise<void>;
     serverStartAndStop(): Promise<void>;
 }

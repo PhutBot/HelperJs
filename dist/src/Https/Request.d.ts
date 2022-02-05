@@ -13,7 +13,7 @@ export declare enum RequestMethod {
 export declare const RequestMethodsAllowingBody: RequestMethod[];
 export interface RequestSettings {
     protocol?: RequestProtocol | string;
-    method?: RequestMethod;
+    method?: RequestMethod | string;
     hostname: string;
     port?: number;
     uri: string;

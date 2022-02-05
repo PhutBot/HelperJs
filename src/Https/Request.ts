@@ -23,7 +23,7 @@ export const RequestMethodsAllowingBody = [
 
 export interface RequestSettings {
     protocol?:RequestProtocol|string;
-    method?:RequestMethod;
+    method?:RequestMethod|string;
     hostname:string;
     port?:number;
     uri:string;
@@ -91,7 +91,7 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
             path,
             hostname: settings.hostname,
             port: settings.port,
-            method: settings.method,
+            method: settings.method as string,
             headers: settings.headers,
         }, res => {
             const headers = {} as Headers;

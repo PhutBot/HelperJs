@@ -7,6 +7,7 @@ import { HttpError, InternalServerError, PageNotFoundError } from './Error';
 import { PathMatcher } from './PathMatcher';
 import {  } from '.';
 import { Logger } from '../Log';
+import { getMetadata } from '../Meta/Metadata';
 
 interface HandlerRecord {
     matcher:PathMatcher;
@@ -132,38 +133,34 @@ export class SimpleServer {
         delete this.alias2Dir[alias];
     }
 
-    mapHandler(clazz:Function) {
-        const decorated = clazz as any;
-        if (decorated.__decorators.hasOwnProperty('requestMapping')) {
-            if (!!decorated.__decorators.requestMapping.method) {
-                const mapping = decorated.__decorators.requestMapping;
-                this.defineHandler(mapping.method, mapping.location, decorated);
+    mapHandler(target:Function) {
+        const clazzMeta = getMetadata(target.prototype, '@RequestMapping');
+        if (!!clazzMeta) {
+            if (!!clazzMeta.mapping) {
+                this.defineHandler(clazzMeta.method, clazzMeta.location, target as RequestHandler);
             } else {
-                Object.entries(Object.getOwnPropertyDescriptors(clazz)).forEach(([ name, desc ]) => {
-                    if (typeof desc.value === 'function' && desc.value.__decorators.hasOwnProperty('requestMapping')) {
-                        const parentMap = decorated.__decorators.requestMapping;
-                        const mapping = desc.value.__decorators.requestMapping;
-                        const path = [parentMap.location, mapping.location].join('/');
-                        this.defineHandler(mapping.method, path, desc.value);
+                Object.entries(Object.getOwnPropertyDescriptors(target)).forEach(([name, desc]) => {
+                    const funcMeta = getMetadata(desc.value, '@RequestMapping');
+                    if (typeof desc.value === 'function' && !!funcMeta) {
+                        const path = [clazzMeta.location, funcMeta.location].join('/');
+                        this.defineHandler(funcMeta.method, path, desc.value);
                     }
                 });
             }
         }
     }
 
-    unmapHandler(clazz:Function) {
-        const decorated = clazz as any;
-        if (decorated.__decorators.hasOwnProperty('requestMapping')) {
-            if (!!decorated.__decorators.requestMapping.method) {
-                const mapping = decorated.__decorators.requestMapping;
-                this.removeHandler(mapping.method, mapping.location);
+    unmapHandler(target:Function) {
+        const clazzMeta = getMetadata(target.prototype, '@RequestMapping');
+        if (!!clazzMeta) {
+            if (!!clazzMeta.mapping) {
+                this.removeHandler(clazzMeta.method, clazzMeta.location);
             } else {
-                Object.entries(Object.getOwnPropertyDescriptors(clazz)).forEach(([ name, desc ]) => {
-                    if (typeof desc.value === 'function' && desc.value.__decorators.hasOwnProperty('requestMapping')) {
-                        const parentMap = decorated.__decorators.requestMapping;
-                        const mapping = desc.value.__decorators.requestMapping;
-                        const path = [parentMap.location, mapping.location].join('/');
-                        this.removeHandler(mapping.method, path);
+                Object.entries(Object.getOwnPropertyDescriptors(target)).forEach(([name, desc]) => {
+                    const funcMeta = getMetadata(desc.value, '@RequestMapping');
+                    if (typeof desc.value === 'function' && !!funcMeta) {
+                        const path = [clazzMeta.location, funcMeta.location].join('/');
+                        this.removeHandler(funcMeta.method, path);
                     }
                 });
             }

@@ -1,5 +1,6 @@
 import http from "http";
 import { resolve } from "path/posix";
+import { DecoratorBuilder } from "../../Meta/DecoratorBuilder";
 import { RequestMethod } from "../Request";
 
 class BaseHandler {
@@ -18,24 +19,16 @@ interface RequestMapping {
 }
 
 export function RequestMapping(mapping:RequestMapping) {
-    mapping.location = mapping.location ?? '/';
     mapping.method = mapping.method as RequestMethod ?? RequestMethod.GET;
+    mapping.location = mapping.location ?? '/';
 
-    return (target:any, key?:string, desc?:TypedPropertyDescriptor<any>) => {
-        if (!!key && !!desc) {
-            if (desc.value.apply(null) instanceof Promise) {
-                desc.value.__decorators = desc.value.__decorators || {};
-                desc.value.__decorators['requestMapping'] = mapping;
-            } else {
-                throw `${desc.value.name} - functions with the '@requestMapping' decorator must be async or return a Promise`;
-            }
-        } else if (typeof target === 'function') {
-            delete mapping.method;
-            target.__decorators = target.__decorators || {};
-            target.__decorators['requestMapping'] = mapping;
-            return target;
-        } else {
-            throw '@requestMapping error';
-        }
-    };
+    return new DecoratorBuilder()
+        .onClass((constructor, meta) => {
+            meta.location = mapping.location
+        })
+        .onMethod((target, propertyKey, descriptor, meta) => {
+            meta.method = mapping.method
+            meta.location = mapping.location
+        })
+        .build();
 }
