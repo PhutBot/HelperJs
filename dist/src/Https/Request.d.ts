@@ -1,3 +1,4 @@
+import { PathParams } from './PathMatcher';
 export declare enum RequestProtocol {
     HTTP = "HTTP",
     HTTPS = "HTTPS"
@@ -11,7 +12,7 @@ export declare enum RequestMethod {
 }
 export declare const RequestMethodsAllowingBody: RequestMethod[];
 export interface RequestSettings {
-    protocol?: RequestProtocol;
+    protocol?: RequestProtocol | string;
     method?: RequestMethod;
     hostname: string;
     port?: number;
@@ -20,4 +21,26 @@ export interface RequestSettings {
     headers?: any;
     body?: string;
 }
-export declare function request(settings: RequestSettings): Promise<unknown>;
+export declare type Headers = Record<string, string[]>;
+export declare type QueryParams = Record<string, string[]>;
+export declare class Body {
+    private data;
+    constructor(data: string);
+    text(): Promise<string>;
+    json(): Promise<any>;
+}
+export interface HttpRequest {
+    method: RequestMethod;
+    url: URL;
+    path: string;
+    pathParams: PathParams;
+    queryParams: QueryParams;
+    headers: Headers;
+    body: () => Promise<Body>;
+}
+export interface HttpResponse {
+    statusCode: number;
+    headers?: Headers;
+    body: () => Promise<Body>;
+}
+export declare function request(settings: RequestSettings): Promise<HttpResponse>;

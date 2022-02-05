@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.request = exports.RequestMethodsAllowingBody = exports.RequestMethod = exports.RequestProtocol = void 0;
+exports.request = exports.Body = exports.RequestMethodsAllowingBody = exports.RequestMethod = exports.RequestProtocol = void 0;
 const http = __importStar(require("http"));
 const https = __importStar(require("https"));
 var RequestProtocol;
@@ -40,6 +40,12 @@ exports.RequestMethodsAllowingBody = [
     RequestMethod.POST,
     RequestMethod.PATCH
 ];
+class Body {
+    constructor(data) { this.data = data; }
+    text() { return Promise.resolve(this.data); }
+    json() { return Promise.resolve(JSON.parse(this.data)); }
+}
+exports.Body = Body;
 // PhutBot PLEASE remember to be careful when debugging this class on stream
 function request(settings) {
     var _a, _b;
@@ -75,21 +81,28 @@ function request(settings) {
             method: settings.method,
             headers: settings.headers,
         }, res => {
-            let data = [];
-            res.on('error', (err) => {
-                reject(err);
-            }).on('data', chunk => {
-                data.push(chunk);
-            }).on('end', () => {
-                data = Buffer.concat(data).toString();
-                resolve({
-                    headers: res.headers,
-                    body: res.headers['content-type']
-                        && res.headers['content-type'].toLowerCase()
-                            .startsWith('application/json')
-                        ? JSON.parse(data.toString())
-                        : data.toString()
-                });
+            var _a;
+            const headers = {};
+            Object.entries(res.headers).forEach(([key, val]) => {
+                headers[key] = headers[key] || [];
+                if (!!val)
+                    headers[key].push(...val);
+            });
+            resolve({
+                statusCode: (_a = res.statusCode) !== null && _a !== void 0 ? _a : -1,
+                headers,
+                body: () => new Promise((resolve, reject) => {
+                    let body = '';
+                    res.on('data', (chunk) => {
+                        body += chunk;
+                    });
+                    res.on('end', () => {
+                        resolve(new Body(body));
+                    });
+                    res.on('error', (err) => {
+                        reject(err);
+                    });
+                })
             });
         });
         req.on('error', err => {

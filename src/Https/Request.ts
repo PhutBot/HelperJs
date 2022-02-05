@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as https from 'https';
+import { PathParams } from './PathMatcher';
 
 export enum RequestProtocol {
     HTTP = 'HTTP',
@@ -21,7 +22,7 @@ export const RequestMethodsAllowingBody = [
 ];
 
 export interface RequestSettings {
-    protocol?:RequestProtocol;
+    protocol?:RequestProtocol|string;
     method?:RequestMethod;
     hostname:string;
     port?:number;
@@ -31,8 +32,33 @@ export interface RequestSettings {
     body?:string;
 }
 
+export type Headers = Record<string, string[]>;
+export type QueryParams = Record<string, string[]>;
+export class Body {
+    private data:string;
+    constructor(data:string) {this.data = data;}
+    text() { return Promise.resolve(this.data); }
+    json() { return Promise.resolve(JSON.parse(this.data)); }
+}
+
+export interface HttpRequest {
+    method:RequestMethod;
+    url:URL;
+    path:string;
+    pathParams:PathParams;
+    queryParams:QueryParams;
+    headers:Headers;
+    body:()=>Promise<Body>;
+}
+
+export interface HttpResponse {
+    statusCode:number;
+    headers?:Headers;
+    body:()=>Promise<Body>;
+}
+
 // PhutBot PLEASE remember to be careful when debugging this class on stream
-export function request(settings:RequestSettings) {
+export function request(settings:RequestSettings):Promise<HttpResponse> {
     settings = Object.assign({
         method: RequestMethod.GET,
         protocol: RequestProtocol.HTTPS,
@@ -60,7 +86,7 @@ export function request(settings:RequestSettings) {
     }
 
     return new Promise((resolve, reject) => {
-        const proto = settings.protocol === RequestProtocol.HTTP ? http : https;
+        const proto = (settings.protocol as RequestProtocol) === RequestProtocol.HTTP ? http : https;
         const req = proto.request({
             path,
             hostname: settings.hostname,
@@ -68,21 +94,27 @@ export function request(settings:RequestSettings) {
             method: settings.method,
             headers: settings.headers,
         }, res => {
-            let data:any = [];
-            res.on('error', (err) => {
-                reject(err);
-            }).on('data', chunk => {
-                data.push(chunk);
-            }).on('end', () => {
-                data = Buffer.concat(data).toString();
-                resolve({
-                    headers: res.headers,
-                    body: res.headers['content-type']
-                            && res.headers['content-type'].toLowerCase()
-                                .startsWith('application/json')
-                        ? JSON.parse(data.toString())
-                        : data.toString()
-                });
+            const headers = {} as Headers;
+            Object.entries(res.headers).forEach(([key, val]) => {
+                headers[key] = headers[key] || [];
+                if (!!val) headers[key].push(...val);
+            });
+
+            resolve({
+                statusCode: res.statusCode ?? -1,
+                headers,
+                body: () => new Promise((resolve, reject) => {
+                    let body = '';
+                    res.on('data', (chunk) => {
+                        body += chunk;
+                    });
+                    res.on('end', () => {
+                        resolve(new Body(body));
+                    });
+                    res.on('error', (err) => {
+                        reject(err);
+                    });
+                })
             });
         });
 
