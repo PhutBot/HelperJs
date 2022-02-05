@@ -18,21 +18,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SimpleServer = exports.Body = void 0;
+exports.SimpleServer = void 0;
 const http = __importStar(require("http"));
-const logger = __importStar(require("npmlog"));
+const npmlog_1 = __importDefault(require("npmlog"));
 const fs = __importStar(require("fs"));
 const Env_1 = require("../Env");
 const Request_1 = require("./Request");
 const Error_1 = require("./Error");
 const PathMatcher_1 = require("./PathMatcher");
-class Body {
-    constructor(data) { this.data = data; }
-    text() { return Promise.resolve(this.data); }
-    json() { return Promise.resolve(JSON.parse(this.data)); }
-}
-exports.Body = Body;
 class SimpleServer {
     constructor(settings = {}) {
         var _a, _b, _c;
@@ -169,14 +166,14 @@ class SimpleServer {
         const matcher = new PathMatcher_1.PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
             if (!!options.force) {
-                logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
+                npmlog_1.default.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
             }
             else {
-                logger.error('SimpleServer', `method already has endpoint ${matcher.path}`);
+                npmlog_1.default.error('SimpleServer', `method already has endpoint ${matcher.path}`);
                 return;
             }
         }
-        logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
+        npmlog_1.default.verbose('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method][matcher.path] = { matcher, handler };
     }
     removeHandler(method, path) {
@@ -185,13 +182,13 @@ class SimpleServer {
     start() {
         return new Promise((res, rej) => {
             if (this._running) {
-                logger.warn('SimpleServer', 'server already started');
+                npmlog_1.default.warn('SimpleServer', 'server already started');
                 rej('server already started');
                 return;
             }
             this.server.listen(this.port, this.hostname, () => {
                 this._running = true;
-                logger.info('SimpleServer', `server started @ ${this.address}`);
+                npmlog_1.default.info('SimpleServer', `server started @ ${this.address}`);
                 res(true);
             });
         });
@@ -199,20 +196,21 @@ class SimpleServer {
     stop() {
         return new Promise((res, rej) => {
             if (!this._running) {
-                logger.warn('SimpleServer', 'server already stopped');
+                npmlog_1.default.warn('SimpleServer', 'server already stopped');
                 rej('server already stopped');
             }
             else {
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
-                    logger.info('SimpleServer', 'server stopped');
+                    npmlog_1.default.info('SimpleServer', 'server stopped');
                     this._running = false;
                     res(true);
                 });
             }
         });
     }
-    _getHandler(method, url) {
+    _getHandler(m, url) {
+        const method = m;
         const path = url.pathname;
         const record = Object.values(this.handlers[method])
             .reduce((pre, cur) => {
@@ -233,7 +231,7 @@ class SimpleServer {
             return pre;
         }, null);
         if (!!record) {
-            logger.http('SimpleServer', `${method} - ${path}`);
+            npmlog_1.default.http('SimpleServer', `${method} - ${path}`);
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
@@ -275,7 +273,7 @@ class SimpleServer {
                         body += chunk;
                     });
                     req.on('end', () => {
-                        resolve(new Body(body));
+                        resolve(new Request_1.Body(body));
                     });
                     req.on('error', (err) => {
                         reject(err);
@@ -299,8 +297,8 @@ class SimpleServer {
                 const httpError = error;
                 res.writeHead(httpError.statusCode);
                 res.end(httpError.description);
-                logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-                logger.error('SimpleServer', (_a = httpError.stack) !== null && _a !== void 0 ? _a : httpError.message);
+                npmlog_1.default.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+                npmlog_1.default.error('SimpleServer', (_a = httpError.stack) !== null && _a !== void 0 ? _a : httpError.message);
             });
         }
         catch (error) {
@@ -315,30 +313,10 @@ class SimpleServer {
             const httpError = error;
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
-            logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-            logger.error('SimpleServer', (_c = httpError.stack) !== null && _c !== void 0 ? _c : httpError.message);
+            npmlog_1.default.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+            npmlog_1.default.error('SimpleServer', (_c = httpError.stack) !== null && _c !== void 0 ? _c : httpError.message);
         }
     }
 }
 exports.SimpleServer = SimpleServer;
-function pathToPattern(path) {
-    const map = {};
-    const regex = /\{([_a-zA-Z][_a-zA-Z0-9])\}/g;
-    const parts = path.split('/');
-    parts.forEach((part, idx, arr) => {
-        if (part.startsWith('{')) {
-            if (part.endsWith('}')) {
-                part = part.toLocaleLowerCase();
-                map[idx] = part;
-            }
-            else {
-                throw new Error('invalid wild handler pattern');
-            }
-        }
-    });
-    return {
-        path: parts,
-        map
-    };
-}
 //# sourceMappingURL=SimpleServer.js.map

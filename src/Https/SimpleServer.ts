@@ -1,43 +1,24 @@
 import * as http from 'http';
-import * as logger from 'npmlog';
+import npmlog from 'npmlog';
 import * as fs from 'fs';
 import { Socket } from 'net';
 import { EnvBackedValue } from '../Env';
-import { RequestMethod, RequestMethodsAllowingBody } from './Request';
+import { RequestMethod, Headers, QueryParams, Body, HttpRequest } from './Request';
 import { HttpError, InternalServerError, PageNotFoundError } from './Error';
-import { PathParams, PathMatcher } from './PathMatcher';
+import { PathMatcher } from './PathMatcher';
+import {  } from '.';
 
 interface HandlerRecord {
     matcher:PathMatcher;
     handler:RequestHandler;
 }
-
-export class Body {
-    private data:string;
-    constructor(data:string) {this.data = data;}
-    text() { return Promise.resolve(this.data); }
-    json() { return Promise.resolve(JSON.parse(this.data)); }
-}
-export type Headers = Record<string, string[]>;
-export type QueryParams = Record<string, string[]>;
-
-export interface HttpRequest {
-    method:RequestMethod;
-    url:URL;
-    path:string;
-    pathParams:PathParams;
-    queryParams:QueryParams;
-    headers:Headers;
-    body:()=>Promise<Body>;
-}
-
-export interface HttpResponse {
+export interface HandlerResponse {
     statusCode:number;
     headers?:Headers;
     body?:string;
 }
 
-export type RequestHandler = (request:HttpRequest) => Promise<HttpResponse>;
+export type RequestHandler = (request:HttpRequest) => Promise<HandlerResponse>;
 export type HandlerMap = Record<RequestMethod,Record<string,HandlerRecord>>;
 
 export interface ServerSettings {
@@ -58,7 +39,7 @@ export class SimpleServer {
     private server:http.Server;
     private sockets:Array<Socket> = [];
     private handlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
-    private errorHandlers:Record<number,RequestHandler> = {};    
+    private errorHandlers:Record<number,RequestHandler> = {};
     private _running:boolean = false;
 
     get running() { return this._running; }
@@ -190,14 +171,14 @@ export class SimpleServer {
         const matcher = new PathMatcher(path);
         if (matcher.path in this.handlers[method as RequestMethod]) {
             if (!!options.force) {
-                logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
+                npmlog.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
             } else {
-                logger.error('SimpleServer', `method already has endpoint ${matcher.path}`);
+                npmlog.error('SimpleServer', `method already has endpoint ${matcher.path}`);
                 return;
             }
         }
         
-        logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
+        npmlog.verbose('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method as RequestMethod][matcher.path] = { matcher, handler };
     }
     
@@ -208,14 +189,14 @@ export class SimpleServer {
     start() {
         return new Promise((res, rej) => {
             if (this._running) {
-                logger.warn('SimpleServer', 'server already started');
+                npmlog.warn('SimpleServer', 'server already started');
                 rej('server already started');
                 return;
             }
             
             this.server.listen(this.port, this.hostname, () => {
                 this._running = true;
-                logger.info('SimpleServer', `server started @ ${this.address}`);
+                npmlog.info('SimpleServer', `server started @ ${this.address}`);
                 res(true);
             });
         });
@@ -224,12 +205,12 @@ export class SimpleServer {
     stop() {
         return new Promise((res, rej) => {
             if (!this._running) {
-                logger.warn('SimpleServer', 'server already stopped');
+                npmlog.warn('SimpleServer', 'server already stopped');
                 rej('server already stopped');
             } else {
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
-                    logger.info('SimpleServer', 'server stopped');
+                    npmlog.info('SimpleServer', 'server stopped');
                     this._running = false;
                     res(true);
                 });
@@ -238,7 +219,8 @@ export class SimpleServer {
         });
     }
 
-    _getHandler(method:RequestMethod, url:URL) {
+    _getHandler(m:string|RequestMethod, url:URL) {
+        const method = m as RequestMethod;
         const path = url.pathname;
         const record:HandlerRecord|null = Object.values(this.handlers[method])
             .reduce((pre:HandlerRecord|null, cur:HandlerRecord) => {
@@ -257,7 +239,7 @@ export class SimpleServer {
             }, null);
         
         if (!!record) {
-            logger.http('SimpleServer', `${method} - ${path}`);
+            npmlog.http('SimpleServer', `${method} - ${path}`);
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
@@ -306,7 +288,7 @@ export class SimpleServer {
                                 reject(err);
                             });
                         })
-                }).then((response:HttpResponse) => {
+                }).then((response:HandlerResponse) => {
                     response.headers = response.headers || {};
                     if (!response.headers.hasOwnProperty('content-type'))
                         response.headers['content-type'] = [ 'text/plain' ];
@@ -325,8 +307,8 @@ export class SimpleServer {
                     const httpError = error as HttpError;
                     res.writeHead(httpError.statusCode);
                     res.end(httpError.description);
-                    logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-                    logger.error('SimpleServer', httpError.stack ?? httpError.message);
+                    npmlog.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+                    npmlog.error('SimpleServer', httpError.stack ?? httpError.message);
                 });
         } catch (error) {
             if (!(error instanceof HttpError)) {
@@ -340,28 +322,8 @@ export class SimpleServer {
             const httpError = error as HttpError;
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
-            logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-            logger.error('SimpleServer', httpError.stack ?? httpError.message);
+            npmlog.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+            npmlog.error('SimpleServer', httpError.stack ?? httpError.message);
         }
     }
-}
-
-function pathToPattern(path:string) {
-    const map:Record<number,string> = {};
-    const regex = /\{([_a-zA-Z][_a-zA-Z0-9])\}/g;
-    const parts = path.split('/');
-    parts.forEach((part, idx, arr) => {
-        if (part.startsWith('{')) {
-            if (part.endsWith('}')) {
-                part = part.toLocaleLowerCase();
-                map[idx] = part;
-            } else {
-                throw new Error('invalid wild handler pattern');
-            }
-        }
-    });
-    return {
-        path: parts,
-        map
-    };
 }

@@ -1,4 +1,9 @@
 import { TestCase } from "../../src/Test/TestCase";
 export default class SimpleServerTest extends TestCase {
-    test(): void;
+    private server;
+    setup(): Promise<void>;
+    teardown(): Promise<void>;
+    settings(): void;
+    handlers({ method, path, statusCode, expect }: any): Promise<void>;
+    serverStartAndStop(): Promise<void>;
 }

@@ -1,35 +1,18 @@
 /// <reference types="node" />
 import * as http from 'http';
 import { EnvBackedValue } from '../Env';
-import { RequestMethod } from './Request';
-import { PathParams, PathMatcher } from './PathMatcher';
+import { RequestMethod, Headers, HttpRequest } from './Request';
+import { PathMatcher } from './PathMatcher';
 interface HandlerRecord {
     matcher: PathMatcher;
     handler: RequestHandler;
 }
-export declare class Body {
-    private data;
-    constructor(data: string);
-    text(): Promise<string>;
-    json(): Promise<any>;
-}
-export declare type Headers = Record<string, string[]>;
-export declare type QueryParams = Record<string, string[]>;
-export interface HttpRequest {
-    method: RequestMethod;
-    url: URL;
-    path: string;
-    pathParams: PathParams;
-    queryParams: QueryParams;
-    headers: Headers;
-    body: () => Promise<Body>;
-}
-export interface HttpResponse {
+export interface HandlerResponse {
     statusCode: number;
     headers?: Headers;
     body?: string;
 }
-export declare type RequestHandler = (request: HttpRequest) => Promise<HttpResponse>;
+export declare type RequestHandler = (request: HttpRequest) => Promise<HandlerResponse>;
 export declare type HandlerMap = Record<RequestMethod, Record<string, HandlerRecord>>;
 export interface ServerSettings {
     hostname?: string | EnvBackedValue;
@@ -65,9 +48,9 @@ export declare class SimpleServer {
     removeHandler(method: string | RequestMethod, path: string): void;
     start(): Promise<unknown>;
     stop(): Promise<unknown>;
-    _getHandler(method: RequestMethod, url: URL): {
+    _getHandler(m: string | RequestMethod, url: URL): {
         handler: RequestHandler;
-        pathParams: PathParams;
+        pathParams: import("./PathMatcher").PathParams;
     };
     _rootHandler(req: http.IncomingMessage, res: http.ServerResponse): void;
 }
