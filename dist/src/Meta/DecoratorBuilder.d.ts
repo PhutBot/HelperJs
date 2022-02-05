@@ -15,5 +15,6 @@ export declare class DecoratorBuilder {
     onProperty(func: PropertyDecorator): this;
     onClass(func: ClassDecorator): this;
     build(): (arg1: any, arg2?: any, arg3?: any) => any;
+    private addMeta;
 }
 export {};

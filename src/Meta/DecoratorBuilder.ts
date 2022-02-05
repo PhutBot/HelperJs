@@ -47,10 +47,8 @@ export class DecoratorBuilder {
         return (arg1:any, arg2?:any, arg3?:any) => {
             if (this.onClassFunc && !!arg1 && !arg2 && !arg3) {
                 const og = arg1;
-    
-                const meta = getMetadata(og) ?? {};
-                meta[this.name] = {};
-    
+        
+                const meta = this.addMeta(og, og.name);
                 const target = this.onClassFunc(og, meta[this.name]);
                 defineMetadata(target?.prototype ?? og.prototype, meta);
                 if (!!target)
@@ -81,9 +79,7 @@ export class DecoratorBuilder {
                 const propertyKey = arg2;
                 const og = arg3;
     
-                const meta = getMetadata(target) ?? {};
-                meta[this.name] = {};
-    
+                const meta = this.addMeta(target, propertyKey);
                 const descriptor = this.onMethodFunc(target, propertyKey, og, meta[this.name]);
                 defineMetadata(descriptor?.value ?? og.value, meta);
                 if (!!descriptor)
@@ -92,5 +88,11 @@ export class DecoratorBuilder {
                 throw new Error(`${this.name} decorator not allowed here`);
             }
         };
+    }
+
+    private addMeta(target:any, name:string) {
+        const meta = getMetadata(target) ?? {};
+        meta[this.name] = { targetName: name };
+        return meta;
     }
 }

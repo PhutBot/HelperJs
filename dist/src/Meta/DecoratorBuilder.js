@@ -33,13 +33,12 @@ class DecoratorBuilder {
     }
     build() {
         return (arg1, arg2, arg3) => {
-            var _a, _b, _c, _d;
+            var _a, _b;
             if (this.onClassFunc && !!arg1 && !arg2 && !arg3) {
                 const og = arg1;
-                const meta = (_a = (0, Metadata_1.getMetadata)(og)) !== null && _a !== void 0 ? _a : {};
-                meta[this.name] = {};
+                const meta = this.addMeta(og, og.name);
                 const target = this.onClassFunc(og, meta[this.name]);
-                (0, Metadata_1.defineMetadata)((_b = target === null || target === void 0 ? void 0 : target.prototype) !== null && _b !== void 0 ? _b : og.prototype, meta);
+                (0, Metadata_1.defineMetadata)((_a = target === null || target === void 0 ? void 0 : target.prototype) !== null && _a !== void 0 ? _a : og.prototype, meta);
                 if (!!target)
                     return target;
             }
@@ -66,10 +65,9 @@ class DecoratorBuilder {
                 const target = arg1;
                 const propertyKey = arg2;
                 const og = arg3;
-                const meta = (_c = (0, Metadata_1.getMetadata)(target)) !== null && _c !== void 0 ? _c : {};
-                meta[this.name] = {};
+                const meta = this.addMeta(target, propertyKey);
                 const descriptor = this.onMethodFunc(target, propertyKey, og, meta[this.name]);
-                (0, Metadata_1.defineMetadata)((_d = descriptor === null || descriptor === void 0 ? void 0 : descriptor.value) !== null && _d !== void 0 ? _d : og.value, meta);
+                (0, Metadata_1.defineMetadata)((_b = descriptor === null || descriptor === void 0 ? void 0 : descriptor.value) !== null && _b !== void 0 ? _b : og.value, meta);
                 if (!!descriptor)
                     return descriptor;
             }
@@ -77,6 +75,12 @@ class DecoratorBuilder {
                 throw new Error(`${this.name} decorator not allowed here`);
             }
         };
+    }
+    addMeta(target, name) {
+        var _a;
+        const meta = (_a = (0, Metadata_1.getMetadata)(target)) !== null && _a !== void 0 ? _a : {};
+        meta[this.name] = { targetName: name };
+        return meta;
     }
 }
 exports.DecoratorBuilder = DecoratorBuilder;
