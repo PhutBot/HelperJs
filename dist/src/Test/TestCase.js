@@ -10,9 +10,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestCase = void 0;
+const console_1 = require("console");
 class TestCase {
     setup() {
         return __awaiter(this, void 0, void 0, function* () { });
+    }
+    teardown() {
+        return __awaiter(this, void 0, void 0, function* () { });
+    }
+    before() {
+        return __awaiter(this, void 0, void 0, function* () { });
+    }
+    after() {
+        return __awaiter(this, void 0, void 0, function* () { });
+    }
+    expectError(expect, func, self, ...args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let err = null;
+            try {
+                yield func.apply(self, args);
+            }
+            catch (e) {
+                err = e;
+            }
+            if (err !== expect) {
+                throw err;
+            }
+            (0, console_1.assert)(err === expect);
+        });
     }
 }
 exports.TestCase = TestCase;

@@ -62,31 +62,32 @@ export async function RunTests(dir:string, root:string="./") {
                 ERROR: 0
             };
             
+            const test = new module.default();
+            await test.setup();
+            
             const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
-                .filter(desc => !!getMetadata(desc.value, '@test') || !!getMetadata(desc.value, '@unroll'))
+                .filter((desc) => !!getMetadata(desc.value, '@test') || !!getMetadata(desc.value, '@unroll'))
                 .map(async (desc) => {
-                    try {
-                        const test = new module.default();
-                        await test.setup();
-                        const result = await desc.value.apply(test);
-                        result.forEach((res:TestResult) => {
-                            fileResults.TOTAL += 1;
-                            fileResults.PASS += res === TestResult.PASS ? 1 : 0;
-                            fileResults.FAIL += res === TestResult.FAIL ? 1 : 0;
-                            fileResults.ERROR += res === TestResult.ERROR ? 1 : 0;
+                    await test.before();
+                    const result = await desc.value.apply(test);
+                    await test.after();
+                    
+                    result.forEach((res:TestResult) => {
+                        fileResults.TOTAL += 1;
+                        fileResults.PASS += res === TestResult.PASS ? 1 : 0;
+                        fileResults.FAIL += res === TestResult.FAIL ? 1 : 0;
+                        fileResults.ERROR += res === TestResult.ERROR ? 1 : 0;
 
-                            fullResults.TOTAL += 1;
-                            fullResults.PASS += res === TestResult.PASS ? 1 : 0;
-                            fullResults.FAIL += res === TestResult.FAIL ? 1 : 0;
-                            fullResults.ERROR += res === TestResult.ERROR ? 1 : 0;
-                        });
-                    } catch (err) {
-                        console.error(err);                                
-                    }
+                        fullResults.TOTAL += 1;
+                        fullResults.PASS += res === TestResult.PASS ? 1 : 0;
+                        fullResults.FAIL += res === TestResult.FAIL ? 1 : 0;
+                        fullResults.ERROR += res === TestResult.ERROR ? 1 : 0;
+                    });
                 });
-
+                
             await Promise.allSettled(promises);
             logResult(module.default.name, fileResults);
+            await test.teardown();
         }
     }, { step: true, filter: (p:string) => p.endsWith('.js') });
 

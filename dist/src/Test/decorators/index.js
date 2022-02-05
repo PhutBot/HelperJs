@@ -21,25 +21,27 @@ function test() {
     return new DecoratorBuilder_1.DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
         const og = descriptor.value;
-        descriptor.value = (_) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield og();
-                npmlog_1.default.info(target.constructor.name, `pass - ${key}`);
-                return [TestRunner_1.TestResult.PASS];
-            }
-            catch (err) {
-                if (err instanceof assert_1.AssertionError) {
-                    npmlog_1.default.error(target.constructor.name, `fail - ${key}`);
-                    console.error(`${err}`);
-                    return [TestRunner_1.TestResult.FAIL];
+        descriptor.value = function (_) {
+            return __awaiter(this, void 0, void 0, function* () {
+                try {
+                    yield og.call(this);
+                    npmlog_1.default.info(target.constructor.name, `pass - ${key}`);
+                    return [TestRunner_1.TestResult.PASS];
                 }
-                else {
-                    npmlog_1.default.error(target.constructor.name, `error - ${key}`);
-                    console.error(err);
-                    return [TestRunner_1.TestResult.ERROR];
+                catch (err) {
+                    if (err instanceof assert_1.AssertionError) {
+                        npmlog_1.default.error(target.constructor.name, `fail - ${key}`);
+                        console.error(`${err}`);
+                        return [TestRunner_1.TestResult.FAIL];
+                    }
+                    else {
+                        npmlog_1.default.error(target.constructor.name, `error - ${key}`);
+                        console.error(err);
+                        return [TestRunner_1.TestResult.ERROR];
+                    }
                 }
-            }
-        });
+            });
+        };
     }).build();
 }
 exports.test = test;
@@ -47,29 +49,31 @@ function unroll(cases) {
     return new DecoratorBuilder_1.DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
         const og = descriptor.value;
-        descriptor.value = (_) => __awaiter(this, void 0, void 0, function* () {
-            return yield Promise.all(cases.map((c, i) => __awaiter(this, void 0, void 0, function* () {
-                try {
-                    yield og(c);
-                    npmlog_1.default.info(target.constructor.name, `pass - ${key}_${i}`);
-                    return TestRunner_1.TestResult.PASS;
-                }
-                catch (err) {
-                    if (err instanceof assert_1.AssertionError) {
-                        npmlog_1.default.warn(target.constructor.name, `fail - ${key}_${i}`);
-                        npmlog_1.default.warn(target.constructor.name, JSON.stringify(c));
-                        console.warn(`${err}`);
-                        return TestRunner_1.TestResult.FAIL;
+        descriptor.value = function (_) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return yield Promise.all(cases.map((c, i) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        yield og.call(this, c);
+                        npmlog_1.default.info(target.constructor.name, `pass - ${key}_${i}`);
+                        return TestRunner_1.TestResult.PASS;
                     }
-                    else {
-                        npmlog_1.default.error(target.constructor.name, `error - ${key}_${i}`);
-                        npmlog_1.default.error(target.constructor.name, JSON.stringify(c));
-                        console.error(err);
-                        return TestRunner_1.TestResult.ERROR;
+                    catch (err) {
+                        if (err instanceof assert_1.AssertionError) {
+                            npmlog_1.default.warn(target.constructor.name, `fail - ${key}_${i}`);
+                            npmlog_1.default.warn(target.constructor.name, JSON.stringify(c));
+                            console.warn(`${err}`);
+                            return TestRunner_1.TestResult.FAIL;
+                        }
+                        else {
+                            npmlog_1.default.error(target.constructor.name, `error - ${key}_${i}`);
+                            npmlog_1.default.error(target.constructor.name, JSON.stringify(c));
+                            console.error(err);
+                            return TestRunner_1.TestResult.ERROR;
+                        }
                     }
-                }
-            })));
-        });
+                })));
+            });
+        };
     }).build();
 }
 exports.unroll = unroll;
