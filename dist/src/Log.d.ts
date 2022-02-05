@@ -1,10 +1,10 @@
 export declare class Logger {
     readonly loglevel: string;
     constructor(loglevel: string);
-    silly(...args: any): void;
-    verbose(...args: any): void;
-    info(...args: any): void;
-    http(...args: any): void;
-    warn(...args: any): void;
-    error(...args: any): void;
+    silly(prefix: string, message: string, ...args: any[]): void;
+    verbose(prefix: string, message: string, ...args: any[]): void;
+    info(prefix: string, message: string, ...args: any[]): void;
+    http(prefix: string, message: string, ...args: any[]): void;
+    warn(prefix: string, message: string, ...args: any[]): void;
+    error(prefix: string, message: string, ...args: any[]): void;
 }
