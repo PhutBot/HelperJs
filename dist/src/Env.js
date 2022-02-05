@@ -74,6 +74,7 @@ function waitForVar(name, timeout = -1) {
                 resolve(get(name));
             }
             else if (timeout > 0 && counter > timeout) {
+                clearInterval(interval);
                 reject(`Env.waitForVar - timed out waiting for environment var '${name}'`);
             }
             counter += 100;
