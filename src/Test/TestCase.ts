@@ -1,4 +1,4 @@
-import { assert } from "console";
+import { AssertionError } from "assert";
 
 export class TestCase {
 
@@ -7,7 +7,7 @@ export class TestCase {
     async before() {}
     async after() {}
 
-    async expectError(expect:any, func:Function, self?:any, ...args:any) {
+    async assertError(expected:any, func:Function, self?:any, ...args:any) {
         let err = null;
         try {
             await func.apply(self, args);
@@ -15,9 +15,14 @@ export class TestCase {
             err = e;
         }
 
-        if (err !== expect) {
+        if (!!err && err !== expected) {
             throw err;
+        } else if (!err) {
+            throw new AssertionError({
+                expected,
+                actual: err,
+                operator: '=='
+            });
         }
-        assert(err === expect);
     }
 }

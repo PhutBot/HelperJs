@@ -70,9 +70,10 @@ function walk(dir, action, options) {
     });
 }
 function logResult(prefix, result, spaces = 0) {
-    npmlog_1.default.info(prefix, '----------------------------------------------------------------');
-    npmlog_1.default.info(prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
-    npmlog_1.default.info(prefix, '----------------------------------------------------------------');
+    const level = result.PASS != result.TOTAL ? 'warn' : 'info';
+    npmlog_1.default.log(level, prefix, '----------------------------------------------------------------');
+    npmlog_1.default.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
+    npmlog_1.default.log(level, prefix, '----------------------------------------------------------------');
     npmlog_1.default.info('', '');
 }
 function RunTests(dir, root = "./") {
@@ -99,9 +100,7 @@ function RunTests(dir, root = "./") {
                 const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
                     .filter((desc) => !!(0, Metadata_1.getMetadata)(desc.value, '@Test') || !!(0, Metadata_1.getMetadata)(desc.value, '@Unroll'))
                     .map((desc) => __awaiter(this, void 0, void 0, function* () {
-                    yield test.before();
                     const result = yield desc.value.apply(test);
-                    yield test.after();
                     result.forEach((res) => {
                         fileResults.TOTAL += 1;
                         fileResults.PASS += res === TestResult.PASS ? 1 : 0;

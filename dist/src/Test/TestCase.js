@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestCase = void 0;
-const console_1 = require("console");
+const assert_1 = require("assert");
 class TestCase {
     setup() {
         return __awaiter(this, void 0, void 0, function* () { });
@@ -24,7 +24,7 @@ class TestCase {
     after() {
         return __awaiter(this, void 0, void 0, function* () { });
     }
-    expectError(expect, func, self, ...args) {
+    assertError(expected, func, self, ...args) {
         return __awaiter(this, void 0, void 0, function* () {
             let err = null;
             try {
@@ -33,10 +33,16 @@ class TestCase {
             catch (e) {
                 err = e;
             }
-            if (err !== expect) {
+            if (!!err && err !== expected) {
                 throw err;
             }
-            (0, console_1.assert)(err === expect);
+            else if (!err) {
+                throw new assert_1.AssertionError({
+                    expected,
+                    actual: err,
+                    operator: '=='
+                });
+            }
         });
     }
 }

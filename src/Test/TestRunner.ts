@@ -35,9 +35,10 @@ async function walk(dir:string, action:(p:string)=>any, options:WalkOptions) {
 }
 
 function logResult(prefix:string, result:Record<TestResult,number>, spaces=0) {
-    npmlog.info(prefix, '----------------------------------------------------------------');
-    npmlog.info(prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
-    npmlog.info(prefix, '----------------------------------------------------------------');
+    const level = result.PASS != result.TOTAL ? 'warn' : 'info';
+    npmlog.log(level, prefix, '----------------------------------------------------------------');
+    npmlog.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
+    npmlog.log(level, prefix, '----------------------------------------------------------------');
     npmlog.info('','');
 }
 
@@ -68,9 +69,7 @@ export async function RunTests(dir:string, root:string="./") {
             const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
                 .filter((desc) => !!getMetadata(desc.value, '@Test') || !!getMetadata(desc.value, '@Unroll'))
                 .map(async (desc) => {
-                    await test.before();
                     const result = await desc.value.apply(test);
-                    await test.after();
                     
                     result.forEach((res:TestResult) => {
                         fileResults.TOTAL += 1;
