@@ -18,21 +18,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SimpleServer = void 0;
 const http = __importStar(require("http"));
-const npmlog_1 = __importDefault(require("npmlog"));
 const fs = __importStar(require("fs"));
 const Env_1 = require("../Env");
 const Request_1 = require("./Request");
 const Error_1 = require("./Error");
 const PathMatcher_1 = require("./PathMatcher");
+const Log_1 = require("../Log");
 class SimpleServer {
     constructor(settings = {}) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         this.alias2Dir = {};
         this.dir2Alias = {};
         this.cachedFiles = {};
@@ -40,9 +37,10 @@ class SimpleServer {
         this.handlers = { DELETE: {}, GET: {}, PATCH: {}, POST: {}, PUT: {} };
         this.errorHandlers = {};
         this._running = false;
-        this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
-        this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
-        this.useCache = (_c = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;
+        this.logger = new Log_1.Logger((_a = settings.loglevel) !== null && _a !== void 0 ? _a : 'silent');
+        this.hostname = (_b = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _b !== void 0 ? _b : '0.0.0.0';
+        this.port = (_c = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _c !== void 0 ? _c : 8080;
+        this.useCache = (_d = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _d !== void 0 ? _d : true;
         this.server = http.createServer(this._rootHandler.bind(this));
         this.server.on('connection', (socket) => {
             this.sockets.push(socket);
@@ -166,14 +164,14 @@ class SimpleServer {
         const matcher = new PathMatcher_1.PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
             if (!!options.force) {
-                npmlog_1.default.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
+                this.logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
             }
             else {
-                npmlog_1.default.error('SimpleServer', `method already has endpoint ${matcher.path}`);
+                this.logger.error('SimpleServer', `method already has endpoint ${matcher.path}`);
                 return;
             }
         }
-        npmlog_1.default.verbose('SimpleServer', `created mapping for ${matcher.path}`);
+        this.logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method][matcher.path] = { matcher, handler };
     }
     removeHandler(method, path) {
@@ -182,13 +180,13 @@ class SimpleServer {
     start() {
         return new Promise((res, rej) => {
             if (this._running) {
-                npmlog_1.default.warn('SimpleServer', 'server already started');
+                this.logger.warn('SimpleServer', 'server already started');
                 rej('server already started');
                 return;
             }
             this.server.listen(this.port, this.hostname, () => {
                 this._running = true;
-                npmlog_1.default.info('SimpleServer', `server started @ ${this.address}`);
+                this.logger.info('SimpleServer', `server started @ ${this.address}`);
                 res(true);
             });
         });
@@ -196,13 +194,13 @@ class SimpleServer {
     stop() {
         return new Promise((res, rej) => {
             if (!this._running) {
-                npmlog_1.default.warn('SimpleServer', 'server already stopped');
+                this.logger.warn('SimpleServer', 'server already stopped');
                 rej('server already stopped');
             }
             else {
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
-                    npmlog_1.default.info('SimpleServer', 'server stopped');
+                    this.logger.info('SimpleServer', 'server stopped');
                     this._running = false;
                     res(true);
                 });
@@ -231,7 +229,7 @@ class SimpleServer {
             return pre;
         }, null);
         if (!!record) {
-            npmlog_1.default.http('SimpleServer', `${method} - ${path}`);
+            this.logger.http('SimpleServer', `${method} - ${path}`);
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
@@ -297,8 +295,8 @@ class SimpleServer {
                 const httpError = error;
                 res.writeHead(httpError.statusCode);
                 res.end(httpError.description);
-                npmlog_1.default.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-                npmlog_1.default.error('SimpleServer', (_a = httpError.stack) !== null && _a !== void 0 ? _a : httpError.message);
+                this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+                this.logger.error('SimpleServer', (_a = httpError.stack) !== null && _a !== void 0 ? _a : httpError.message);
             });
         }
         catch (error) {
@@ -313,8 +311,8 @@ class SimpleServer {
             const httpError = error;
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
-            npmlog_1.default.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-            npmlog_1.default.error('SimpleServer', (_c = httpError.stack) !== null && _c !== void 0 ? _c : httpError.message);
+            this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+            this.logger.error('SimpleServer', (_c = httpError.stack) !== null && _c !== void 0 ? _c : httpError.message);
         }
     }
 }

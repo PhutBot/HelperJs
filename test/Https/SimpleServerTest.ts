@@ -2,7 +2,6 @@ import assert from "assert";
 import { TestCase } from "../../src/Test/TestCase";
 import { test, unroll } from "../../src/Test/decorators";
 import { request, SimpleServer } from "../../src/Https";
-import npmlog from "npmlog";
 
 export default class SimpleServerTest extends TestCase {
     private server = new SimpleServer({ port: 9999 });

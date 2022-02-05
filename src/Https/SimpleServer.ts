@@ -1,5 +1,4 @@
 import * as http from 'http';
-import npmlog from 'npmlog';
 import * as fs from 'fs';
 import { Socket } from 'net';
 import { EnvBackedValue } from '../Env';
@@ -7,6 +6,7 @@ import { RequestMethod, Headers, QueryParams, Body, HttpRequest } from './Reques
 import { HttpError, InternalServerError, PageNotFoundError } from './Error';
 import { PathMatcher } from './PathMatcher';
 import {  } from '.';
+import { Logger } from '../Log';
 
 interface HandlerRecord {
     matcher:PathMatcher;
@@ -25,6 +25,7 @@ export interface ServerSettings {
     hostname?:string|EnvBackedValue;
     port?:number|EnvBackedValue;
     useCache?:boolean|EnvBackedValue;
+    loglevel?:string;
 }
 
 export class SimpleServer {
@@ -36,6 +37,7 @@ export class SimpleServer {
     private dir2Alias:Record<string,string> = {};
     private cachedFiles:Record<string,string> = {};
 
+    private logger:Logger;
     private server:http.Server;
     private sockets:Array<Socket> = [];
     private handlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
@@ -46,6 +48,7 @@ export class SimpleServer {
     get address() { return `http://${this.hostname}:${this.port}`; }
 
     constructor(settings:ServerSettings = {}) {
+        this.logger = new Logger(settings.loglevel ?? 'silent');
         this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
         this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
@@ -171,14 +174,14 @@ export class SimpleServer {
         const matcher = new PathMatcher(path);
         if (matcher.path in this.handlers[method as RequestMethod]) {
             if (!!options.force) {
-                npmlog.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
+                this.logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
             } else {
-                npmlog.error('SimpleServer', `method already has endpoint ${matcher.path}`);
+                this.logger.error('SimpleServer', `method already has endpoint ${matcher.path}`);
                 return;
             }
         }
         
-        npmlog.verbose('SimpleServer', `created mapping for ${matcher.path}`);
+        this.logger.verbose('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method as RequestMethod][matcher.path] = { matcher, handler };
     }
     
@@ -189,14 +192,14 @@ export class SimpleServer {
     start() {
         return new Promise((res, rej) => {
             if (this._running) {
-                npmlog.warn('SimpleServer', 'server already started');
+                this.logger.warn('SimpleServer', 'server already started');
                 rej('server already started');
                 return;
             }
             
             this.server.listen(this.port, this.hostname, () => {
                 this._running = true;
-                npmlog.info('SimpleServer', `server started @ ${this.address}`);
+                this.logger.info('SimpleServer', `server started @ ${this.address}`);
                 res(true);
             });
         });
@@ -205,12 +208,12 @@ export class SimpleServer {
     stop() {
         return new Promise((res, rej) => {
             if (!this._running) {
-                npmlog.warn('SimpleServer', 'server already stopped');
+                this.logger.warn('SimpleServer', 'server already stopped');
                 rej('server already stopped');
             } else {
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
-                    npmlog.info('SimpleServer', 'server stopped');
+                    this.logger.info('SimpleServer', 'server stopped');
                     this._running = false;
                     res(true);
                 });
@@ -239,7 +242,7 @@ export class SimpleServer {
             }, null);
         
         if (!!record) {
-            npmlog.http('SimpleServer', `${method} - ${path}`);
+            this.logger.http('SimpleServer', `${method} - ${path}`);
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
@@ -307,8 +310,8 @@ export class SimpleServer {
                     const httpError = error as HttpError;
                     res.writeHead(httpError.statusCode);
                     res.end(httpError.description);
-                    npmlog.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-                    npmlog.error('SimpleServer', httpError.stack ?? httpError.message);
+                    this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+                    this.logger.error('SimpleServer', httpError.stack ?? httpError.message);
                 });
         } catch (error) {
             if (!(error instanceof HttpError)) {
@@ -322,8 +325,8 @@ export class SimpleServer {
             const httpError = error as HttpError;
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
-            npmlog.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-            npmlog.error('SimpleServer', httpError.stack ?? httpError.message);
+            this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
+            this.logger.error('SimpleServer', httpError.stack ?? httpError.message);
         }
     }
 }

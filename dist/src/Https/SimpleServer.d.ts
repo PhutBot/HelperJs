@@ -18,6 +18,7 @@ export interface ServerSettings {
     hostname?: string | EnvBackedValue;
     port?: number | EnvBackedValue;
     useCache?: boolean | EnvBackedValue;
+    loglevel?: string;
 }
 export declare class SimpleServer {
     readonly hostname: string;
@@ -26,6 +27,7 @@ export declare class SimpleServer {
     private alias2Dir;
     private dir2Alias;
     private cachedFiles;
+    private logger;
     private server;
     private sockets;
     private handlers;
