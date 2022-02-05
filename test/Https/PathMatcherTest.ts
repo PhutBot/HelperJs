@@ -1,11 +1,11 @@
 import assert from "assert";
 import { TestCase } from "../../src/Test/TestCase";
-import { test, unroll } from "../../src/Test/decorators";
+import { Test, Unroll } from "../../src/Test/decorators";
 import { PathMatcher } from "../../src/Https/PathMatcher";
 
 export default class PathMatcherTest extends TestCase {
 
-    @unroll([
+    @Unroll([
         { pattern: '/',        path: '/',      isWild: false, isDynamic: false, vars: {}                 },
         { pattern: '/*',       path: '/',      isWild: true,  isDynamic: false, vars: { _: '' }          },
         { pattern: '/*',       path: '/a',     isWild: true,  isDynamic: false, vars: { _: 'a' }         },
@@ -31,7 +31,7 @@ export default class PathMatcherTest extends TestCase {
         assert(matcher.isDynamic === isDynamic);
     }
 
-    @unroll([
+    @Unroll([
         { pattern: '/',        path: '/b',     isWild: false, isDynamic: false, },
         { pattern: '/a',       path: '/b',     isWild: false, isDynamic: false, },
         { pattern: '/{v}',     path: '/1/a',   isWild: false, isDynamic: true,  },

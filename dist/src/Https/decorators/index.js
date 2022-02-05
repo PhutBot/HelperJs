@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requestMapping = void 0;
+exports.RequestMapping = void 0;
 const Request_1 = require("../Request");
 class BaseHandler {
     constructor() {
@@ -8,7 +8,7 @@ class BaseHandler {
         this.method = Request_1.RequestMethod.GET;
     }
 }
-function requestMapping(mapping) {
+function RequestMapping(mapping) {
     var _a, _b;
     mapping.location = (_a = mapping.location) !== null && _a !== void 0 ? _a : '/';
     mapping.method = (_b = mapping.method) !== null && _b !== void 0 ? _b : Request_1.RequestMethod.GET;
@@ -33,5 +33,5 @@ function requestMapping(mapping) {
         }
     };
 }
-exports.requestMapping = requestMapping;
+exports.RequestMapping = RequestMapping;
 //# sourceMappingURL=index.js.map

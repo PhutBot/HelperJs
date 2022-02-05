@@ -3,7 +3,7 @@ import npmlog from "npmlog";
 import { DecoratorBuilder } from "../../Meta/DecoratorBuilder";
 import { TestResult } from "../TestRunner";
 
-export function test() {
+export function Test() {
     return new DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
             const og = descriptor.value;
@@ -27,7 +27,7 @@ export function test() {
         }).build();
 }
 
-export function unroll(cases:object[]) {
+export function Unroll(cases:object[]) {
     return new DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
             const og = descriptor.value;

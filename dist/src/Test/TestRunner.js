@@ -97,7 +97,7 @@ function RunTests(dir, root = "./") {
                 const test = new module.default();
                 yield test.setup();
                 const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
-                    .filter((desc) => !!(0, Metadata_1.getMetadata)(desc.value, '@test') || !!(0, Metadata_1.getMetadata)(desc.value, '@unroll'))
+                    .filter((desc) => !!(0, Metadata_1.getMetadata)(desc.value, '@Test') || !!(0, Metadata_1.getMetadata)(desc.value, '@Unroll'))
                     .map((desc) => __awaiter(this, void 0, void 0, function* () {
                     yield test.before();
                     const result = yield desc.value.apply(test);

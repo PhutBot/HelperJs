@@ -17,7 +17,7 @@ interface RequestMapping {
     location?:string;
 }
 
-export function requestMapping(mapping:RequestMapping) {
+export function RequestMapping(mapping:RequestMapping) {
     mapping.location = mapping.location ?? '/';
     mapping.method = mapping.method as RequestMethod ?? RequestMethod.GET;
 

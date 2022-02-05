@@ -66,7 +66,7 @@ export async function RunTests(dir:string, root:string="./") {
             await test.setup();
             
             const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
-                .filter((desc) => !!getMetadata(desc.value, '@test') || !!getMetadata(desc.value, '@unroll'))
+                .filter((desc) => !!getMetadata(desc.value, '@Test') || !!getMetadata(desc.value, '@Unroll'))
                 .map(async (desc) => {
                     await test.before();
                     const result = await desc.value.apply(test);

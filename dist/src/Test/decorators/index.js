@@ -12,12 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unroll = exports.test = void 0;
+exports.Unroll = exports.Test = void 0;
 const assert_1 = require("assert");
 const npmlog_1 = __importDefault(require("npmlog"));
 const DecoratorBuilder_1 = require("../../Meta/DecoratorBuilder");
 const TestRunner_1 = require("../TestRunner");
-function test() {
+function Test() {
     return new DecoratorBuilder_1.DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
         const og = descriptor.value;
@@ -44,8 +44,8 @@ function test() {
         };
     }).build();
 }
-exports.test = test;
-function unroll(cases) {
+exports.Test = Test;
+function Unroll(cases) {
     return new DecoratorBuilder_1.DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
         const og = descriptor.value;
@@ -76,5 +76,5 @@ function unroll(cases) {
         };
     }).build();
 }
-exports.unroll = unroll;
+exports.Unroll = Unroll;
 //# sourceMappingURL=index.js.map

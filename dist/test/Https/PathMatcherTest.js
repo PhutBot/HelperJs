@@ -33,7 +33,7 @@ class PathMatcherTest extends TestCase_1.TestCase {
     }
 }
 __decorate([
-    (0, decorators_1.unroll)([
+    (0, decorators_1.Unroll)([
         { pattern: '/', path: '/', isWild: false, isDynamic: false, vars: {} },
         { pattern: '/*', path: '/', isWild: true, isDynamic: false, vars: { _: '' } },
         { pattern: '/*', path: '/a', isWild: true, isDynamic: false, vars: { _: 'a' } },
@@ -49,7 +49,7 @@ __decorate([
     ])
 ], PathMatcherTest.prototype, "match", null);
 __decorate([
-    (0, decorators_1.unroll)([
+    (0, decorators_1.Unroll)([
         { pattern: '/', path: '/b', isWild: false, isDynamic: false, },
         { pattern: '/a', path: '/b', isWild: false, isDynamic: false, },
         { pattern: '/{v}', path: '/1/a', isWild: false, isDynamic: true, },

@@ -1,7 +1,8 @@
 import assert from "assert";
 import { TestCase } from "../../src/Test/TestCase";
-import { test, unroll } from "../../src/Test/decorators";
+import { Test, Unroll } from "../../src/Test/decorators";
 import { request, SimpleServer } from "../../src/Https";
+import { RequestMapping } from "../../src/Https/decorators";
 
 export default class SimpleServerTest extends TestCase {
     private server = new SimpleServer({ port: 9999, loglevel: 'silent' });
@@ -14,14 +15,14 @@ export default class SimpleServerTest extends TestCase {
         await this.server.stop();
     }
 
-    @test()
+    @Test()
     settings() {
         assert(this.server.hostname === '0.0.0.0');
         assert(this.server.port === 9999);
         assert(this.server.address === 'http://0.0.0.0:9999');
     }
 
-    @unroll([
+    @Unroll([
         { method: 'DELETE', path: '/delete', statusCode: 200, expect: 'content' },
         { method: 'GET',    path: '/get',    statusCode: 200, expect: 'content' },
         { method: 'PATCH',  path: '/patch',  statusCode: 200, expect: 'content' },
@@ -53,7 +54,7 @@ export default class SimpleServerTest extends TestCase {
         assert(response.statusCode === 404);
     }
 
-    @test()
+    @Test()
     async serverStartAndStop() {
         const server = new SimpleServer({ port: 9000, loglevel: 'silent' });
         assert(!server.running);
@@ -66,4 +67,9 @@ export default class SimpleServerTest extends TestCase {
         assert(!server.running);
         await this.expectError('server already stopped', server.stop, server);
     }
+}
+
+@RequestMapping({ })
+class Mapping {
+
 }

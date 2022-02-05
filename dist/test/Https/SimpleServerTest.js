@@ -22,6 +22,7 @@ const assert_1 = __importDefault(require("assert"));
 const TestCase_1 = require("../../src/Test/TestCase");
 const decorators_1 = require("../../src/Test/decorators");
 const Https_1 = require("../../src/Https");
+const decorators_2 = require("../../src/Https/decorators");
 class SimpleServerTest extends TestCase_1.TestCase {
     constructor() {
         super(...arguments);
@@ -80,10 +81,10 @@ class SimpleServerTest extends TestCase_1.TestCase {
     }
 }
 __decorate([
-    (0, decorators_1.test)()
+    (0, decorators_1.Test)()
 ], SimpleServerTest.prototype, "settings", null);
 __decorate([
-    (0, decorators_1.unroll)([
+    (0, decorators_1.Unroll)([
         { method: 'DELETE', path: '/delete', statusCode: 200, expect: 'content' },
         { method: 'GET', path: '/get', statusCode: 200, expect: 'content' },
         { method: 'PATCH', path: '/patch', statusCode: 200, expect: 'content' },
@@ -92,7 +93,12 @@ __decorate([
     ])
 ], SimpleServerTest.prototype, "handlers", null);
 __decorate([
-    (0, decorators_1.test)()
+    (0, decorators_1.Test)()
 ], SimpleServerTest.prototype, "serverStartAndStop", null);
 exports.default = SimpleServerTest;
+let Mapping = class Mapping {
+};
+Mapping = __decorate([
+    (0, decorators_2.RequestMapping)({})
+], Mapping);
 //# sourceMappingURL=SimpleServerTest.js.map
