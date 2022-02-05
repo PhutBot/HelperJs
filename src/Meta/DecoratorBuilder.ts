@@ -79,7 +79,7 @@ export class DecoratorBuilder {
                 const propertyKey = arg2;
                 const og = arg3;
     
-                const meta = this.addMeta(target, propertyKey);
+                const meta = this.addMeta(og.value, propertyKey);
                 const descriptor = this.onMethodFunc(target, propertyKey, og, meta[this.name]);
                 defineMetadata(descriptor?.value ?? og.value, meta);
                 if (!!descriptor)

@@ -65,7 +65,7 @@ class DecoratorBuilder {
                 const target = arg1;
                 const propertyKey = arg2;
                 const og = arg3;
-                const meta = this.addMeta(target, propertyKey);
+                const meta = this.addMeta(og.value, propertyKey);
                 const descriptor = this.onMethodFunc(target, propertyKey, og, meta[this.name]);
                 (0, Metadata_1.defineMetadata)((_b = descriptor === null || descriptor === void 0 ? void 0 : descriptor.value) !== null && _b !== void 0 ? _b : og.value, meta);
                 if (!!descriptor)
