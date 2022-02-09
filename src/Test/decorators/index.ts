@@ -20,12 +20,12 @@ export function Test(c?:{}) {
                     if (err instanceof AssertionError) {
                         npmlog.warn(target.constructor.name, `fail - ${key}`);
                         npmlog.warn(target.constructor.name, JSON.stringify(c));
-                        console.warn(`${err}`);
+                        npmlog.warn(target.constructor.name, `${err}`);
                         return [ TestResult.FAIL ];
                     } else {
                         npmlog.error(target.constructor.name, `error - ${key}`);
                         npmlog.error(target.constructor.name, JSON.stringify(c));
-                        console.error(err);
+                        npmlog.error(target.constructor.name, `${err}`);
                         return [ TestResult.ERROR ];
                     }
                 }
@@ -50,12 +50,12 @@ export function Unroll(cases:object[]) {
                             if (err instanceof AssertionError) {
                                 npmlog.warn(target.constructor.name, `fail - ${key}_${i}`);
                                 npmlog.warn(target.constructor.name, JSON.stringify(c));
-                                console.warn(`${err}`);
+                                npmlog.warn(target.constructor.name, `${err}`);
                                 return TestResult.FAIL;
                             } else {
                                 npmlog.error(target.constructor.name, `error - ${key}_${i}`);
                                 npmlog.error(target.constructor.name, JSON.stringify(c));
-                                console.error(err);
+                                npmlog.error(target.constructor.name, `${err}`);
                                 return TestResult.ERROR;
                             }
                         }

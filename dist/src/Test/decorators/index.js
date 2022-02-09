@@ -35,13 +35,13 @@ function Test(c) {
                     if (err instanceof assert_1.AssertionError) {
                         npmlog_1.default.warn(target.constructor.name, `fail - ${key}`);
                         npmlog_1.default.warn(target.constructor.name, JSON.stringify(c));
-                        console.warn(`${err}`);
+                        npmlog_1.default.warn(target.constructor.name, `${err}`);
                         return [TestRunner_1.TestResult.FAIL];
                     }
                     else {
                         npmlog_1.default.error(target.constructor.name, `error - ${key}`);
                         npmlog_1.default.error(target.constructor.name, JSON.stringify(c));
-                        console.error(err);
+                        npmlog_1.default.error(target.constructor.name, `${err}`);
                         return [TestRunner_1.TestResult.ERROR];
                     }
                 }
@@ -69,13 +69,13 @@ function Unroll(cases) {
                         if (err instanceof assert_1.AssertionError) {
                             npmlog_1.default.warn(target.constructor.name, `fail - ${key}_${i}`);
                             npmlog_1.default.warn(target.constructor.name, JSON.stringify(c));
-                            console.warn(`${err}`);
+                            npmlog_1.default.warn(target.constructor.name, `${err}`);
                             return TestRunner_1.TestResult.FAIL;
                         }
                         else {
                             npmlog_1.default.error(target.constructor.name, `error - ${key}_${i}`);
                             npmlog_1.default.error(target.constructor.name, JSON.stringify(c));
-                            console.error(err);
+                            npmlog_1.default.error(target.constructor.name, `${err}`);
                             return TestRunner_1.TestResult.ERROR;
                         }
                     }
