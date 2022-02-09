@@ -5,6 +5,9 @@ function elapsedToStringHelper(elapsed, result, total, fmt, name, from, to, mul 
     if (name in fmt) {
         const value = Math.max(fmt[name], Math.floor(to(elapsed - total) / mul));
         total += from(value * mul);
+        if (value > 1) {
+            name += 's';
+        }
         if (value > 0) {
             if (!!result)
                 result += ', ';
@@ -38,16 +41,23 @@ exports.inf = inf;
 function elapsedToString(elapsed, fmt) {
     let total = 0;
     let result = '';
-    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'years', fromYrs, toYrs));
-    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'weeks', fromDay, toDay, 7));
-    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'days', fromDay, toDay));
-    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'hours', fromHrs, toHrs));
-    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'minutes', fromMin, toMin));
-    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'seconds', fromSec, toSec));
-    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'millis', (time) => time, (time) => time));
-    const idx = result.lastIndexOf(', ');
-    if (idx >= 0)
-        result = result.slice(0, idx) + ' and ' + result.slice(idx + 2);
+    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'year', fromYrs, toYrs));
+    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'week', fromDay, toDay, 7));
+    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'day', fromDay, toDay));
+    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'hour', fromHrs, toHrs));
+    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'minute', fromMin, toMin));
+    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'second', fromSec, toSec));
+    ({ result, total } = elapsedToStringHelper(elapsed, result, total, fmt, 'milli', (time) => time, (time) => time));
+    const last = result.lastIndexOf(', ');
+    if (last >= 0) {
+        const first = result.indexOf(', ');
+        if (first === last) {
+            result = result.slice(0, last) + ' and ' + result.slice(last + 2);
+        }
+        else {
+            result = result.slice(0, last) + ', and ' + result.slice(last + 2);
+        }
+    }
     return result;
 }
 exports.elapsedToString = elapsedToString;
