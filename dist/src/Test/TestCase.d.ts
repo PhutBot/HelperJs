@@ -3,5 +3,4 @@ export declare class TestCase {
     teardown(): Promise<void>;
     before(): Promise<void>;
     after(): Promise<void>;
-    assertError(expected: any, func: Function, self?: any, ...args: any): Promise<void>;
 }
