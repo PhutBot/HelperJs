@@ -23,12 +23,12 @@ export default class PathMatcherTest extends TestCase {
         const matcher = new PathMatcher(pattern);
         const match = matcher.match(path);
 
-        assert(match.isMatch === true);
+        assert.strictEqual(match.isMatch, true);
         Object.entries(vars).forEach(([key,val]) => {
-            assert(match.vars[key] === val, `\n\texpected: match.vars['${key}'] === '${val}'\n\tfound: '${match.vars[key]}'`);
+            assert.strictEqual(match.vars[key], val);
         });
-        assert(matcher.isWild === isWild);
-        assert(matcher.isDynamic === isDynamic);
+        assert.strictEqual(matcher.isWild, isWild);
+        assert.strictEqual(matcher.isDynamic, isDynamic);
     }
 
     @Unroll([
@@ -45,8 +45,8 @@ export default class PathMatcherTest extends TestCase {
         const matcher = new PathMatcher(pattern);
         const match = matcher.match(path);
 
-        assert(match.isMatch !== true);
-        assert(matcher.isWild === isWild);
-        assert(matcher.isDynamic === isDynamic);
+        assert.notStrictEqual(match.isMatch, true);
+        assert.strictEqual(matcher.isWild, isWild);
+        assert.strictEqual(matcher.isDynamic, isDynamic);
     }
 }

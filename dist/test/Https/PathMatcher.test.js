@@ -17,19 +17,19 @@ class PathMatcherTest extends TestCase_1.TestCase {
     match({ pattern, path, isWild, isDynamic, vars }) {
         const matcher = new PathMatcher_1.PathMatcher(pattern);
         const match = matcher.match(path);
-        (0, assert_1.default)(match.isMatch === true);
+        assert_1.default.strictEqual(match.isMatch, true);
         Object.entries(vars).forEach(([key, val]) => {
-            (0, assert_1.default)(match.vars[key] === val, `\n\texpected: match.vars['${key}'] === '${val}'\n\tfound: '${match.vars[key]}'`);
+            assert_1.default.strictEqual(match.vars[key], val);
         });
-        (0, assert_1.default)(matcher.isWild === isWild);
-        (0, assert_1.default)(matcher.isDynamic === isDynamic);
+        assert_1.default.strictEqual(matcher.isWild, isWild);
+        assert_1.default.strictEqual(matcher.isDynamic, isDynamic);
     }
     notMatch({ pattern, path, isWild, isDynamic }) {
         const matcher = new PathMatcher_1.PathMatcher(pattern);
         const match = matcher.match(path);
-        (0, assert_1.default)(match.isMatch !== true);
-        (0, assert_1.default)(matcher.isWild === isWild);
-        (0, assert_1.default)(matcher.isDynamic === isDynamic);
+        assert_1.default.notStrictEqual(match.isMatch, true);
+        assert_1.default.strictEqual(matcher.isWild, isWild);
+        assert_1.default.strictEqual(matcher.isDynamic, isDynamic);
     }
 }
 __decorate([
