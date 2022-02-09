@@ -30,61 +30,63 @@ class EnvTest extends TestCase_1.TestCase {
     }
     getEnv({ key, val }) {
         src_1.Env.load(this.filename);
-        (0, assert_1.default)(src_1.Env.get(key) === `${val}`);
+        assert_1.default.equal(src_1.Env.get(key), `${val}`);
     }
     setEnv({ key, val }) {
         src_1.Env.load(this.filename);
         src_1.Env.set(key, val);
-        (0, assert_1.default)(src_1.Env.get(key) === `${val}`);
+        assert_1.default.strictEqual(src_1.Env.get(key), `${val}`);
     }
     getBackedValue({ key, val }) {
         src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key);
-        (0, assert_1.default)(value.get() === val);
+        assert_1.default.strictEqual(value.get(), val);
     }
     setBackedValue({ key, val }) {
         src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key);
         value.set(val);
-        (0, assert_1.default)(src_1.Env.get('EXTRA') === val);
+        assert_1.default.strictEqual(src_1.Env.get('EXTRA'), val);
     }
     getBackedValueDefault({ key, val }) {
         src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key, val);
-        (0, assert_1.default)(value.get() === val);
+        assert_1.default.strictEqual(value.get(), val);
     }
     getBackedValueAsBool({ key, val, expect }) {
         src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key, val);
-        (0, assert_1.default)(value.asBool() === expect);
+        assert_1.default.strictEqual(value.asBool(), expect);
     }
     getBackedValueAsInt({ key, val, expect }) {
         src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key, val);
-        (0, assert_1.default)(value.asInt() === expect);
+        assert_1.default.strictEqual(value.asInt(), expect);
     }
     getBackedValueAsFloat({ key, val, expect }) {
         src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key, val);
-        (0, assert_1.default)(value.asFloat() === expect);
+        assert_1.default.strictEqual(value.asFloat(), expect);
     }
     getBackedValueAsNan({ key }) {
         src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key, 'sdfj');
-        (0, assert_1.default)(Number.isNaN(value[`as${key}`]()));
+        assert_1.default.ok(Number.isNaN(value[`as${key}`]()));
     }
     wait({ key, val, timeout }) {
         return __awaiter(this, void 0, void 0, function* () {
             src_1.Env.load(this.filename);
             setTimeout(() => { src_1.Env.set(key, val); }, 50);
             yield src_1.Env.waitForVar(key, timeout);
-            (0, assert_1.default)(src_1.Env.get(key) === val);
+            assert_1.default.strictEqual(src_1.Env.get(key), val);
         });
     }
     timeout({ key, timeout }) {
         return __awaiter(this, void 0, void 0, function* () {
             src_1.Env.load(this.filename);
-            yield this.assertError(`Env.waitForVar - timed out waiting for environment var '${key}'`, src_1.Env.waitForVar, src_1.Env, key, timeout);
+            yield assert_1.default.rejects(src_1.Env.waitForVar(key, timeout), {
+                message: `Env.waitForVar - timed out waiting for environment var '${key}'`
+            });
         });
     }
 }

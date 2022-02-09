@@ -15,7 +15,7 @@ export default class EnvTest extends TestCase {
     ])
     getEnv({ key, val }:any) {
         Env.load(this.filename);
-        assert(Env.get(key) === `${val}`);
+        assert.equal(Env.get(key), `${val}`);
     }
 
     @Unroll([
@@ -27,7 +27,7 @@ export default class EnvTest extends TestCase {
     setEnv({ key, val }:any) {
         Env.load(this.filename);
         Env.set(key, val);
-        assert(Env.get(key) === `${val}`);
+        assert.strictEqual(Env.get(key), `${val}`);
     }
 
     @Unroll([
@@ -40,7 +40,7 @@ export default class EnvTest extends TestCase {
     getBackedValue({ key, val }:any) {
         Env.load(this.filename);
         const value = new EnvBackedValue(key);
-        assert(value.get() === val);
+        assert.strictEqual(value.get(), val);
     }
 
     @Test({ key:'EXTRA', val:'default' })
@@ -48,14 +48,14 @@ export default class EnvTest extends TestCase {
         Env.load(this.filename);
         const value = new EnvBackedValue(key);
         value.set(val)
-        assert(Env.get('EXTRA') === val);
+        assert.strictEqual(Env.get('EXTRA'), val);
     }
 
     @Test({ key:'EXTRA', val:'default' })
     getBackedValueDefault({ key, val }:any) {
         Env.load(this.filename);
         const value = new EnvBackedValue(key, val);
-        assert(value.get() === val);
+        assert.strictEqual(value.get(), val);
     }
 
     @Unroll([
@@ -79,7 +79,7 @@ export default class EnvTest extends TestCase {
     getBackedValueAsBool({ key, val, expect }:any) {
         Env.load(this.filename);
         const value = new EnvBackedValue(key, val);
-        assert(value.asBool() === expect);
+        assert.strictEqual(value.asBool(), expect);
     }
 
     @Unroll([
@@ -93,7 +93,7 @@ export default class EnvTest extends TestCase {
     getBackedValueAsInt({ key, val, expect }:any) {
         Env.load(this.filename);
         const value = new EnvBackedValue(key, val);
-        assert(value.asInt() === expect);
+        assert.strictEqual(value.asInt(), expect);
     }
 
     @Unroll([
@@ -107,7 +107,7 @@ export default class EnvTest extends TestCase {
     getBackedValueAsFloat({ key, val, expect }:any) {
         Env.load(this.filename);
         const value = new EnvBackedValue(key, val);
-        assert(value.asFloat() === expect);
+        assert.strictEqual(value.asFloat(), expect);
     }
 
     @Unroll([
@@ -117,7 +117,7 @@ export default class EnvTest extends TestCase {
     getBackedValueAsNan({ key }:any) {
         Env.load(this.filename);
         const value = new EnvBackedValue(key, 'sdfj');
-        assert(Number.isNaN((value as any)[`as${key}`]()));
+        assert.ok(Number.isNaN((value as any)[`as${key}`]()));
     }
 
     @Test({ key:'WAIT', val:'VAL', timeout:150 })
@@ -125,13 +125,14 @@ export default class EnvTest extends TestCase {
         Env.load(this.filename);
         setTimeout(() => { Env.set(key, val); }, 50);
         await Env.waitForVar(key, timeout);
-        assert(Env.get(key) === val);
+        assert.strictEqual(Env.get(key), val);
     }
 
     @Test({ key:'TIMEOUT', timeout:150 })
     async timeout({ key, timeout }:any) {
         Env.load(this.filename);
-        await this.assertError(`Env.waitForVar - timed out waiting for environment var '${key}'`,
-            Env.waitForVar, Env, key, timeout);
+        await assert.rejects(Env.waitForVar(key, timeout), {
+            message: `Env.waitForVar - timed out waiting for environment var '${key}'`
+        });
     }
 }
