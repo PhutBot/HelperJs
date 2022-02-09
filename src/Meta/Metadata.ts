@@ -1,7 +1,7 @@
 export type Metadata = Record<string, any>; 
 
 // const metaPropName = '$';
-// const metaPropName = '__meta';
+const metaPropName = '__meta';
 export function defineMetadata(target:object|Function, key:string|Metadata, value?:any) {
     if (typeof target !== 'function' && typeof target !== 'object')
         return;
@@ -14,12 +14,19 @@ export function defineMetadata(target:object|Function, key:string|Metadata, valu
             target.prototype.__meta = Object.assign(target.prototype.__meta, key);
         }
     } else {
-        const target1 = target as {__meta:any};
-        target1.__meta = target1.__meta || {};
+        let desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        if (!desc) {
+            Object.defineProperty(target, metaPropName, {
+                value: {},
+                enumerable: false
+            });
+            desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        }
+        
         if (typeof key === 'string') {
-            target1.__meta[key as string] = value;
+            desc!.value[key] = value;
         } else {
-            target1.__meta = Object.assign(target1.__meta, key);
+            desc!.value = Object.assign(desc!.value, key);
         }
     }
 }
@@ -35,11 +42,19 @@ export function getMetadata(target:object|Function, key?:string) {
             return target?.prototype.__meta;
         }
     } else {
-        const target1 = target as {__meta?:any};
+        let desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        if (!desc) {
+            Object.defineProperty(target, metaPropName, {
+                value: {},
+                enumerable: false
+            });
+            desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        }
+        
         if (!!key) {
-            return target1?.__meta?.[key];
+            return desc!.value[key];
         } else {
-            return target1?.__meta;
+            return desc!.value;
         }
     }
 }

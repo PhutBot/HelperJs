@@ -25,5 +25,6 @@ export default class MetadataTest extends TestCase {
         defineMetadata(target, key, val);
         assert.strictEqual(getMetadata(target, key), val);
         assert.strictEqual(!!target[key], false);
+        assert.strictEqual(Object.keys(target).includes('__meta'), false);
     }
 }

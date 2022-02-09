@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMetadata = exports.defineMetadata = void 0;
 // const metaPropName = '$';
-// const metaPropName = '__meta';
+const metaPropName = '__meta';
 function defineMetadata(target, key, value) {
     if (typeof target !== 'function' && typeof target !== 'object')
         return;
@@ -16,19 +16,25 @@ function defineMetadata(target, key, value) {
         }
     }
     else {
-        const target1 = target;
-        target1.__meta = target1.__meta || {};
+        let desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        if (!desc) {
+            Object.defineProperty(target, metaPropName, {
+                value: {},
+                enumerable: false
+            });
+            desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        }
         if (typeof key === 'string') {
-            target1.__meta[key] = value;
+            desc.value[key] = value;
         }
         else {
-            target1.__meta = Object.assign(target1.__meta, key);
+            desc.value = Object.assign(desc.value, key);
         }
     }
 }
 exports.defineMetadata = defineMetadata;
 function getMetadata(target, key) {
-    var _a, _b;
+    var _a;
     if (typeof target !== 'function' && typeof target !== 'object')
         return;
     if ('prototype' in target) {
@@ -40,12 +46,19 @@ function getMetadata(target, key) {
         }
     }
     else {
-        const target1 = target;
+        let desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        if (!desc) {
+            Object.defineProperty(target, metaPropName, {
+                value: {},
+                enumerable: false
+            });
+            desc = Object.getOwnPropertyDescriptor(target, metaPropName);
+        }
         if (!!key) {
-            return (_b = target1 === null || target1 === void 0 ? void 0 : target1.__meta) === null || _b === void 0 ? void 0 : _b[key];
+            return desc.value[key];
         }
         else {
-            return target1 === null || target1 === void 0 ? void 0 : target1.__meta;
+            return desc.value;
         }
     }
 }
