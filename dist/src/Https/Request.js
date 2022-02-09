@@ -106,7 +106,7 @@ function request(settings) {
             });
         });
         req.on('error', err => {
-            reject(`request - ${err}`);
+            reject(new Error(`request - ${err}`));
         });
         if (!!settings.body) {
             if (typeof settings.body === 'object' || Array.isArray(settings.body)) {

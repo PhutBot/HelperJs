@@ -119,7 +119,7 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
         });
 
         req.on('error', err => {
-            reject(`request - ${err}`);
+            reject(new Error(`request - ${err}`));
         });
 
         if (!!settings.body) {
