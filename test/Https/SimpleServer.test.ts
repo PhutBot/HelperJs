@@ -17,9 +17,9 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     settings() {
-        assert(this.server.hostname === '0.0.0.0');
-        assert(this.server.port === 9999);
-        assert(this.server.address === 'http://0.0.0.0:9999');
+        assert.strictEqual(this.server.hostname, '0.0.0.0');
+        assert.strictEqual(this.server.port, 9999);
+        assert.strictEqual(this.server.address, 'http://0.0.0.0:9999');
     }
 
     @Unroll([
@@ -41,12 +41,12 @@ export default class SimpleServerTest extends TestCase {
         this.server.defineHandler(method, path, async () => ({ statusCode, body: expect }));
         let response = await request(requestObj);
         const body = await (await response.body()).text();
-        assert(response.statusCode === statusCode);
-        assert(body === expect);
+        assert.strictEqual(response.statusCode, statusCode);
+        assert.strictEqual(body, expect);
         
         this.server.removeHandler(method, path);
         response = await request(requestObj);
-        assert(response.statusCode === 404);
+        assert.strictEqual(response.statusCode, 404);
     }
 
     @Test()
@@ -62,12 +62,12 @@ export default class SimpleServerTest extends TestCase {
         this.server.mapHandler(Mapping);
         let response = await request(requestObj);
         const body = await (await response.body()).text();
-        assert(response.statusCode === 200);
-        assert(body === 'request mapping test');
+        assert.strictEqual(response.statusCode, 200);
+        assert.strictEqual(body, 'request mapping test');
 
         this.server.unmapHandler(Mapping);
         response = await request(requestObj);
-        assert(response.statusCode === 404);
+        assert.strictEqual(response.statusCode, 404);
     }
 
     @Test()
@@ -86,35 +86,39 @@ export default class SimpleServerTest extends TestCase {
 
         let response = await request(requestObj);
         let body = await (await response.body()).text();
-        assert(response.statusCode === 200);
-        assert(body === expect);
+        assert.strictEqual(response.statusCode, 200);
+        assert.strictEqual(body, expect);
 
         response = await request(requestObj2);
         body = await (await response.body()).text();
-        assert(response.statusCode === 200);
-        assert(body === expect);
+        assert.strictEqual(response.statusCode, 200);
+        assert.strictEqual(body, expect);
 
         this.server.unmapDirectory('/dir');
 
         response = await request(requestObj);
-        assert(response.statusCode === 404);
+        assert.strictEqual(response.statusCode, 404);
         
         response = await request(requestObj2);
-        assert(response.statusCode === 404);
+        assert.strictEqual(response.statusCode, 404);
     }
 
     @Test()
     async serverStartAndStop() {
         const server = new SimpleServer({ port: 9000, loglevel: 'silent' });
-        assert(!server.running);
+        assert.ok(!server.running);
 
         await server.start();
-        assert(server.running);
-        await this.assertError('server already started', server.start, server);
+        assert.ok(server.running);
+        await assert.rejects(server.start(), {
+            message: 'server already started'
+        });
 
         await server.stop();
-        assert(!server.running);
-        await this.assertError('server already stopped', server.stop, server);
+        assert.ok(!server.running);
+        await assert.rejects(server.stop(), {
+            message: 'server already stopped'
+        });
     }
 }
 

@@ -5,7 +5,6 @@ import { EnvBackedValue } from '../Env';
 import { RequestMethod, Headers, QueryParams, Body, HttpRequest } from './Request';
 import { HttpError, InternalServerError, PageNotFoundError } from './Error';
 import { PathMatcher } from './PathMatcher';
-import {  } from '.';
 import { Logger } from '../Log';
 import { getMetadata } from '../Meta/Metadata';
 
@@ -190,7 +189,7 @@ export class SimpleServer {
         return new Promise((res, rej) => {
             if (this._running) {
                 this.logger.warn('SimpleServer', 'server already started');
-                rej('server already started');
+                rej(new Error('server already started'));
                 return;
             }
             
@@ -206,7 +205,7 @@ export class SimpleServer {
         return new Promise((res, rej) => {
             if (!this._running) {
                 this.logger.warn('SimpleServer', 'server already stopped');
-                rej('server already stopped');
+                rej(new Error('server already stopped'));
             } else {
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {

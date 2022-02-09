@@ -39,9 +39,9 @@ class SimpleServerTest extends TestCase_1.TestCase {
         });
     }
     settings() {
-        (0, assert_1.default)(this.server.hostname === '0.0.0.0');
-        (0, assert_1.default)(this.server.port === 9999);
-        (0, assert_1.default)(this.server.address === 'http://0.0.0.0:9999');
+        assert_1.default.strictEqual(this.server.hostname, '0.0.0.0');
+        assert_1.default.strictEqual(this.server.port, 9999);
+        assert_1.default.strictEqual(this.server.address, 'http://0.0.0.0:9999');
     }
     handlers({ method, path, statusCode, expect }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -55,11 +55,11 @@ class SimpleServerTest extends TestCase_1.TestCase {
             this.server.defineHandler(method, path, () => __awaiter(this, void 0, void 0, function* () { return ({ statusCode, body: expect }); }));
             let response = yield (0, Https_1.request)(requestObj);
             const body = yield (yield response.body()).text();
-            (0, assert_1.default)(response.statusCode === statusCode);
-            (0, assert_1.default)(body === expect);
+            assert_1.default.strictEqual(response.statusCode, statusCode);
+            assert_1.default.strictEqual(body, expect);
             this.server.removeHandler(method, path);
             response = yield (0, Https_1.request)(requestObj);
-            (0, assert_1.default)(response.statusCode === 404);
+            assert_1.default.strictEqual(response.statusCode, 404);
         });
     }
     requestMapping() {
@@ -74,11 +74,11 @@ class SimpleServerTest extends TestCase_1.TestCase {
             this.server.mapHandler(Mapping);
             let response = yield (0, Https_1.request)(requestObj);
             const body = yield (yield response.body()).text();
-            (0, assert_1.default)(response.statusCode === 200);
-            (0, assert_1.default)(body === 'request mapping test');
+            assert_1.default.strictEqual(response.statusCode, 200);
+            assert_1.default.strictEqual(body, 'request mapping test');
             this.server.unmapHandler(Mapping);
             response = yield (0, Https_1.request)(requestObj);
-            (0, assert_1.default)(response.statusCode === 404);
+            assert_1.default.strictEqual(response.statusCode, 404);
         });
     }
     dirMapping() {
@@ -95,29 +95,33 @@ class SimpleServerTest extends TestCase_1.TestCase {
             this.server.mapDirectory('./www', { alias: '/dir' });
             let response = yield (0, Https_1.request)(requestObj);
             let body = yield (yield response.body()).text();
-            (0, assert_1.default)(response.statusCode === 200);
-            (0, assert_1.default)(body === expect);
+            assert_1.default.strictEqual(response.statusCode, 200);
+            assert_1.default.strictEqual(body, expect);
             response = yield (0, Https_1.request)(requestObj2);
             body = yield (yield response.body()).text();
-            (0, assert_1.default)(response.statusCode === 200);
-            (0, assert_1.default)(body === expect);
+            assert_1.default.strictEqual(response.statusCode, 200);
+            assert_1.default.strictEqual(body, expect);
             this.server.unmapDirectory('/dir');
             response = yield (0, Https_1.request)(requestObj);
-            (0, assert_1.default)(response.statusCode === 404);
+            assert_1.default.strictEqual(response.statusCode, 404);
             response = yield (0, Https_1.request)(requestObj2);
-            (0, assert_1.default)(response.statusCode === 404);
+            assert_1.default.strictEqual(response.statusCode, 404);
         });
     }
     serverStartAndStop() {
         return __awaiter(this, void 0, void 0, function* () {
             const server = new Https_1.SimpleServer({ port: 9000, loglevel: 'silent' });
-            (0, assert_1.default)(!server.running);
+            assert_1.default.ok(!server.running);
             yield server.start();
-            (0, assert_1.default)(server.running);
-            yield this.assertError('server already started', server.start, server);
+            assert_1.default.ok(server.running);
+            yield assert_1.default.rejects(server.start(), {
+                message: 'server already started'
+            });
             yield server.stop();
-            (0, assert_1.default)(!server.running);
-            yield this.assertError('server already stopped', server.stop, server);
+            assert_1.default.ok(!server.running);
+            yield assert_1.default.rejects(server.stop(), {
+                message: 'server already stopped'
+            });
         });
     }
 }

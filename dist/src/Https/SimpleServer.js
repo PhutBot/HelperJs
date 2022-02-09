@@ -178,7 +178,7 @@ class SimpleServer {
         return new Promise((res, rej) => {
             if (this._running) {
                 this.logger.warn('SimpleServer', 'server already started');
-                rej('server already started');
+                rej(new Error('server already started'));
                 return;
             }
             this.server.listen(this.port, this.hostname, () => {
@@ -192,7 +192,7 @@ class SimpleServer {
         return new Promise((res, rej) => {
             if (!this._running) {
                 this.logger.warn('SimpleServer', 'server already stopped');
-                rej('server already stopped');
+                rej(new Error('server already stopped'));
             }
             else {
                 this.sockets.forEach(socket => socket.destroy());
