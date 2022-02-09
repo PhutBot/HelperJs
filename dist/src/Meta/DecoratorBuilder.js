@@ -33,12 +33,12 @@ class DecoratorBuilder {
     }
     build() {
         return (arg1, arg2, arg3) => {
-            var _a, _b;
+            var _a;
             if (this.onClassFunc && !!arg1 && !arg2 && !arg3) {
                 const og = arg1;
                 const meta = this.addMeta(og, og.name);
                 const target = this.onClassFunc(og, meta[this.name]);
-                (0, Metadata_1.defineMetadata)((_a = target === null || target === void 0 ? void 0 : target.prototype) !== null && _a !== void 0 ? _a : og.prototype, meta);
+                (0, Metadata_1.defineMetadata)(target !== null && target !== void 0 ? target : og, meta);
                 if (!!target)
                     return target;
             }
@@ -67,7 +67,7 @@ class DecoratorBuilder {
                 const og = arg3;
                 const meta = this.addMeta(og.value, propertyKey);
                 const descriptor = this.onMethodFunc(target, propertyKey, og, meta[this.name]);
-                (0, Metadata_1.defineMetadata)((_b = descriptor === null || descriptor === void 0 ? void 0 : descriptor.value) !== null && _b !== void 0 ? _b : og.value, meta);
+                (0, Metadata_1.defineMetadata)((_a = descriptor === null || descriptor === void 0 ? void 0 : descriptor.value) !== null && _a !== void 0 ? _a : og.value, meta);
                 if (!!descriptor)
                     return descriptor;
             }

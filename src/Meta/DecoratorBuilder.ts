@@ -50,7 +50,7 @@ export class DecoratorBuilder {
         
                 const meta = this.addMeta(og, og.name);
                 const target = this.onClassFunc(og, meta[this.name]);
-                defineMetadata(target?.prototype ?? og.prototype, meta);
+                defineMetadata(target ?? og, meta);
                 if (!!target)
                     return target;
             } else if (this.onPropertyFunc && !!arg1 && !!arg2 && !arg3) {
