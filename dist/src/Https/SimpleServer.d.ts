@@ -10,7 +10,7 @@ interface HandlerRecord {
 export interface HandlerResponse {
     statusCode: number;
     headers?: Headers;
-    body?: string;
+    body?: string | Buffer;
 }
 export declare type RequestHandler = (request: HttpRequest) => Promise<HandlerResponse>;
 export declare type HandlerMap = Record<RequestMethod, Record<string, HandlerRecord>>;

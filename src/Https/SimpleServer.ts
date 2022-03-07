@@ -15,7 +15,7 @@ interface HandlerRecord {
 export interface HandlerResponse {
     statusCode:number;
     headers?:Headers;
-    body?:string;
+    body?:string|Buffer;
 }
 
 export type RequestHandler = (request:HttpRequest) => Promise<HandlerResponse>;
@@ -35,7 +35,7 @@ export class SimpleServer {
 
     private alias2Dir:Record<string,string> = {};
     private dir2Alias:Record<string,string> = {};
-    private cachedFiles:Record<string,string> = {};
+    private cachedFiles:Record<string,string|Buffer> = {};
 
     private logger:Logger;
     private server:http.Server;
@@ -73,8 +73,9 @@ export class SimpleServer {
                 const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
                 const headers = {} as Headers;
                 
+                let encoding:BufferEncoding = 'utf8'
                 let contentType = '';
-                let file:string = ''; // TODO: files should only be cached once even if the path is "different"
+                let file:string|Buffer = ''; // TODO: files should only be cached once even if the path is "different"
                 if (this.useCache && !!options.cache && path in this.cachedFiles) {
                     file = this.cachedFiles[path];
                 } else if (fs.existsSync(path)) {
@@ -84,7 +85,7 @@ export class SimpleServer {
                             contentType = 'text/html';
                         } else if (path.endsWith('.png')) {
                             contentType = 'image/png';
-                            file = fs.readFileSync(`./${path}`, 'binary');
+                            encoding = 'binary';
                         } else if (path.endsWith('.js')) {
                             contentType = 'application/javascript';
                         } else if (path.endsWith('.css')) {
@@ -93,15 +94,14 @@ export class SimpleServer {
                             contentType = 'text/plain';
                         }
 
-                        if (!file)
-                            file = fs.readFileSync(`./${path}`, 'utf8');
+                        file = Buffer.from(fs.readFileSync(`./${path}`, encoding), encoding);
                     } else if (stat.isDirectory()) {
                         if (fs.existsSync(`./${path}/index.html`)) {
                             contentType = 'text/html';
-                            file = fs.readFileSync(`./${path}/index.html`, 'utf8');
+                            file = fs.readFileSync(`./${path}/index.html`, encoding);
                         } else if (fs.existsSync(`./${path}/index.js`)) {
                             contentType = 'application/javascript';
-                            file = fs.readFileSync(`./${path}/index.js`, 'utf8');
+                            file = fs.readFileSync(`./${path}/index.js`, encoding);
                         }
                     } else {
                         reject(new InternalServerError('how is this not a file or a directory??'));
@@ -112,7 +112,7 @@ export class SimpleServer {
                     }
                 } else if (fs.existsSync(path + '.html')) {
                     contentType = 'text/html';
-                    file = fs.readFileSync(`./${path}.html`, 'utf8');
+                    file = fs.readFileSync(`./${path}.html`, encoding);
                     if (this.useCache && !!options.cache) {
                         this.cachedFiles[path] = file;
                     }
