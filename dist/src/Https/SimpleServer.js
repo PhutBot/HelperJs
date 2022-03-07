@@ -36,12 +36,15 @@ class SimpleServer {
         this.cachedFiles = {};
         this.sockets = [];
         this.handlers = { DELETE: {}, GET: {}, PATCH: {}, POST: {}, PUT: {} };
-        this.errorHandlers = {};
+        // private errorHandlers:Record<number,RequestHandler> = {};
         this._running = false;
+        this.preprocessor = (_, view) => view;
         this.logger = new Log_1.Logger((_a = settings.loglevel) !== null && _a !== void 0 ? _a : 'info');
         this.hostname = (_b = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _b !== void 0 ? _b : '0.0.0.0';
         this.port = (_c = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _c !== void 0 ? _c : 8080;
         this.useCache = (_d = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _d !== void 0 ? _d : true;
+        if (!!settings.preprocessor)
+            this.preprocessor = settings.preprocessor;
         this.server = http.createServer(this._rootHandler.bind(this));
         this.server.on('connection', (socket) => {
             this.sockets.push(socket);
@@ -60,8 +63,11 @@ class SimpleServer {
             const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
             const headers = {};
             let encoding = 'utf8';
-            let contentType = '';
-            let file = ''; // TODO: files should only be cached once even if the path is "different"
+            let file = {
+                type: 'text/plain',
+                content: ''
+            };
+            // TODO: files should only be cached once even if the path is "different"
             if (this.useCache && !!options.cache && path in this.cachedFiles) {
                 file = this.cachedFiles[path];
             }
@@ -69,31 +75,28 @@ class SimpleServer {
                 const stat = fs.lstatSync(path);
                 if (stat.isFile()) {
                     if (path.endsWith('.html')) {
-                        contentType = 'text/html';
+                        file.type = 'text/html';
                     }
                     else if (path.endsWith('.png')) {
-                        contentType = 'image/png';
+                        file.type = 'image/png';
                         encoding = 'binary';
                     }
                     else if (path.endsWith('.js')) {
-                        contentType = 'application/javascript';
+                        file.type = 'application/javascript';
                     }
                     else if (path.endsWith('.css')) {
-                        contentType = 'text/css';
+                        file.type = 'text/css';
                     }
-                    else {
-                        contentType = 'text/plain';
-                    }
-                    file = Buffer.from(fs.readFileSync(`./${path}`, encoding), encoding);
+                    file.content = Buffer.from(fs.readFileSync(`./${path}`, encoding), encoding);
                 }
                 else if (stat.isDirectory()) {
                     if (fs.existsSync(`./${path}/index.html`)) {
-                        contentType = 'text/html';
-                        file = fs.readFileSync(`./${path}/index.html`, encoding);
+                        file.type = 'text/html';
+                        file.content = fs.readFileSync(`./${path}/index.html`, encoding);
                     }
                     else if (fs.existsSync(`./${path}/index.js`)) {
-                        contentType = 'application/javascript';
-                        file = fs.readFileSync(`./${path}/index.js`, encoding);
+                        file.type = 'application/javascript';
+                        file.content = fs.readFileSync(`./${path}/index.js`, encoding);
                     }
                 }
                 else {
@@ -104,21 +107,23 @@ class SimpleServer {
                 }
             }
             else if (fs.existsSync(path + '.html')) {
-                contentType = 'text/html';
-                file = fs.readFileSync(`./${path}.html`, encoding);
+                file.type = 'text/html';
+                file.content = fs.readFileSync(`./${path}.html`, encoding);
                 if (this.useCache && !!options.cache) {
                     this.cachedFiles[path] = file;
                 }
             }
-            headers['content-type'] = [contentType];
+            headers['content-type'] = [file.type];
             if (!file) {
                 reject(new Error_1.PageNotFoundError(request.url));
             }
             else {
+                const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
+                    ? this.preprocessor(options.model, file.content)
+                    : file.content;
                 resolve({
                     statusCode: 200,
-                    headers,
-                    body: file
+                    headers, body
                 });
             }
         }), options);

@@ -12,13 +12,15 @@ export interface HandlerResponse {
     headers?: Headers;
     body?: string | Buffer;
 }
-export declare type RequestHandler = (request: HttpRequest) => Promise<HandlerResponse>;
+export declare type RequestHandler = (request: HttpRequest, model?: {}) => Promise<HandlerResponse>;
 export declare type HandlerMap = Record<RequestMethod, Record<string, HandlerRecord>>;
+export declare type PreProcessor = (model: {} | undefined, view: string) => string;
 export interface ServerSettings {
     hostname?: string | EnvBackedValue;
     port?: number | EnvBackedValue;
     useCache?: boolean | EnvBackedValue;
     loglevel?: string;
+    preprocessor?: PreProcessor;
 }
 export declare class SimpleServer {
     readonly hostname: string;
@@ -31,8 +33,8 @@ export declare class SimpleServer {
     private server;
     private sockets;
     private handlers;
-    private errorHandlers;
     private _running;
+    private preprocessor;
     get running(): boolean;
     get address(): string;
     constructor(settings?: ServerSettings);
@@ -40,6 +42,7 @@ export declare class SimpleServer {
         alias?: string;
         force?: boolean;
         cache?: boolean;
+        model?: {};
     }): void;
     unmapDirectory(alias: string): void;
     mapHandler(target: Function): void;

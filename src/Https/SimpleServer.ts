@@ -18,14 +18,21 @@ export interface HandlerResponse {
     body?:string|Buffer;
 }
 
-export type RequestHandler = (request:HttpRequest) => Promise<HandlerResponse>;
+export type RequestHandler = (request:HttpRequest, model?:{}) => Promise<HandlerResponse>;
 export type HandlerMap = Record<RequestMethod,Record<string,HandlerRecord>>;
+
+export type PreProcessor = (model:{}|undefined, view:string) => string;
+interface CachedFile {
+    type:string,
+    content:string|Buffer
+}
 
 export interface ServerSettings {
     hostname?:string|EnvBackedValue;
     port?:number|EnvBackedValue;
     useCache?:boolean|EnvBackedValue;
     loglevel?:string;
+    preprocessor?: PreProcessor;
 }
 
 export class SimpleServer {
@@ -35,14 +42,16 @@ export class SimpleServer {
 
     private alias2Dir:Record<string,string> = {};
     private dir2Alias:Record<string,string> = {};
-    private cachedFiles:Record<string,string|Buffer> = {};
+    private cachedFiles:Record<string,CachedFile> = {};
 
     private logger:Logger;
     private server:http.Server;
     private sockets:Array<Socket> = [];
     private handlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
-    private errorHandlers:Record<number,RequestHandler> = {};
+    // private errorHandlers:Record<number,RequestHandler> = {};
     private _running:boolean = false;
+
+    private preprocessor:PreProcessor = (_, view) => view;
 
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
@@ -53,6 +62,9 @@ export class SimpleServer {
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
         this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
 
+        if (!!settings.preprocessor)
+            this.preprocessor = settings.preprocessor;
+
         this.server = http.createServer(this._rootHandler.bind(this));
 
         this.server.on('connection', (socket:Socket) => {
@@ -60,7 +72,7 @@ export class SimpleServer {
         });
     }
 
-    mapDirectory(dirName:string, options:{ alias?:string, force?:boolean, cache?:boolean } = {}) {
+    mapDirectory(dirName:string, options:{ alias?:string, force?:boolean, cache?:boolean, model?:{} } = {}) {
         dirName = dirName.endsWith('/') ? dirName : `${dirName}/`;
         options.cache = options.cache === undefined ? true : options.cache;
         const _alias = PathMatcher.prepPath(options.alias ?? dirName.replace(/^\./, ''));
@@ -74,34 +86,35 @@ export class SimpleServer {
                 const headers = {} as Headers;
                 
                 let encoding:BufferEncoding = 'utf8'
-                let contentType = '';
-                let file:string|Buffer = ''; // TODO: files should only be cached once even if the path is "different"
+                let file:CachedFile = {
+                    type: 'text/plain',
+                    content: ''
+                };
+                // TODO: files should only be cached once even if the path is "different"
                 if (this.useCache && !!options.cache && path in this.cachedFiles) {
                     file = this.cachedFiles[path];
                 } else if (fs.existsSync(path)) {
                     const stat = fs.lstatSync(path);
                     if (stat.isFile()) {
                         if (path.endsWith('.html')) {
-                            contentType = 'text/html';
+                            file.type = 'text/html';
                         } else if (path.endsWith('.png')) {
-                            contentType = 'image/png';
+                            file.type = 'image/png';
                             encoding = 'binary';
                         } else if (path.endsWith('.js')) {
-                            contentType = 'application/javascript';
+                            file.type = 'application/javascript';
                         } else if (path.endsWith('.css')) {
-                            contentType = 'text/css';
-                        } else {
-                            contentType = 'text/plain';
+                            file.type = 'text/css';
                         }
 
-                        file = Buffer.from(fs.readFileSync(`./${path}`, encoding), encoding);
+                        file.content = Buffer.from(fs.readFileSync(`./${path}`, encoding), encoding);
                     } else if (stat.isDirectory()) {
                         if (fs.existsSync(`./${path}/index.html`)) {
-                            contentType = 'text/html';
-                            file = fs.readFileSync(`./${path}/index.html`, encoding);
+                            file.type = 'text/html';
+                            file.content = fs.readFileSync(`./${path}/index.html`, encoding);
                         } else if (fs.existsSync(`./${path}/index.js`)) {
-                            contentType = 'application/javascript';
-                            file = fs.readFileSync(`./${path}/index.js`, encoding);
+                            file.type = 'application/javascript';
+                            file.content = fs.readFileSync(`./${path}/index.js`, encoding);
                         }
                     } else {
                         reject(new InternalServerError('how is this not a file or a directory??'));
@@ -111,21 +124,23 @@ export class SimpleServer {
                         this.cachedFiles[path] = file;
                     }
                 } else if (fs.existsSync(path + '.html')) {
-                    contentType = 'text/html';
-                    file = fs.readFileSync(`./${path}.html`, encoding);
+                    file.type = 'text/html';
+                    file.content = fs.readFileSync(`./${path}.html`, encoding);
                     if (this.useCache && !!options.cache) {
                         this.cachedFiles[path] = file;
                     }
                 }
                 
-                headers['content-type'] = [contentType];
+                headers['content-type'] = [file.type];
                 if (!file) {
                     reject(new PageNotFoundError(request.url));
                 } else {
+                    const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
+                        ? this.preprocessor(options.model, file.content as string)
+                        : file.content;
                     resolve({
                         statusCode: 200,
-                        headers,
-                        body: file
+                        headers, body
                     });
                 }
             }), options);
