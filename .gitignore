@@ -6,6 +6,7 @@
 !.gitignore
 !.dockerignore
 !.npmignore
+!test/.env
 
 # vscode
 .vscode/
