@@ -82,6 +82,8 @@ export class SimpleServer {
                     if (stat.isFile()) {
                         if (path.endsWith('.html')) {
                             contentType = 'text/html';
+                        } else if (path.endsWith('.png')) {
+                            contentType = 'image/png';
                         } else if (path.endsWith('.js')) {
                             contentType = 'application/javascript';
                         } else if (path.endsWith('.css')) {
