@@ -42,7 +42,8 @@ function logResult(prefix:string, result:Record<TestResult,number>, spaces=0) {
     npmlog.info('','');
 }
 
-export async function RunTests(dir:string, root:string="./") {
+export async function RunTests(dir:string) {
+    const root = process.cwd();
     const fullResults:Record<TestResult,number> = {
         TOTAL: 0,
         PASS: 0,
@@ -54,7 +55,8 @@ export async function RunTests(dir:string, root:string="./") {
         if (filePath === `${dir}/index.js`)
             return;
 
-        const module = await import(path.join(root, filePath));
+        const location = path.join(root, filePath);
+        const module = await import(location);
         if (!!module.default && module.default.prototype instanceof TestCase) {
             const fileResults:Record<TestResult,number> = {
                 TOTAL: 0,

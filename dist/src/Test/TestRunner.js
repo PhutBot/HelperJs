@@ -76,8 +76,9 @@ function logResult(prefix, result, spaces = 0) {
     npmlog_1.default.log(level, prefix, '----------------------------------------------------------------');
     npmlog_1.default.info('', '');
 }
-function RunTests(dir, root = "./") {
+function RunTests(dir) {
     return __awaiter(this, void 0, void 0, function* () {
+        const root = process.cwd();
         const fullResults = {
             TOTAL: 0,
             PASS: 0,
@@ -87,7 +88,8 @@ function RunTests(dir, root = "./") {
         yield walk(dir, (filePath) => __awaiter(this, void 0, void 0, function* () {
             if (filePath === `${dir}/index.js`)
                 return;
-            const module = yield Promise.resolve().then(() => __importStar(require(path_1.default.join(root, filePath))));
+            const location = path_1.default.join(root, filePath);
+            const module = yield Promise.resolve().then(() => __importStar(require(location)));
             if (!!module.default && module.default.prototype instanceof TestCase_1.TestCase) {
                 const fileResults = {
                     TOTAL: 0,
