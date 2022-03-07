@@ -72,6 +72,7 @@ class SimpleServer {
                     }
                     else if (path.endsWith('.png')) {
                         contentType = 'image/png';
+                        file = fs.readFileSync(`./${path}`, 'binary');
                     }
                     else if (path.endsWith('.js')) {
                         contentType = 'application/javascript';
@@ -82,7 +83,8 @@ class SimpleServer {
                     else {
                         contentType = 'text/plain';
                     }
-                    file = fs.readFileSync(`./${path}`, 'utf8');
+                    if (!file)
+                        file = fs.readFileSync(`./${path}`, 'utf8');
                 }
                 else if (stat.isDirectory()) {
                     if (fs.existsSync(`./${path}/index.html`)) {
