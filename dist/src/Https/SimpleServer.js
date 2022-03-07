@@ -118,8 +118,11 @@ class SimpleServer {
                 reject(new Error_1.PageNotFoundError(request.url));
             }
             else {
+                const model = typeof options.model === 'function'
+                    ? options.model()
+                    : options.model;
                 const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
-                    ? this.preprocessor(options.model, file.content)
+                    ? this.preprocessor(model, file.content)
                     : file.content;
                 resolve({
                     statusCode: 200,

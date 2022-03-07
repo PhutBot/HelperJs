@@ -21,7 +21,7 @@ export interface HandlerResponse {
 export type RequestHandler = (request:HttpRequest, model?:{}) => Promise<HandlerResponse>;
 export type HandlerMap = Record<RequestMethod,Record<string,HandlerRecord>>;
 
-export type PreProcessor = (model:{}|undefined, view:string) => string;
+export type PreProcessor = (model:{}|Function|undefined, view:string) => string;
 interface CachedFile {
     type:string,
     content:string|Buffer
@@ -135,8 +135,11 @@ export class SimpleServer {
                 if (!file) {
                     reject(new PageNotFoundError(request.url));
                 } else {
+                    const model = typeof options.model === 'function'
+                        ? options.model()
+                        : options.model; 
                     const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
-                        ? this.preprocessor(options.model, file.content as string)
+                        ? this.preprocessor(model, file.content as string)
                         : file.content;
                     resolve({
                         statusCode: 200,
