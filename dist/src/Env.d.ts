@@ -14,4 +14,5 @@ export declare class EnvBackedValue {
     asInt(): number;
     asFloat(): number;
     set(val: string): void;
+    commit(val?: string): void;
 }

@@ -28,62 +28,68 @@ class EnvTest extends TestCase_1.TestCase {
         super(...arguments);
         this.filename = './.env';
     }
+    before(testcase) {
+        return __awaiter(this, void 0, void 0, function* () {
+            src_1.Env.load(this.filename);
+        });
+    }
     getEnv({ key, val }) {
-        src_1.Env.load(this.filename);
         assert_1.default.equal(src_1.Env.get(key), `${val}`);
     }
-    setEnv({ key, val }) {
-        src_1.Env.load(this.filename);
+    setEnv({ testcase, key, val }) {
+        key += testcase;
         src_1.Env.set(key, val);
         assert_1.default.strictEqual(src_1.Env.get(key), `${val}`);
     }
     getBackedValue({ key, val }) {
-        src_1.Env.load(this.filename);
         const value = new Env_1.EnvBackedValue(key);
         assert_1.default.strictEqual(value.get(), val);
     }
-    setBackedValue({ key, val }) {
-        src_1.Env.load(this.filename);
+    setBackedValue({ testcase, key, val }) {
+        key += testcase;
         const value = new Env_1.EnvBackedValue(key);
         value.set(val);
-        assert_1.default.strictEqual(src_1.Env.get('EXTRA'), val);
+        assert_1.default.strictEqual(src_1.Env.get(key), val);
     }
-    getBackedValueDefault({ key, val }) {
-        src_1.Env.load(this.filename);
+    getBackedValueDefault({ testcase, key, val }) {
+        key += testcase;
         const value = new Env_1.EnvBackedValue(key, val);
         assert_1.default.strictEqual(value.get(), val);
     }
-    getBackedValueAsBool({ key, val, expect }) {
-        src_1.Env.load(this.filename);
+    getBackedValueAsBool({ testcase, key, val, expect }) {
+        key += testcase;
         const value = new Env_1.EnvBackedValue(key, val);
         assert_1.default.strictEqual(value.asBool(), expect);
     }
-    getBackedValueAsInt({ key, val, expect }) {
-        src_1.Env.load(this.filename);
+    getBackedValueAsInt({ testcase, key, val, expect }) {
+        key += testcase;
         const value = new Env_1.EnvBackedValue(key, val);
         assert_1.default.strictEqual(value.asInt(), expect);
     }
-    getBackedValueAsFloat({ key, val, expect }) {
-        src_1.Env.load(this.filename);
+    getBackedValueAsFloat({ testcase, key, val, expect }) {
+        key += testcase;
         const value = new Env_1.EnvBackedValue(key, val);
         assert_1.default.strictEqual(value.asFloat(), expect);
     }
-    getBackedValueAsNan({ key }) {
-        src_1.Env.load(this.filename);
-        const value = new Env_1.EnvBackedValue(key, 'sdfj');
+    getBackedValueAs({ key, val }) {
+        const value = new Env_1.EnvBackedValue(key.toUpperCase());
+        assert_1.default.strictEqual(value[`as${key}`](), val);
+    }
+    getBackedValueAsNan({ testcase, key }) {
+        const value = new Env_1.EnvBackedValue(testcase + key, 'sdfj');
         assert_1.default.ok(Number.isNaN(value[`as${key}`]()));
     }
-    wait({ key, val, timeout }) {
+    wait({ testcase, key, val, timeout }) {
         return __awaiter(this, void 0, void 0, function* () {
-            src_1.Env.load(this.filename);
+            key += testcase;
             setTimeout(() => { src_1.Env.set(key, val); }, 50);
             yield src_1.Env.waitForVar(key, timeout);
             assert_1.default.strictEqual(src_1.Env.get(key), val);
         });
     }
-    timeout({ key, timeout }) {
+    timeout({ testcase, key, timeout }) {
         return __awaiter(this, void 0, void 0, function* () {
-            src_1.Env.load(this.filename);
+            key += testcase;
             yield assert_1.default.rejects(src_1.Env.waitForVar(key, timeout), {
                 message: `Env.waitForVar - timed out waiting for environment var '${key}'`
             });
@@ -123,44 +129,48 @@ __decorate([
 ], EnvTest.prototype, "getBackedValueDefault", null);
 __decorate([
     (0, decorators_1.Unroll)([
-        { key: 'BOOL', val: undefined, expect: true },
-        { key: 'bool', val: '1', expect: true },
-        { key: 'bool', val: 'true', expect: true },
-        { key: 'bool', val: 'yes', expect: true },
-        { key: 'bool', val: 'on', expect: true },
-        { key: 'bool', val: 'TRUE', expect: true },
-        { key: 'bool', val: 'YES', expect: true },
-        { key: 'bool', val: 'ON', expect: true },
-        { key: 'bool', val: '0', expect: false },
-        { key: 'bool', val: 'false', expect: false },
-        { key: 'bool', val: 'no', expect: false },
-        { key: 'bool', val: 'off', expect: false },
-        { key: 'bool', val: 'FALSE', expect: false },
-        { key: 'bool', val: 'NO', expect: false },
-        { key: 'bool', val: 'OFF', expect: false },
-        { key: 'bool', val: 'sdfh', expect: false },
+        { key: 'Bool', val: '1', expect: true },
+        { key: 'Bool', val: 'true', expect: true },
+        { key: 'Bool', val: 'yes', expect: true },
+        { key: 'Bool', val: 'on', expect: true },
+        { key: 'Bool', val: 'TRUE', expect: true },
+        { key: 'Bool', val: 'YES', expect: true },
+        { key: 'Bool', val: 'ON', expect: true },
+        { key: 'Bool', val: '0', expect: false },
+        { key: 'Bool', val: 'false', expect: false },
+        { key: 'Bool', val: 'no', expect: false },
+        { key: 'Bool', val: 'off', expect: false },
+        { key: 'Bool', val: 'FALSE', expect: false },
+        { key: 'Bool', val: 'NO', expect: false },
+        { key: 'Bool', val: 'OFF', expect: false },
+        { key: 'Bool', val: 'sdfh', expect: false },
     ])
 ], EnvTest.prototype, "getBackedValueAsBool", null);
 __decorate([
     (0, decorators_1.Unroll)([
-        { key: 'INT', val: undefined, expect: 8090 },
-        { key: 'int', val: '1', expect: 1 },
-        { key: 'int', val: '123', expect: 123 },
-        { key: 'int', val: '1.34', expect: 1 },
-        { key: 'int', val: '4.32', expect: 4 },
-        { key: 'int', val: '-10', expect: -10 },
+        { key: 'Int', val: '1', expect: 1 },
+        { key: 'Int', val: '123', expect: 123 },
+        { key: 'Int', val: '1.34', expect: 1 },
+        { key: 'Int', val: '4.32', expect: 4 },
+        { key: 'Int', val: '-10', expect: -10 },
     ])
 ], EnvTest.prototype, "getBackedValueAsInt", null);
 __decorate([
     (0, decorators_1.Unroll)([
-        { key: 'FLOAT', val: undefined, expect: 0.123 },
-        { key: 'float', val: '1', expect: 1 },
-        { key: 'float', val: '123', expect: 123 },
-        { key: 'float', val: '1.34', expect: 1.34 },
-        { key: 'float', val: '4.32', expect: 4.32 },
-        { key: 'float', val: '-10', expect: -10 },
+        { key: 'Float', val: '1', expect: 1 },
+        { key: 'Float', val: '123', expect: 123 },
+        { key: 'Float', val: '1.34', expect: 1.34 },
+        { key: 'Float', val: '4.32', expect: 4.32 },
+        { key: 'Float', val: '-10', expect: -10 },
     ])
 ], EnvTest.prototype, "getBackedValueAsFloat", null);
+__decorate([
+    (0, decorators_1.Unroll)([
+        { key: 'Bool', val: true },
+        { key: 'Int', val: 8090 },
+        { key: 'Float', val: 0.123 },
+    ])
+], EnvTest.prototype, "getBackedValueAs", null);
 __decorate([
     (0, decorators_1.Unroll)([
         { key: 'Int' },

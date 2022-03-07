@@ -2,6 +2,6 @@ export class TestCase {
 
     async setup() {}
     async teardown() {}
-    async before() {}
-    async after() {}
+    async before(testcase:string) {}
+    async after(testcase:string) {}
 }

@@ -20,7 +20,7 @@ export function load(file:string) {
     const filecontent = fs.readFileSync(file).toString();
 
     vars = [];
-    filecontent.split('\n')
+    filecontent.split(/\r?\n/)
         .filter(line => !!line.trim())
         .forEach(line => {
             const split = line.indexOf('=');
@@ -93,6 +93,14 @@ export class EnvBackedValue {
 
     set(val:string) {
         set(this.key, val);
+    }
+
+    commit(val?:string) {
+        if (!val) {
+            val = get(this.key);
+        }
+        
+        set(this.key, val as string);
         if (!EnvBackedValue.saveTimeout) {
             EnvBackedValue.saveTimeout = setTimeout(() => {
                 save();

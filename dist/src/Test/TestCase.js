@@ -17,10 +17,10 @@ class TestCase {
     teardown() {
         return __awaiter(this, void 0, void 0, function* () { });
     }
-    before() {
+    before(testcase) {
         return __awaiter(this, void 0, void 0, function* () { });
     }
-    after() {
+    after(testcase) {
         return __awaiter(this, void 0, void 0, function* () { });
     }
 }

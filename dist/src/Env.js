@@ -40,7 +40,7 @@ function load(file) {
     filename = file;
     const filecontent = fs.readFileSync(file).toString();
     vars = [];
-    filecontent.split('\n')
+    filecontent.split(/\r?\n/)
         .filter(line => !!line.trim())
         .forEach(line => {
         const split = line.indexOf('=');
@@ -104,6 +104,12 @@ class EnvBackedValue {
         return Number.parseFloat((_a = this.get()) !== null && _a !== void 0 ? _a : '0');
     }
     set(val) {
+        set(this.key, val);
+    }
+    commit(val) {
+        if (!val) {
+            val = get(this.key);
+        }
         set(this.key, val);
         if (!EnvBackedValue.saveTimeout) {
             EnvBackedValue.saveTimeout = setTimeout(() => {
