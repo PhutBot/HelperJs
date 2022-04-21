@@ -119,7 +119,7 @@ class SimpleServer {
             }
             else {
                 const model = typeof options.model === 'function'
-                    ? options.model()
+                    ? options.model({ request })
                     : options.model;
                 const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
                     ? this.preprocessor(model, file.content)

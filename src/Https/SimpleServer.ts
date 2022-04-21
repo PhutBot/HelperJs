@@ -136,7 +136,7 @@ export class SimpleServer {
                     reject(new PageNotFoundError(request.url));
                 } else {
                     const model = typeof options.model === 'function'
-                        ? options.model({ url: request.url })
+                        ? options.model({ request })
                         : options.model; 
                     const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
                         ? this.preprocessor(model, file.content as string)
