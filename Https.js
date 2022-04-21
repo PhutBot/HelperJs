@@ -122,7 +122,7 @@ class SimpleServer {
     }
 
     get hostname() {
-        return this._settings.hostname === '0.0.0.0' ? 'localhost' : this._settings.hostname;
+        return this._settings.hostname;
     }
 
     get address() {
@@ -140,7 +140,7 @@ class SimpleServer {
 
     start() {
         this._server.listen(this.port, this.hostname, () => {
-                console.log(`[INFO] SimpleServer.start: Server started @ ${this.address}`);
+                console.log(`[INFO] SimpleServer.start: Server started @ http://${this._settings.hostname === '0.0.0.0' ? 'localhost' : this._settings.hostname}:${this.port}`);
             });
     }
 
