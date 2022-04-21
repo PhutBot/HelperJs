@@ -101,6 +101,9 @@ export class SimpleServer {
                         } else if (path.endsWith('.png')) {
                             file.type = 'image/png';
                             encoding = 'binary';
+                        } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+                            file.type = 'image/jpeg';
+                            encoding = 'binary';
                         } else if (path.endsWith('.js')) {
                             file.type = 'application/javascript';
                         } else if (path.endsWith('.css')) {
