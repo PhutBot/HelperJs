@@ -69,6 +69,9 @@ export class SimpleServer {
 
         this.server.on('connection', (socket:Socket) => {
             this.sockets.push(socket);
+            socket.on('data', (data) => {
+                this.logger.silly('SimpleServer', data.toString());
+            });
         });
     }
 

@@ -48,6 +48,9 @@ class SimpleServer {
         this.server = http.createServer(this._rootHandler.bind(this));
         this.server.on('connection', (socket) => {
             this.sockets.push(socket);
+            socket.on('data', (data) => {
+                this.logger.silly('SimpleServer', data.toString());
+            });
         });
     }
     get running() { return this._running; }
