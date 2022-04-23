@@ -281,7 +281,12 @@ export class SimpleServer {
             const headers:Headers = {};
             Object.entries(req.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
-                if (!!val) headers[key].push(val);
+                if (!!val) {
+                    if (Array.isArray(val))
+                        headers[key].push(...val);
+                    else
+                        headers[key].push(val);
+                }
             });
             
             const queryParams:QueryParams = {};
