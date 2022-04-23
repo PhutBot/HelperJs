@@ -69,7 +69,7 @@ export class SimpleServer {
 
         this.server.on('connection', (socket:Socket) => {
             this.sockets.push(socket);
-            dispatchEvent(new CustomEvent('connection', { detail: socket }));
+            window.dispatchEvent(new CustomEvent('simple-server-connection', { detail: socket }));
         });
     }
 
