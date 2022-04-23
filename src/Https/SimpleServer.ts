@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as fs from 'fs';
+import * as events from 'events';
 import { Socket } from 'net';
 import { EnvBackedValue } from '../Env';
 import { RequestMethod, Headers, QueryParams, Body, HttpRequest } from './Request';
@@ -44,6 +45,8 @@ export class SimpleServer {
     private dir2Alias:Record<string,string> = {};
     private cachedFiles:Record<string,CachedFile> = {};
 
+    
+    private eventEmitter:events.EventEmitter = new events.EventEmitter();
     private logger:Logger;
     private server:http.Server;
     private sockets:Array<Socket> = [];
@@ -69,7 +72,13 @@ export class SimpleServer {
 
         this.server.on('connection', (socket:Socket) => {
             this.sockets.push(socket);
-            window.dispatchEvent(new CustomEvent('simple-server-connection', { detail: socket }));
+            this.eventEmitter.emit('simple-server-connection', { detail: socket });
+        });
+    }
+
+    addEventListener(eventName:string, handler:Function) {
+        this.eventEmitter.addListener(eventName, (...args) => {
+            handler(args[0]);
         });
     }
 

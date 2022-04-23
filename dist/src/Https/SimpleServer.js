@@ -22,6 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SimpleServer = void 0;
 const http = __importStar(require("http"));
 const fs = __importStar(require("fs"));
+const events = __importStar(require("events"));
 const Env_1 = require("../Env");
 const Request_1 = require("./Request");
 const Error_1 = require("./Error");
@@ -34,6 +35,7 @@ class SimpleServer {
         this.alias2Dir = {};
         this.dir2Alias = {};
         this.cachedFiles = {};
+        this.eventEmitter = new events.EventEmitter();
         this.sockets = [];
         this.handlers = { DELETE: {}, GET: {}, PATCH: {}, POST: {}, PUT: {} };
         // private errorHandlers:Record<number,RequestHandler> = {};
@@ -48,11 +50,16 @@ class SimpleServer {
         this.server = http.createServer(this._rootHandler.bind(this));
         this.server.on('connection', (socket) => {
             this.sockets.push(socket);
-            window.dispatchEvent(new CustomEvent('simple-server-connection', { detail: socket }));
+            this.eventEmitter.emit('simple-server-connection', { detail: socket });
         });
     }
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
+    addEventListener(eventName, handler) {
+        this.eventEmitter.addListener(eventName, (...args) => {
+            handler(args[0]);
+        });
+    }
     mapDirectory(dirName, options = {}) {
         var _a;
         dirName = dirName.endsWith('/') ? dirName : `${dirName}/`;

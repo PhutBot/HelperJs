@@ -29,6 +29,7 @@ export declare class SimpleServer {
     private alias2Dir;
     private dir2Alias;
     private cachedFiles;
+    private eventEmitter;
     private logger;
     private server;
     private sockets;
@@ -38,6 +39,7 @@ export declare class SimpleServer {
     get running(): boolean;
     get address(): string;
     constructor(settings?: ServerSettings);
+    addEventListener(eventName: string, handler: Function): void;
     mapDirectory(dirName: string, options?: {
         alias?: string;
         force?: boolean;
