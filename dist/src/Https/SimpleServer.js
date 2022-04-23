@@ -81,10 +81,6 @@ class SimpleServer {
                         file.type = 'image/png';
                         encoding = 'binary';
                     }
-                    else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
-                        file.type = 'image/jpeg';
-                        encoding = 'binary';
-                    }
                     else if (path.endsWith('.js')) {
                         file.type = 'application/javascript';
                     }
@@ -264,7 +260,7 @@ class SimpleServer {
             Object.entries(req.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
                 if (!!val)
-                    headers[key].push(...val);
+                    headers[key].push(val);
             });
             const queryParams = {};
             for (const [key, val] of url.searchParams.entries()) {
