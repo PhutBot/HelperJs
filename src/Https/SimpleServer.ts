@@ -101,9 +101,6 @@ export class SimpleServer {
                         } else if (path.endsWith('.png')) {
                             file.type = 'image/png';
                             encoding = 'binary';
-                        } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
-                            file.type = 'image/jpeg';
-                            encoding = 'binary';
                         } else if (path.endsWith('.js')) {
                             file.type = 'application/javascript';
                         } else if (path.endsWith('.css')) {
@@ -284,7 +281,7 @@ export class SimpleServer {
             const headers:Headers = {};
             Object.entries(req.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
-                if (!!val) headers[key].push(...val);
+                if (!!val) headers[key].push(val);
             });
             
             const queryParams:QueryParams = {};
