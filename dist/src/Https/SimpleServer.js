@@ -89,6 +89,10 @@ class SimpleServer {
                         file.type = 'image/png';
                         encoding = 'binary';
                     }
+                    else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+                        file.type = 'image/jpeg';
+                        encoding = 'binary';
+                    }
                     else if (path.endsWith('.js')) {
                         file.type = 'application/javascript';
                     }
