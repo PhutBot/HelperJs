@@ -307,6 +307,7 @@ export class SimpleServer {
 
             const { handler, pathParams } = this._getHandler(method, url);
             handler({
+                    socket: req.socket,
                     method,
                     url,
                     path,

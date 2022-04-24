@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import * as net from 'net';
 import { PathParams } from './PathMatcher';
 export declare enum RequestProtocol {
     HTTP = "HTTP",
@@ -30,6 +32,7 @@ export declare class Body {
     json(): Promise<any>;
 }
 export interface HttpRequest {
+    socket: net.Socket;
     method: RequestMethod;
     url: URL;
     path: string;

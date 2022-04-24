@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as https from 'https';
+import * as net from 'net';
 import { PathParams } from './PathMatcher';
 
 export enum RequestProtocol {
@@ -42,6 +43,7 @@ export class Body {
 }
 
 export interface HttpRequest {
+    socket:net.Socket;
     method:RequestMethod;
     url:URL;
     path:string;
