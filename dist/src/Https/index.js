@@ -13,4 +13,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Error"), exports);
 __exportStar(require("./Request"), exports);
 __exportStar(require("./SimpleServer"), exports);
+__exportStar(require("./Middleware"), exports);
 //# sourceMappingURL=index.js.map
