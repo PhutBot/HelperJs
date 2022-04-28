@@ -23,11 +23,10 @@ function Test(c) {
         const og = descriptor.value;
         descriptor.value = function (_) {
             return __awaiter(this, void 0, void 0, function* () {
+                const test = this;
+                const ctx = yield test.before(key);
                 try {
-                    const test = this;
-                    yield test.before(key);
-                    yield og.call(this, Object.assign({ testcase: key }, c));
-                    yield test.after(key);
+                    yield og.call(this, Object.assign({ context: ctx, testcase: key }, c));
                     npmlog_1.default.info(target.constructor.name, `pass - ${key}`);
                     return [TestRunner_1.TestResult.PASS];
                 }
@@ -45,6 +44,9 @@ function Test(c) {
                         return [TestRunner_1.TestResult.ERROR];
                     }
                 }
+                finally {
+                    yield test.after(key, ctx);
+                }
             });
         };
     }).build();
@@ -58,11 +60,10 @@ function Unroll(cases) {
             return __awaiter(this, void 0, void 0, function* () {
                 return yield Promise.all(cases.map((c, i) => __awaiter(this, void 0, void 0, function* () {
                     const testcase = `${key}_${i}`;
+                    const test = this;
+                    const ctx = yield test.before(testcase);
                     try {
-                        const test = this;
-                        yield test.before(testcase);
-                        yield og.call(this, Object.assign({ testcase }, c));
-                        yield test.after(testcase);
+                        yield og.call(this, Object.assign({ context: ctx, testcase }, c));
                         npmlog_1.default.info(target.constructor.name, `pass - ${testcase}`);
                         return TestRunner_1.TestResult.PASS;
                     }
@@ -79,6 +80,9 @@ function Unroll(cases) {
                             npmlog_1.default.error(target.constructor.name, `${err}`);
                             return TestRunner_1.TestResult.ERROR;
                         }
+                    }
+                    finally {
+                        yield test.after(testcase, ctx);
                     }
                 })));
             });

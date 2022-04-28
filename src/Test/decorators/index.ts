@@ -9,11 +9,11 @@ export function Test(c?:{}) {
         .onMethod((target, key, descriptor, meta) => {
             const og = descriptor.value;
             descriptor.value = async function(_:any) {
+                const test = this as TestCase; 
+                const ctx = await test.before(key);
+
                 try {
-                    const test = this as TestCase; 
-                    await test.before(key);
-                    await og.call(this, { testcase: key, ...c });
-                    await test.after(key);
+                    await og.call(this, { context: ctx, testcase: key, ...c });
                     npmlog.info(target.constructor.name, `pass - ${key}`);
                     return [ TestResult.PASS ];
                 } catch (err) {
@@ -28,6 +28,8 @@ export function Test(c?:{}) {
                         npmlog.error(target.constructor.name, `${err}`);
                         return [ TestResult.ERROR ];
                     }
+                } finally {
+                    await test.after(key, ctx);
                 }
             };
         }).build();
@@ -40,11 +42,11 @@ export function Unroll(cases:object[]) {
             descriptor.value = async function(_:any) {
                 return await Promise.all(cases.map(async (c:any, i:number) => {
                         const testcase = `${key}_${i}`;
+                        const test = this as TestCase; 
+                        const ctx = await test.before(testcase);
+                        
                         try {
-                            const test = this as TestCase; 
-                            await test.before(testcase);
-                            await og.call(this, { testcase, ...c });
-                            await test.after(testcase);
+                            await og.call(this, { context: ctx, testcase, ...c });
                             npmlog.info(target.constructor.name, `pass - ${testcase}`);
                             return TestResult.PASS;
                         } catch (err) {
@@ -59,6 +61,8 @@ export function Unroll(cases:object[]) {
                                 npmlog.error(target.constructor.name, `${err}`);
                                 return TestResult.ERROR;
                             }
+                        } finally {
+                            await test.after(testcase, ctx);
                         }
                     }));
             };

@@ -20,7 +20,7 @@ class TestCase {
     before(testcase) {
         return __awaiter(this, void 0, void 0, function* () { });
     }
-    after(testcase) {
+    after(testcase, ctx) {
         return __awaiter(this, void 0, void 0, function* () { });
     }
 }
