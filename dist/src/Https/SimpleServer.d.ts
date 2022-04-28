@@ -53,6 +53,7 @@ export declare class SimpleServer {
         force?: boolean;
     }): void;
     removeHandler(method: string | RequestMethod, path: string): void;
+    removeAllHandlers(): void;
     start(): Promise<unknown>;
     stop(): Promise<unknown>;
     _getHandler(m: string | RequestMethod, url: URL): {

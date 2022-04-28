@@ -113,6 +113,7 @@ class SimpleServer {
                 }
                 else {
                     reject(new Error_1.InternalServerError('how is this not a file or a directory??'));
+                    return;
                 }
                 if (this.useCache && !!options.cache && !!file) {
                     this.cachedFiles[path] = file;
@@ -125,22 +126,21 @@ class SimpleServer {
                     this.cachedFiles[path] = file;
                 }
             }
-            headers['content-type'] = [file.type];
-            if (!file) {
-                reject(new Error_1.PageNotFoundError(request.url));
-            }
             else {
-                const model = typeof options.model === 'function'
-                    ? options.model({ request })
-                    : options.model;
-                const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
-                    ? this.preprocessor(model, file.content)
-                    : file.content;
-                resolve({
-                    statusCode: 200,
-                    headers, body
-                });
+                reject(new Error_1.PageNotFoundError(request.url));
+                return;
             }
+            headers['content-type'] = [file.type];
+            const model = typeof options.model === 'function'
+                ? options.model({ request })
+                : options.model;
+            const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
+                ? this.preprocessor(model, file.content)
+                : file.content;
+            resolve({
+                statusCode: 200,
+                headers, body
+            });
         }), options);
     }
     unmapDirectory(alias) {
@@ -198,6 +198,13 @@ class SimpleServer {
     }
     removeHandler(method, path) {
         delete this.handlers[method][PathMatcher_1.PathMatcher.prepPath(path)];
+    }
+    removeAllHandlers() {
+        Object.entries(this.handlers).forEach(([method, handlers]) => {
+            Object.entries(handlers).forEach(([path, handler]) => {
+                delete this.handlers[method][PathMatcher_1.PathMatcher.prepPath(path)];
+            });
+        });
     }
     start() {
         return new Promise((res, rej) => {

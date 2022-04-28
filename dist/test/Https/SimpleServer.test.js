@@ -23,76 +23,109 @@ const TestCase_1 = require("../../src/Test/TestCase");
 const decorators_1 = require("../../src/Test/decorators");
 const Https_1 = require("../../src/Https");
 const decorators_2 = require("../../src/Https/decorators");
+const Rand_1 = require("../../src/Rand");
 class SimpleServerTest extends TestCase_1.TestCase {
     constructor() {
         super(...arguments);
-        this.server = new Https_1.SimpleServer({ port: 9999, loglevel: 'silent' });
+        this.portItr = 10000;
     }
-    setup() {
+    before(testcase) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.server.start();
+            const server = new Https_1.SimpleServer({ port: this.portItr++, loglevel: 'silent' });
+            yield server.start();
+            return { server };
         });
     }
-    teardown() {
+    after(testcase, context) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.server.stop();
+            yield context.server.stop();
         });
     }
-    settings() {
-        assert_1.default.strictEqual(this.server.hostname, '0.0.0.0');
-        assert_1.default.strictEqual(this.server.port, 9999);
-        assert_1.default.strictEqual(this.server.address, 'http://0.0.0.0:9999');
+    settings(_) {
+        const server = new Https_1.SimpleServer({ port: 9999, loglevel: 'silent' });
+        assert_1.default.strictEqual(server.hostname, '0.0.0.0');
+        assert_1.default.strictEqual(server.port, 9999);
+        assert_1.default.strictEqual(server.address, 'http://0.0.0.0:9999');
     }
-    handlers({ method, path, statusCode, expect }) {
+    handlers({ context, method, path, statusCode, expect }) {
         return __awaiter(this, void 0, void 0, function* () {
             const requestObj = {
                 protocol: 'HTTP',
                 method,
-                hostname: this.server.hostname,
-                port: this.server.port,
+                hostname: context.server.hostname,
+                port: context.server.port,
                 uri: path
             };
-            this.server.defineHandler(method, path, () => __awaiter(this, void 0, void 0, function* () { return ({ statusCode, body: expect }); }));
+            context.server.defineHandler(method, path, () => __awaiter(this, void 0, void 0, function* () { return ({ statusCode, body: expect }); }));
             let response = yield (0, Https_1.request)(requestObj);
             const body = yield (yield response.body()).text();
             assert_1.default.strictEqual(response.statusCode, statusCode);
             assert_1.default.strictEqual(body, expect);
-            this.server.removeHandler(method, path);
+            context.server.removeHandler(method, path);
             response = yield (0, Https_1.request)(requestObj);
             assert_1.default.strictEqual(response.statusCode, 404);
         });
     }
-    requestMapping() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const requestObj = {
-                protocol: 'HTTP',
-                method: 'PUT',
-                hostname: this.server.hostname,
-                port: this.server.port,
-                uri: '/request/mapping/test'
-            };
-            this.server.mapHandler(Mapping);
-            let response = yield (0, Https_1.request)(requestObj);
-            const body = yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, 200);
-            assert_1.default.strictEqual(body, 'request mapping test');
-            this.server.unmapHandler(Mapping);
-            response = yield (0, Https_1.request)(requestObj);
-            assert_1.default.strictEqual(response.statusCode, 404);
-        });
-    }
-    dirMapping() {
+    error404({ context }) {
         return __awaiter(this, void 0, void 0, function* () {
             const requestObj = {
                 protocol: 'HTTP',
                 method: 'GET',
-                hostname: this.server.hostname,
-                port: this.server.port,
+                hostname: context.server.hostname,
+                port: context.server.port,
+                uri: '/error404'
+            };
+            let response = yield (0, Https_1.request)(requestObj);
+            yield (yield response.body()).text();
+            assert_1.default.strictEqual(response.statusCode, 404);
+        });
+    }
+    error500({ context }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requestObj = {
+                protocol: 'HTTP',
+                method: 'GET',
+                hostname: context.server.hostname,
+                port: context.server.port,
+                uri: '/error500'
+            };
+            context.server.defineHandler(requestObj.method, requestObj.uri, () => __awaiter(this, void 0, void 0, function* () { throw 'error'; }));
+            let response = yield (0, Https_1.request)(requestObj);
+            yield (yield response.body()).text();
+            assert_1.default.strictEqual(response.statusCode, 500);
+        });
+    }
+    requestMapping({ context }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requestObj = {
+                protocol: 'HTTP',
+                method: 'PUT',
+                hostname: context.server.hostname,
+                port: context.server.port,
+                uri: '/request/mapping/test'
+            };
+            context.server.mapHandler(Mapping);
+            let response = yield (0, Https_1.request)(requestObj);
+            const body = yield (yield response.body()).text();
+            assert_1.default.strictEqual(response.statusCode, 200);
+            assert_1.default.strictEqual(body, 'request mapping test');
+            context.server.unmapHandler(Mapping);
+            response = yield (0, Https_1.request)(requestObj);
+            assert_1.default.strictEqual(response.statusCode, 404);
+        });
+    }
+    dirMapping200({ context }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requestObj = {
+                protocol: 'HTTP',
+                method: 'GET',
+                hostname: context.server.hostname,
+                port: context.server.port,
                 uri: '/dir'
             };
-            const requestObj2 = Object.assign(Object.assign({}, requestObj), { uri: '/dir/index.html' });
+            const requestObj2 = Object.assign(Object.assign({}, requestObj), { uri: `${requestObj.uri}/index.html` });
             const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
-            this.server.mapDirectory('./www', { alias: '/dir' });
+            context.server.mapDirectory('./www', { alias: requestObj.uri });
             let response = yield (0, Https_1.request)(requestObj);
             let body = yield (yield response.body()).text();
             assert_1.default.strictEqual(response.statusCode, 200);
@@ -101,14 +134,30 @@ class SimpleServerTest extends TestCase_1.TestCase {
             body = yield (yield response.body()).text();
             assert_1.default.strictEqual(response.statusCode, 200);
             assert_1.default.strictEqual(body, expect);
-            this.server.unmapDirectory('/dir');
+            response = yield (0, Https_1.request)(Object.assign(Object.assign({}, requestObj), { uri: `/dir/${(0, Rand_1.rString)(32)}` }));
+            assert_1.default.strictEqual(response.statusCode, 404);
+            context.server.unmapDirectory(requestObj.uri);
             response = yield (0, Https_1.request)(requestObj);
             assert_1.default.strictEqual(response.statusCode, 404);
             response = yield (0, Https_1.request)(requestObj2);
             assert_1.default.strictEqual(response.statusCode, 404);
         });
     }
-    serverStartAndStop() {
+    dirMapping404({ context }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requestObj = {
+                protocol: 'HTTP',
+                method: 'GET',
+                hostname: context.server.hostname,
+                port: context.server.port,
+                uri: `/dir/${(0, Rand_1.rString)(32)}`
+            };
+            context.server.mapDirectory('./www', { alias: '/dir' });
+            let response = yield (0, Https_1.request)(requestObj);
+            assert_1.default.strictEqual(response.statusCode, 404);
+        });
+    }
+    serverStartAndStop(_) {
         return __awaiter(this, void 0, void 0, function* () {
             const server = new Https_1.SimpleServer({ port: 9000, loglevel: 'silent' });
             assert_1.default.ok(!server.running);
@@ -139,10 +188,19 @@ __decorate([
 ], SimpleServerTest.prototype, "handlers", null);
 __decorate([
     (0, decorators_1.Test)()
+], SimpleServerTest.prototype, "error404", null);
+__decorate([
+    (0, decorators_1.Test)()
+], SimpleServerTest.prototype, "error500", null);
+__decorate([
+    (0, decorators_1.Test)()
 ], SimpleServerTest.prototype, "requestMapping", null);
 __decorate([
     (0, decorators_1.Test)()
-], SimpleServerTest.prototype, "dirMapping", null);
+], SimpleServerTest.prototype, "dirMapping200", null);
+__decorate([
+    (0, decorators_1.Test)()
+], SimpleServerTest.prototype, "dirMapping404", null);
 __decorate([
     (0, decorators_1.Test)()
 ], SimpleServerTest.prototype, "serverStartAndStop", null);

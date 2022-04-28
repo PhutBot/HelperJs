@@ -1,11 +1,17 @@
 import { TestCase } from "../../src/Test/TestCase";
+import { SimpleServer } from "../../src/Https";
 export default class SimpleServerTest extends TestCase {
-    private server;
-    setup(): Promise<void>;
-    teardown(): Promise<void>;
-    settings(): void;
-    handlers({ method, path, statusCode, expect }: any): Promise<void>;
-    requestMapping(): Promise<void>;
-    dirMapping(): Promise<void>;
-    serverStartAndStop(): Promise<void>;
+    private portItr;
+    before(testcase: string): Promise<{
+        server: SimpleServer;
+    }>;
+    after(testcase: string, context: any): Promise<void>;
+    settings(_: any): void;
+    handlers({ context, method, path, statusCode, expect }: any): Promise<void>;
+    error404({ context }: any): Promise<void>;
+    error500({ context }: any): Promise<void>;
+    requestMapping({ context }: any): Promise<void>;
+    dirMapping200({ context }: any): Promise<void>;
+    dirMapping404({ context }: any): Promise<void>;
+    serverStartAndStop(_: any): Promise<void>;
 }

@@ -3,23 +3,27 @@ import { TestCase } from "../../src/Test/TestCase";
 import { Test, Unroll } from "../../src/Test/decorators";
 import { request, SimpleServer } from "../../src/Https";
 import { RequestMapping } from "../../src/Https/decorators";
+import { rString } from "../../src/Rand";
 
 export default class SimpleServerTest extends TestCase {
-    private server = new SimpleServer({ port: 9999, loglevel: 'silent' });
+    private portItr = 10000;
 
-    async setup() {
-        await this.server.start();
+    async before(testcase:string) {
+        const server = new SimpleServer({ port: this.portItr++, loglevel: 'silent' });
+        await server.start();
+        return { server };
     }
-    
-    async teardown() {
-        await this.server.stop();
+
+    async after(testcase:string, context:any) {
+        await context.server.stop();
     }
 
     @Test()
-    settings() {
-        assert.strictEqual(this.server.hostname, '0.0.0.0');
-        assert.strictEqual(this.server.port, 9999);
-        assert.strictEqual(this.server.address, 'http://0.0.0.0:9999');
+    settings(_:any) {
+        const server = new SimpleServer({ port: 9999, loglevel: 'silent' });
+        assert.strictEqual(server.hostname, '0.0.0.0');
+        assert.strictEqual(server.port, 9999);
+        assert.strictEqual(server.address, 'http://0.0.0.0:9999');
     }
 
     @Unroll([
@@ -29,60 +33,91 @@ export default class SimpleServerTest extends TestCase {
         { method: 'POST',   path: '/post',   statusCode: 200, expect: 'content' },
         { method: 'PUT',    path: '/put',    statusCode: 200, expect: 'content' },
     ])
-    async handlers({ method, path, statusCode, expect }:any) {
+    async handlers({ context, method, path, statusCode, expect }:any) {
         const requestObj = {
             protocol: 'HTTP',
             method,
-            hostname: this.server.hostname,
-            port: this.server.port,
+            hostname: context.server.hostname,
+            port: context.server.port,
             uri: path
         };
 
-        this.server.defineHandler(method, path, async () => ({ statusCode, body: expect }));
+        context.server.defineHandler(method, path, async () => ({ statusCode, body: expect }));
         let response = await request(requestObj);
         const body = await (await response.body()).text();
         assert.strictEqual(response.statusCode, statusCode);
         assert.strictEqual(body, expect);
         
-        this.server.removeHandler(method, path);
+        context.server.removeHandler(method, path);
         response = await request(requestObj);
         assert.strictEqual(response.statusCode, 404);
     }
 
     @Test()
-    async requestMapping() {
+    async error404({ context }:any) {
+        const requestObj = {
+            protocol: 'HTTP',
+            method: 'GET',
+            hostname: context.server.hostname,
+            port: context.server.port,
+            uri: '/error404'
+        };
+
+        let response = await request(requestObj);
+        await (await response.body()).text();
+        assert.strictEqual(response.statusCode, 404);
+    }
+
+    @Test()
+    async error500({ context }:any) {
+        const requestObj = {
+            protocol: 'HTTP',
+            method: 'GET',
+            hostname: context.server.hostname,
+            port: context.server.port,
+            uri: '/error500'
+        };
+
+        context.server.defineHandler(requestObj.method, requestObj.uri, async () => { throw 'error'; });
+        let response = await request(requestObj);
+        await (await response.body()).text();
+        assert.strictEqual(response.statusCode, 500);
+    }
+
+    @Test()
+    async requestMapping({ context }:any) {
         const requestObj = {
             protocol: 'HTTP',
             method: 'PUT',
-            hostname: this.server.hostname,
-            port: this.server.port,
+            hostname: context.server.hostname,
+            port: context.server.port,
             uri: '/request/mapping/test'
         };
 
-        this.server.mapHandler(Mapping);
+        context.server.mapHandler(Mapping);
         let response = await request(requestObj);
         const body = await (await response.body()).text();
         assert.strictEqual(response.statusCode, 200);
         assert.strictEqual(body, 'request mapping test');
 
-        this.server.unmapHandler(Mapping);
+        context.server.unmapHandler(Mapping);
         response = await request(requestObj);
         assert.strictEqual(response.statusCode, 404);
     }
 
     @Test()
-    async dirMapping() {
+    async dirMapping200({ context }:any) {
         const requestObj = {
             protocol: 'HTTP',
             method: 'GET',
-            hostname: this.server.hostname,
-            port: this.server.port,
+            hostname: context.server.hostname,
+            port: context.server.port,
             uri: '/dir'
         };
-        const requestObj2 = { ...requestObj, uri: '/dir/index.html' };
+        const requestObj2 = { ...requestObj, uri: `${requestObj.uri}/index.html` };
         const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
 
-        this.server.mapDirectory('./www', { alias: '/dir' });
+        context.server.mapDirectory('./www', { alias: requestObj.uri });
 
         let response = await request(requestObj);
         let body = await (await response.body()).text();
@@ -94,7 +129,10 @@ export default class SimpleServerTest extends TestCase {
         assert.strictEqual(response.statusCode, 200);
         assert.strictEqual(body, expect);
 
-        this.server.unmapDirectory('/dir');
+        response = await request({...requestObj, uri: `/dir/${rString(32)}`});
+        assert.strictEqual(response.statusCode, 404);
+
+        context.server.unmapDirectory(requestObj.uri);
 
         response = await request(requestObj);
         assert.strictEqual(response.statusCode, 404);
@@ -104,7 +142,23 @@ export default class SimpleServerTest extends TestCase {
     }
 
     @Test()
-    async serverStartAndStop() {
+    async dirMapping404({ context }:any) {
+        const requestObj = {
+            protocol: 'HTTP',
+            method: 'GET',
+            hostname: context.server.hostname,
+            port: context.server.port,
+            uri: `/dir/${rString(32)}`
+        };
+
+        context.server.mapDirectory('./www', { alias: '/dir' });
+
+        let response = await request(requestObj);
+        assert.strictEqual(response.statusCode, 404);
+    }
+
+    @Test()
+    async serverStartAndStop(_:any) {
         const server = new SimpleServer({ port: 9000, loglevel: 'silent' });
         assert.ok(!server.running);
 

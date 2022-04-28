@@ -131,6 +131,7 @@ export class SimpleServer {
                         }
                     } else {
                         reject(new InternalServerError('how is this not a file or a directory??'));
+                        return;
                     }
                     
                     if (this.useCache && !!options.cache && !!file) {
@@ -142,23 +143,22 @@ export class SimpleServer {
                     if (this.useCache && !!options.cache) {
                         this.cachedFiles[path] = file;
                     }
+                } else {
+                    reject(new PageNotFoundError(request.url));
+                    return;
                 }
                 
                 headers['content-type'] = [file.type];
-                if (!file) {
-                    reject(new PageNotFoundError(request.url));
-                } else {
-                    const model = typeof options.model === 'function'
-                        ? options.model({ request })
-                        : options.model; 
-                    const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
-                        ? this.preprocessor(model, file.content as string)
-                        : file.content;
-                    resolve({
-                        statusCode: 200,
-                        headers, body
-                    });
-                }
+                const model = typeof options.model === 'function'
+                    ? options.model({ request })
+                    : options.model; 
+                const body = file.type === 'text/html' && !Buffer.isBuffer(file.content)
+                    ? this.preprocessor(model, file.content as string)
+                    : file.content;
+                resolve({
+                    statusCode: 200,
+                    headers, body
+                });
             }), options);
     }
 
@@ -219,6 +219,14 @@ export class SimpleServer {
     
     removeHandler(method:string|RequestMethod, path:string) {
         delete this.handlers[method as RequestMethod][PathMatcher.prepPath(path)];
+    }
+
+    removeAllHandlers() {
+        Object.entries(this.handlers).forEach(([method, handlers]) => {
+            Object.entries(handlers).forEach(([path, handler]) => {
+                delete this.handlers[method as RequestMethod][PathMatcher.prepPath(path)];
+            });
+        });
     }
 
     start() {
