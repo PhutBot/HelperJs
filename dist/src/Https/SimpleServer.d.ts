@@ -3,6 +3,7 @@ import * as http from 'http';
 import { EnvBackedValue } from '../Env';
 import { RequestMethod, Headers, HttpRequest } from './Request';
 import { PathMatcher } from './PathMatcher';
+import { Middleware } from './Middleware';
 interface HandlerRecord {
     matcher: PathMatcher;
     handler: RequestHandler;
@@ -35,10 +36,12 @@ export declare class SimpleServer {
     private sockets;
     private handlers;
     private _running;
+    private middlewares;
     private preprocessor;
     get running(): boolean;
     get address(): string;
     constructor(settings?: ServerSettings);
+    addMiddleware(middleware: Middleware): void;
     addEventListener(eventName: string, handler: Function): void;
     mapDirectory(dirName: string, options?: {
         alias?: string;

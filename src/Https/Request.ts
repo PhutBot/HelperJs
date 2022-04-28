@@ -50,7 +50,7 @@ export interface HttpRequest {
     pathParams:PathParams;
     queryParams:QueryParams;
     headers:Headers;
-    body:()=>Promise<Body>;
+    body?:()=>Promise<Body>;
 }
 
 export interface HttpResponse {

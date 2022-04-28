@@ -29,6 +29,7 @@ const Error_1 = require("./Error");
 const PathMatcher_1 = require("./PathMatcher");
 const Log_1 = require("../Log");
 const Metadata_1 = require("../Meta/Metadata");
+const Middleware_1 = require("./Middleware");
 class SimpleServer {
     constructor(settings = {}) {
         var _a, _b, _c, _d;
@@ -40,6 +41,7 @@ class SimpleServer {
         this.handlers = { DELETE: {}, GET: {}, PATCH: {}, POST: {}, PUT: {} };
         // private errorHandlers:Record<number,RequestHandler> = {};
         this._running = false;
+        this.middlewares = { PRE_PROCESSOR: [], POST_PROCESSOR: [] };
         this.preprocessor = (_, view) => view;
         this.logger = new Log_1.Logger((_a = settings.loglevel) !== null && _a !== void 0 ? _a : 'info');
         this.hostname = (_b = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _b !== void 0 ? _b : '0.0.0.0';
@@ -55,6 +57,9 @@ class SimpleServer {
     }
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
+    addMiddleware(middleware) {
+        this.middlewares[middleware.stage].push(middleware);
+    }
     addEventListener(eventName, handler) {
         this.eventEmitter.addListener(eventName, (...args) => {
             handler(args[0]);
@@ -291,7 +296,7 @@ class SimpleServer {
                 queryParams[key].push(val);
             }
             const { handler, pathParams } = this._getHandler(method, url);
-            handler({
+            const request = {
                 socket: req.socket,
                 method,
                 url,
@@ -299,7 +304,12 @@ class SimpleServer {
                 pathParams,
                 queryParams,
                 headers,
-                body: () => new Promise((resolve, reject) => {
+            };
+            const model = { request };
+            this.middlewares[Middleware_1.MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
+                middleware.process(model);
+            });
+            handler(Object.assign(Object.assign({}, request), { body: () => new Promise((resolve, reject) => {
                     let body = '';
                     req.on('data', (chunk) => {
                         body += chunk;
@@ -310,14 +320,16 @@ class SimpleServer {
                     req.on('error', (err) => {
                         reject(err);
                     });
-                })
-            }).then((response) => {
+                }) }), model).then((response) => {
                 response.headers = response.headers || {};
                 if (!response.headers.hasOwnProperty('content-type'))
                     response.headers['content-type'] = ['text/plain'];
                 for (const [key, value] of Object.entries(response.headers)) {
                     res.setHeader(key, value);
                 }
+                this.middlewares[Middleware_1.MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
+                    middleware.process(model, response);
+                });
                 res.writeHead(response.statusCode);
                 res.end(response.body);
             }).catch((error) => {

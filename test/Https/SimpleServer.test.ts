@@ -1,9 +1,10 @@
 import assert from "assert";
 import { TestCase } from "../../src/Test/TestCase";
 import { Test, Unroll } from "../../src/Test/decorators";
-import { request, SimpleServer } from "../../src/Https";
+import { HandlerResponse, HttpRequest, request, SimpleServer } from "../../src/Https";
 import { RequestMapping } from "../../src/Https/decorators";
 import { rString } from "../../src/Rand";
+import { Middleware, MiddlewareStage } from "../../src/Https/Middleware";
 
 export default class SimpleServerTest extends TestCase {
     private portItr = 10000;
@@ -174,6 +175,51 @@ export default class SimpleServerTest extends TestCase {
             message: 'server already stopped'
         });
     }
+
+    @Test()
+    async preMiddleware({ context }:any) {
+        context.server.addMiddleware(new PreMiddleware('custom-model-key', 'custom-model-value'));
+
+        const requestObj = {
+            protocol: 'HTTP',
+            method: 'PUT',
+            hostname: context.server.hostname,
+            port: context.server.port,
+            uri: '/middleware/test'
+        };
+
+        let value;
+        context.server.defineHandler(requestObj.method, requestObj.uri, async (_:any, model:any) => {
+            value = model['custom-model-key'];
+            return { statusCode: 200, body: 'content' };
+        });
+        let response = await request(requestObj);
+        const body = await (await response.body()).text();
+        assert.strictEqual(response.statusCode, 200);
+        assert.strictEqual(body, 'content');
+        assert.strictEqual(value, 'custom-model-value');
+    }
+
+    @Test()
+    async postMiddleware({ context }:any) {
+        context.server.addMiddleware(new PostMiddleware('REPLACE_ME', 'NEW_VALUE'));
+
+        const requestObj = {
+            protocol: 'HTTP',
+            method: 'PUT',
+            hostname: context.server.hostname,
+            port: context.server.port,
+            uri: '/middleware/test'
+        };
+
+        context.server.defineHandler(requestObj.method, requestObj.uri, async (_:any, model:any) => {
+            return { statusCode: 200, body: 'REPLACE_ME' };
+        });
+        let response = await request(requestObj);
+        assert.strictEqual(response.statusCode, 200);
+        const body = await (await response.body()).text();
+        assert.strictEqual(body, 'NEW_VALUE');
+    }
 }
 
 @RequestMapping({ location: '/request/mapping' })
@@ -184,5 +230,38 @@ class Mapping {
             statusCode: 200,
             body: 'request mapping test'
         };
+    }
+}
+
+class PreMiddleware extends Middleware {
+    private key:string;
+    private value:string;
+
+    constructor(key:string, value:string) {
+        super();
+        this.key = key;
+        this.value = value;
+    }
+
+    get stage() { return MiddlewareStage.PRE_PROCESSOR };
+    process(model:any) {
+        model[this.key] = this.value;
+    }
+}
+
+class PostMiddleware extends Middleware {
+    private key:string;
+    private value:string;
+
+    constructor(key:string, value:string) {
+        super();
+        this.key = key;
+        this.value = value;
+    }
+
+    get stage() { return MiddlewareStage.POST_PROCESSOR };
+    process(model:{}, response?:HandlerResponse) {
+        if (!!response && typeof response?.body === 'string')
+            response.body = response?.body?.replace(this.key, this.value);
     }
 }

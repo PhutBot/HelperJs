@@ -24,6 +24,7 @@ const decorators_1 = require("../../src/Test/decorators");
 const Https_1 = require("../../src/Https");
 const decorators_2 = require("../../src/Https/decorators");
 const Rand_1 = require("../../src/Rand");
+const Middleware_1 = require("../../src/Https/Middleware");
 class SimpleServerTest extends TestCase_1.TestCase {
     constructor() {
         super(...arguments);
@@ -173,6 +174,47 @@ class SimpleServerTest extends TestCase_1.TestCase {
             });
         });
     }
+    preMiddleware({ context }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            context.server.addMiddleware(new PreMiddleware('custom-model-key', 'custom-model-value'));
+            const requestObj = {
+                protocol: 'HTTP',
+                method: 'PUT',
+                hostname: context.server.hostname,
+                port: context.server.port,
+                uri: '/middleware/test'
+            };
+            let value;
+            context.server.defineHandler(requestObj.method, requestObj.uri, (_, model) => __awaiter(this, void 0, void 0, function* () {
+                value = model['custom-model-key'];
+                return { statusCode: 200, body: 'content' };
+            }));
+            let response = yield (0, Https_1.request)(requestObj);
+            const body = yield (yield response.body()).text();
+            assert_1.default.strictEqual(response.statusCode, 200);
+            assert_1.default.strictEqual(body, 'content');
+            assert_1.default.strictEqual(value, 'custom-model-value');
+        });
+    }
+    postMiddleware({ context }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            context.server.addMiddleware(new PostMiddleware('REPLACE_ME', 'NEW_VALUE'));
+            const requestObj = {
+                protocol: 'HTTP',
+                method: 'PUT',
+                hostname: context.server.hostname,
+                port: context.server.port,
+                uri: '/middleware/test'
+            };
+            context.server.defineHandler(requestObj.method, requestObj.uri, (_, model) => __awaiter(this, void 0, void 0, function* () {
+                return { statusCode: 200, body: 'REPLACE_ME' };
+            }));
+            let response = yield (0, Https_1.request)(requestObj);
+            assert_1.default.strictEqual(response.statusCode, 200);
+            const body = yield (yield response.body()).text();
+            assert_1.default.strictEqual(body, 'NEW_VALUE');
+        });
+    }
 }
 __decorate([
     (0, decorators_1.Test)()
@@ -204,6 +246,12 @@ __decorate([
 __decorate([
     (0, decorators_1.Test)()
 ], SimpleServerTest.prototype, "serverStartAndStop", null);
+__decorate([
+    (0, decorators_1.Test)()
+], SimpleServerTest.prototype, "preMiddleware", null);
+__decorate([
+    (0, decorators_1.Test)()
+], SimpleServerTest.prototype, "postMiddleware", null);
 exports.default = SimpleServerTest;
 let Mapping = class Mapping {
     static test() {
@@ -221,4 +269,30 @@ __decorate([
 Mapping = __decorate([
     (0, decorators_2.RequestMapping)({ location: '/request/mapping' })
 ], Mapping);
+class PreMiddleware extends Middleware_1.Middleware {
+    constructor(key, value) {
+        super();
+        this.key = key;
+        this.value = value;
+    }
+    get stage() { return Middleware_1.MiddlewareStage.PRE_PROCESSOR; }
+    ;
+    process(model) {
+        model[this.key] = this.value;
+    }
+}
+class PostMiddleware extends Middleware_1.Middleware {
+    constructor(key, value) {
+        super();
+        this.key = key;
+        this.value = value;
+    }
+    get stage() { return Middleware_1.MiddlewareStage.POST_PROCESSOR; }
+    ;
+    process(model, response) {
+        var _a;
+        if (!!response && typeof (response === null || response === void 0 ? void 0 : response.body) === 'string')
+            response.body = (_a = response === null || response === void 0 ? void 0 : response.body) === null || _a === void 0 ? void 0 : _a.replace(this.key, this.value);
+    }
+}
 //# sourceMappingURL=SimpleServer.test.js.map

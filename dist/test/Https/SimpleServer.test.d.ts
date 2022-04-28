@@ -14,4 +14,6 @@ export default class SimpleServerTest extends TestCase {
     dirMapping200({ context }: any): Promise<void>;
     dirMapping404({ context }: any): Promise<void>;
     serverStartAndStop(_: any): Promise<void>;
+    preMiddleware({ context }: any): Promise<void>;
+    postMiddleware({ context }: any): Promise<void>;
 }

@@ -8,6 +8,7 @@ import { HttpError, InternalServerError, PageNotFoundError } from './Error';
 import { PathMatcher } from './PathMatcher';
 import { Logger } from '../Log';
 import { getMetadata } from '../Meta/Metadata';
+import { Middleware, MiddlewareStage } from './Middleware';
 
 interface HandlerRecord {
     matcher:PathMatcher;
@@ -44,7 +45,6 @@ export class SimpleServer {
     private alias2Dir:Record<string,string> = {};
     private dir2Alias:Record<string,string> = {};
     private cachedFiles:Record<string,CachedFile> = {};
-
     
     private eventEmitter:events.EventEmitter = new events.EventEmitter();
     private logger:Logger;
@@ -54,6 +54,7 @@ export class SimpleServer {
     // private errorHandlers:Record<number,RequestHandler> = {};
     private _running:boolean = false;
 
+    private middlewares:Record<MiddlewareStage,Array<Middleware>> = { PRE_PROCESSOR:[], POST_PROCESSOR:[] };
     private preprocessor:PreProcessor = (_, view) => view;
 
     get running() { return this._running; }
@@ -74,6 +75,10 @@ export class SimpleServer {
             this.sockets.push(socket);
             this.eventEmitter.emit('simple-server-connection', { detail: socket });
         });
+    }
+
+    addMiddleware(middleware:Middleware) {
+        this.middlewares[middleware.stage].push(middleware);
     }
 
     addEventListener(eventName:string, handler:Function) {
@@ -317,14 +322,23 @@ export class SimpleServer {
             }
 
             const { handler, pathParams } = this._getHandler(method, url);
+            const request:HttpRequest = {
+                socket: req.socket,
+                method,
+                url,
+                path,
+                pathParams,
+                queryParams,
+                headers,
+            };
+
+            const model = { request };
+            this.middlewares[MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
+                middleware.process(model);
+            });
+
             handler({
-                    socket: req.socket,
-                    method,
-                    url,
-                    path,
-                    pathParams,
-                    queryParams,
-                    headers,
+                    ...request,
                     body: () => new Promise((resolve, reject) => {
                             let body = '';
                             req.on('data', (chunk) => {
@@ -337,13 +351,17 @@ export class SimpleServer {
                                 reject(err);
                             });
                         })
-                }).then((response:HandlerResponse) => {
+                }, model).then((response:HandlerResponse) => {
                     response.headers = response.headers || {};
                     if (!response.headers.hasOwnProperty('content-type'))
                         response.headers['content-type'] = [ 'text/plain' ];
                     for (const [key, value] of Object.entries(response.headers)) {
                         res.setHeader(key, value);
                     }
+                    
+                    this.middlewares[MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
+                        middleware.process(model, response);  
+                    });
                     
                     res.writeHead(response.statusCode);
                     res.end(response.body);
