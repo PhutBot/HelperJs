@@ -28,6 +28,7 @@ export interface RequestSettings {
     hostname:string;
     port?:number;
     uri:string;
+    path?:string;
     query?:object;
     headers?:any;
     body?:string;

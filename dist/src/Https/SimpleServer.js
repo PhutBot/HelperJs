@@ -77,6 +77,7 @@ class SimpleServer {
         this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (request) => new Promise((resolve, reject) => {
             const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
             const headers = {};
+            request.path = path;
             let encoding = 'utf8';
             let file = {
                 type: 'text/plain',
