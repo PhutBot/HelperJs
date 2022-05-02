@@ -332,14 +332,14 @@ class SimpleServer {
             });
             handler(request, model).then((response) => {
                 response.headers = response.headers || {};
+                this.middlewares[Middleware_1.MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
+                    middleware.process(model, response);
+                });
                 if (!response.headers.hasOwnProperty('content-type'))
                     response.headers['content-type'] = ['text/plain'];
                 for (const [key, value] of Object.entries(response.headers)) {
                     res.setHeader(key, value);
                 }
-                this.middlewares[Middleware_1.MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
-                    middleware.process(model, response);
-                });
                 res.writeHead(response.statusCode);
                 res.end(response.body);
             }).catch((error) => {
