@@ -337,6 +337,18 @@ export class SimpleServer {
                 pathParams,
                 queryParams,
                 headers,
+                body: () => new Promise((resolve, reject) => {
+                    let body = '';
+                    req.on('data', (chunk) => {
+                        body += chunk;
+                    });
+                    req.on('end', () => {
+                        resolve(new Body(body));
+                    });
+                    req.on('error', (err) => {
+                        reject(err);
+                    });
+                }),
             };
 
             if (handler === null) {            
@@ -348,21 +360,7 @@ export class SimpleServer {
                 middleware.process(model);
             });
 
-            handler({
-                    ...request,
-                    body: () => new Promise((resolve, reject) => {
-                            let body = '';
-                            req.on('data', (chunk) => {
-                                body += chunk;
-                            });
-                            req.on('end', () => {
-                                resolve(new Body(body));
-                            });
-                            req.on('error', (err) => {
-                                reject(err);
-                            });
-                        })
-                }, model).then((response:HandlerResponse) => {
+            handler(request, model).then((response:HandlerResponse) => {
                     response.headers = response.headers || {};
                     if (!response.headers.hasOwnProperty('content-type'))
                         response.headers['content-type'] = [ 'text/plain' ];

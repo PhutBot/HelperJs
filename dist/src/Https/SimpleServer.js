@@ -310,15 +310,7 @@ class SimpleServer {
                 pathParams,
                 queryParams,
                 headers,
-            };
-            if (handler === null) {
-                throw new _4XX_1.ErrorHttp404NotFound(request);
-            }
-            const model = { request };
-            this.middlewares[Middleware_1.MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
-                middleware.process(model);
-            });
-            handler(Object.assign(Object.assign({}, request), { body: () => new Promise((resolve, reject) => {
+                body: () => new Promise((resolve, reject) => {
                     let body = '';
                     req.on('data', (chunk) => {
                         body += chunk;
@@ -329,7 +321,16 @@ class SimpleServer {
                     req.on('error', (err) => {
                         reject(err);
                     });
-                }) }), model).then((response) => {
+                }),
+            };
+            if (handler === null) {
+                throw new _4XX_1.ErrorHttp404NotFound(request);
+            }
+            const model = { request };
+            this.middlewares[Middleware_1.MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
+                middleware.process(model);
+            });
+            handler(request, model).then((response) => {
                 response.headers = response.headers || {};
                 if (!response.headers.hasOwnProperty('content-type'))
                     response.headers['content-type'] = ['text/plain'];
