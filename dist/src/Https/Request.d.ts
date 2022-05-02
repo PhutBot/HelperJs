@@ -19,7 +19,6 @@ export interface RequestSettings {
     hostname: string;
     port?: number;
     uri: string;
-    path?: string;
     query?: object;
     headers?: any;
     body?: string;
@@ -37,6 +36,7 @@ export interface HttpRequest {
     method: RequestMethod;
     url: URL;
     path: string;
+    filePath?: string;
     pathParams: PathParams;
     queryParams: QueryParams;
     headers: Headers;

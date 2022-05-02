@@ -101,7 +101,7 @@ export class SimpleServer {
             (request:HttpRequest) => new Promise((resolve, reject) => {
                 const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
                 const headers = {} as Headers;
-                request.path = path;
+                request.filePath = path;
                 
                 let encoding:BufferEncoding = 'utf8'
                 let file:CachedFile = {
