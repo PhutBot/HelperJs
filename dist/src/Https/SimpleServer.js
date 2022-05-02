@@ -25,7 +25,9 @@ const fs = __importStar(require("fs"));
 const events = __importStar(require("events"));
 const Env_1 = require("../Env");
 const Request_1 = require("./Request");
-const Error_1 = require("./Error");
+const Error_1 = require("./Errors/Error");
+const _4XX_1 = require("./Errors/4XX");
+const _5XX_1 = require("./Errors/5XX");
 const PathMatcher_1 = require("./PathMatcher");
 const Log_1 = require("../Log");
 const Metadata_1 = require("../Meta/Metadata");
@@ -117,7 +119,7 @@ class SimpleServer {
                     }
                 }
                 else {
-                    reject(new Error_1.InternalServerError('how is this not a file or a directory??'));
+                    reject(new _5XX_1.ErrorHttp500Internal(request, 'how is this not a file or a directory??'));
                     return;
                 }
                 if (this.useCache && !!options.cache && !!file) {
@@ -132,7 +134,7 @@ class SimpleServer {
                 }
             }
             else {
-                reject(new Error_1.PageNotFoundError(request.url));
+                reject(new _4XX_1.ErrorHttp404NotFound(request));
                 return;
             }
             headers['content-type'] = [file.type];
@@ -271,11 +273,14 @@ class SimpleServer {
             };
         }
         else {
-            throw new Error_1.PageNotFoundError(url);
+            return {
+                handler: null,
+                pathParams: {}
+            };
         }
     }
     _rootHandler(req, res) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         try {
             const method = (_a = req.method) !== null && _a !== void 0 ? _a : Request_1.RequestMethod.GET;
             const url = new URL((_b = req.url) !== null && _b !== void 0 ? _b : '', this.address);
@@ -305,6 +310,9 @@ class SimpleServer {
                 queryParams,
                 headers,
             };
+            if (handler === null) {
+                throw new _4XX_1.ErrorHttp404NotFound(request);
+            }
             const model = { request };
             this.middlewares[Middleware_1.MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
                 middleware.process(model);
@@ -334,8 +342,8 @@ class SimpleServer {
                 res.end(response.body);
             }).catch((error) => {
                 var _a;
-                if (!(error instanceof Error_1.HttpError)) {
-                    error = new Error_1.InternalServerError(error instanceof Error
+                if (!(error instanceof Error_1.ErrorHttp)) {
+                    error = new _5XX_1.ErrorHttp500Internal(request, error instanceof Error
                         ? error.message : `${error}`);
                 }
                 const httpError = error;
@@ -346,19 +354,28 @@ class SimpleServer {
             });
         }
         catch (error) {
-            if (!(error instanceof Error_1.HttpError)) {
+            if (!(error instanceof Error_1.ErrorHttp)) {
+                const dummyRequest = {
+                    headers: {},
+                    method: (_c = req.method) !== null && _c !== void 0 ? _c : Request_1.RequestMethod.GET,
+                    path: '',
+                    pathParams: {},
+                    queryParams: {},
+                    socket: req.socket,
+                    url: new URL((_d = req.url) !== null && _d !== void 0 ? _d : '', this.address),
+                };
                 if (error instanceof Error) {
-                    error = new Error_1.InternalServerError(error.message);
+                    error = new _5XX_1.ErrorHttp500Internal(dummyRequest, error.message);
                 }
                 else {
-                    error = new Error_1.InternalServerError(`${error}`);
+                    error = new _5XX_1.ErrorHttp500Internal(dummyRequest, `${error}`);
                 }
             }
             const httpError = error;
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
             this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-            this.logger.error('SimpleServer', (_c = httpError.stack) !== null && _c !== void 0 ? _c : httpError.message);
+            this.logger.error('SimpleServer', (_e = httpError.stack) !== null && _e !== void 0 ? _e : httpError.message);
         }
     }
 }

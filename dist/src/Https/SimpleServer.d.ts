@@ -62,6 +62,9 @@ export declare class SimpleServer {
     _getHandler(m: string | RequestMethod, url: URL): {
         handler: RequestHandler;
         pathParams: import("./PathMatcher").PathParams;
+    } | {
+        handler: null;
+        pathParams: {};
     };
     _rootHandler(req: http.IncomingMessage, res: http.ServerResponse): void;
 }

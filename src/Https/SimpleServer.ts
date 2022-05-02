@@ -4,7 +4,9 @@ import * as events from 'events';
 import { Socket } from 'net';
 import { EnvBackedValue } from '../Env';
 import { RequestMethod, Headers, QueryParams, Body, HttpRequest } from './Request';
-import { HttpError, InternalServerError, PageNotFoundError } from './Error';
+import { ErrorHttp } from './Errors/Error';
+import { ErrorHttp404NotFound } from './Errors/4XX';
+import { ErrorHttp500Internal } from './Errors/5XX';
 import { PathMatcher } from './PathMatcher';
 import { Logger } from '../Log';
 import { getMetadata } from '../Meta/Metadata';
@@ -135,7 +137,7 @@ export class SimpleServer {
                             file.content = fs.readFileSync(`./${path}/index.js`, encoding);
                         }
                     } else {
-                        reject(new InternalServerError('how is this not a file or a directory??'));
+                        reject(new ErrorHttp500Internal(request, 'how is this not a file or a directory??'));
                         return;
                     }
                     
@@ -149,7 +151,7 @@ export class SimpleServer {
                         this.cachedFiles[path] = file;
                     }
                 } else {
-                    reject(new PageNotFoundError(request.url));
+                    reject(new ErrorHttp404NotFound(request));
                     return;
                 }
                 
@@ -294,7 +296,10 @@ export class SimpleServer {
                 pathParams: match.vars
             };
         } else {
-            throw new PageNotFoundError(url);
+            return {
+                handler: null,
+                pathParams: {}
+            };
         }
     }
 
@@ -322,6 +327,7 @@ export class SimpleServer {
             }
 
             const { handler, pathParams } = this._getHandler(method, url);
+
             const request:HttpRequest = {
                 socket: req.socket,
                 method,
@@ -331,6 +337,10 @@ export class SimpleServer {
                 queryParams,
                 headers,
             };
+
+            if (handler === null) {            
+                throw new ErrorHttp404NotFound(request);
+            }
 
             const model = { request };
             this.middlewares[MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
@@ -366,27 +376,36 @@ export class SimpleServer {
                     res.writeHead(response.statusCode);
                     res.end(response.body);
                 }).catch((error:any) => {
-                    if (!(error instanceof HttpError)) {
-                        error = new InternalServerError(error instanceof Error
+                    if (!(error instanceof ErrorHttp)) {
+                        error = new ErrorHttp500Internal(request, error instanceof Error
                             ? error.message : `${error}`);
                     }
 
-                    const httpError = error as HttpError;
+                    const httpError = error as ErrorHttp;
                     res.writeHead(httpError.statusCode);
                     res.end(httpError.description);
                     this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
                     this.logger.error('SimpleServer', httpError.stack ?? httpError.message);
                 });
         } catch (error) {
-            if (!(error instanceof HttpError)) {
+            if (!(error instanceof ErrorHttp)) {
+                const dummyRequest:HttpRequest = {
+                    headers: {},
+                    method: req.method as RequestMethod ?? RequestMethod.GET,
+                    path: '',
+                    pathParams: {},
+                    queryParams: {},
+                    socket: req.socket,
+                    url: new URL(req.url ?? '', this.address),
+                };
                 if (error instanceof Error) {
-                    error = new InternalServerError(error.message);
+                    error = new ErrorHttp500Internal(dummyRequest, error.message);
                 } else {
-                    error = new InternalServerError(`${error}`);
+                    error = new ErrorHttp500Internal(dummyRequest, `${error}`);
                 }
             }
 
-            const httpError = error as HttpError;
+            const httpError = error as ErrorHttp;
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
             this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
