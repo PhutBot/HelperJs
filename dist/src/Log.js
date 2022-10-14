@@ -65,7 +65,7 @@ class Logger {
         return ControlChars.FgBlue + heading + ControlChars.Reset;
     }
     log(level, prefix, message, ...args) {
-        console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, args);
+        console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
     }
     silly(prefix, message, ...args) {
         this.log(LogLevel.SILLY, prefix, message, args);

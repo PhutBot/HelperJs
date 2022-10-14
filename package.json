@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "tsc && cd test && ts-node index.ts"
+    "test": "tsc && cd dist/test && node index.js"
   },
   "repository": {
     "type": "git",
