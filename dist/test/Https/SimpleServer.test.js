@@ -126,7 +126,7 @@ class SimpleServerTest extends TestCase_1.TestCase {
             };
             const requestObj2 = Object.assign(Object.assign({}, requestObj), { uri: `${requestObj.uri}/index.html` });
             const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
-            context.server.mapDirectory('./www', { alias: requestObj.uri });
+            context.server.mapDirectory('../../test/www', { alias: requestObj.uri });
             let response = yield (0, Https_1.request)(requestObj);
             let body = yield (yield response.body()).text();
             assert_1.default.strictEqual(response.statusCode, 200);

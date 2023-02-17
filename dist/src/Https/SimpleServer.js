@@ -32,29 +32,40 @@ const PathMatcher_1 = require("./PathMatcher");
 const Log_1 = require("../Log");
 const Metadata_1 = require("../Meta/Metadata");
 const Middleware_1 = require("./Middleware");
+const WebSocket_1 = require("./WebSocket");
 class SimpleServer {
     constructor(settings = {}) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c;
         this.alias2Dir = {};
         this.dir2Alias = {};
         this.cachedFiles = {};
         this.eventEmitter = new events.EventEmitter();
         this.sockets = [];
+        this.websockets = [];
         this.handlers = { DELETE: {}, GET: {}, PATCH: {}, POST: {}, PUT: {} };
         // private errorHandlers:Record<number,RequestHandler> = {};
         this._running = false;
         this.middlewares = { PRE_PROCESSOR: [], POST_PROCESSOR: [] };
         this.preprocessor = (_, view) => view;
-        this.logger = new Log_1.Logger((_a = settings.loglevel) !== null && _a !== void 0 ? _a : 'info');
-        this.hostname = (_b = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _b !== void 0 ? _b : '0.0.0.0';
-        this.port = (_c = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _c !== void 0 ? _c : 8080;
-        this.useCache = (_d = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _d !== void 0 ? _d : true;
+        this.logger = new Log_1.Logger();
+        this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
+        this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
+        this.useCache = (_c = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;
         if (!!settings.preprocessor)
             this.preprocessor = settings.preprocessor;
         this.server = http.createServer(this._rootHandler.bind(this));
         this.server.on('connection', (socket) => {
             this.sockets.push(socket);
             this.eventEmitter.emit('simple-server-connection', { detail: socket });
+        });
+        this.server.on('upgrade', (req, socket) => {
+            const request = this._translateRequest(req);
+            const ws = new WebSocket_1.WebSocketConnection(this.websockets.length, request, socket);
+            ws.on('text', (data) => {
+                this.eventEmitter.emit('simple-websocket-msg', { detail: { ws, data } });
+            });
+            this.websockets.push(ws);
+            this.eventEmitter.emit('simple-websocket-connection', { detail: ws });
         });
     }
     get running() { return this._running; }
@@ -235,6 +246,7 @@ class SimpleServer {
                 rej(new Error('server already stopped'));
             }
             else {
+                this.websockets.forEach(ws => ws.close());
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
                     this.logger.info('SimpleServer', 'server stopped');
@@ -280,49 +292,94 @@ class SimpleServer {
             };
         }
     }
-    _rootHandler(req, res) {
-        var _a, _b, _c, _d, _e;
-        try {
-            const method = (_a = req.method) !== null && _a !== void 0 ? _a : Request_1.RequestMethod.GET;
-            const url = new URL((_b = req.url) !== null && _b !== void 0 ? _b : '', this.address);
-            const path = url.pathname;
-            const headers = {};
-            Object.entries(req.headers).forEach(([key, val]) => {
-                headers[key] = headers[key] || [];
-                if (!!val) {
-                    if (Array.isArray(val))
-                        headers[key].push(...val);
-                    else
-                        headers[key].push(val);
-                }
-            });
-            const queryParams = {};
-            for (const [key, val] of url.searchParams.entries()) {
-                queryParams[key] = queryParams[key] || [];
-                queryParams[key].push(val);
+    _translateRequest(req) {
+        var _a, _b;
+        const method = (_a = req.method) !== null && _a !== void 0 ? _a : Request_1.RequestMethod.GET;
+        const url = new URL((_b = req.url) !== null && _b !== void 0 ? _b : '', this.address);
+        const path = url.pathname;
+        const headers = {};
+        Object.entries(req.headers).forEach(([key, val]) => {
+            headers[key] = headers[key] || [];
+            if (!!val) {
+                if (Array.isArray(val))
+                    headers[key].push(...val);
+                else
+                    headers[key].push(val);
             }
-            const { handler, pathParams } = this._getHandler(method, url);
-            const request = {
-                socket: req.socket,
-                method,
-                url,
-                path,
-                pathParams,
-                queryParams,
-                headers,
-                body: () => new Promise((resolve, reject) => {
-                    let body = '';
-                    req.on('data', (chunk) => {
-                        body += chunk;
-                    });
-                    req.on('end', () => {
-                        resolve(new Request_1.Body(body));
-                    });
-                    req.on('error', (err) => {
-                        reject(err);
-                    });
-                }),
-            };
+        });
+        const queryParams = {};
+        for (const [key, val] of url.searchParams.entries()) {
+            queryParams[key] = queryParams[key] || [];
+            queryParams[key].push(val);
+        }
+        const request = {
+            socket: req.socket,
+            method,
+            url,
+            path,
+            pathParams: {},
+            queryParams,
+            headers,
+            body: () => new Promise((resolve, reject) => {
+                const chunks = [];
+                req.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                req.on('end', () => {
+                    resolve(new Request_1.Body(Buffer.concat(chunks)));
+                });
+                req.on('error', (err) => {
+                    reject(err);
+                });
+            }),
+        };
+        return request;
+    }
+    _rootHandler(req, res) {
+        var _a, _b, _c;
+        try {
+            // const method = req.method as RequestMethod ?? RequestMethod.GET;
+            // const url = new URL(req.url ?? '', this.address);
+            // const path = url.pathname;
+            // const headers:Headers = {};
+            // Object.entries(req.headers).forEach(([key, val]) => {
+            //     headers[key] = headers[key] || [];
+            //     if (!!val) {
+            //         if (Array.isArray(val))
+            //             headers[key].push(...val);
+            //         else
+            //             headers[key].push(val);
+            //     }
+            // });
+            // const queryParams:QueryParams = {};
+            // for (const [key, val] of url.searchParams.entries()) {
+            //     queryParams[key] = queryParams[key] || [];
+            //     queryParams[key].push(val);
+            // }
+            const request = this._translateRequest(req);
+            const { handler, pathParams } = this._getHandler(request.method, request.url);
+            request.pathParams = pathParams;
+            // const request:HttpRequest = {
+            //     socket: req.socket,
+            //     method,
+            //     url,
+            //     path,
+            //     pathParams,
+            //     queryParams,
+            //     headers,
+            //     body: () => new Promise((resolve, reject) => {
+            //         const chunks:Buffer[] = [];
+            //         req.on('data', (chunk) => {
+            //             chunks.push(chunk);
+            //         });
+            //         req.on('end', () => {
+            //             resolve(new Body(Buffer.concat(chunks)));
+            //         });
+            //         req.on('error', (err) => {
+            //             reject(err);
+            //         });
+            //     }),
+            // };
             if (handler === null) {
                 throw new _4XX_1.ErrorHttp404NotFound(request);
             }
@@ -359,12 +416,12 @@ class SimpleServer {
             if (!(error instanceof Error_1.ErrorHttp)) {
                 const dummyRequest = {
                     headers: {},
-                    method: (_c = req.method) !== null && _c !== void 0 ? _c : Request_1.RequestMethod.GET,
+                    method: (_a = req.method) !== null && _a !== void 0 ? _a : Request_1.RequestMethod.GET,
                     path: '',
                     pathParams: {},
                     queryParams: {},
                     socket: req.socket,
-                    url: new URL((_d = req.url) !== null && _d !== void 0 ? _d : '', this.address),
+                    url: new URL((_b = req.url) !== null && _b !== void 0 ? _b : '', this.address),
                 };
                 if (error instanceof Error) {
                     error = new _5XX_1.ErrorHttp500Internal(dummyRequest, error.message);
@@ -377,7 +434,7 @@ class SimpleServer {
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
             this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-            this.logger.error('SimpleServer', (_e = httpError.stack) !== null && _e !== void 0 ? _e : httpError.message);
+            this.logger.error('SimpleServer', (_c = httpError.stack) !== null && _c !== void 0 ? _c : httpError.message);
         }
     }
 }

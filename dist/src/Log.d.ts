@@ -1,4 +1,4 @@
-declare enum LogLevel {
+export declare enum LogLevel {
     SILLY = 0,
     VERBOSE = 1,
     INFO = 2,
@@ -8,11 +8,13 @@ declare enum LogLevel {
     FATAL = 6
 }
 export declare class Logger {
+    private static level;
     private heading?;
     constructor(heading?: boolean | Function | string);
     private printPrefix;
     private printLevel;
     private printHeading;
+    setLevel(level: LogLevel): void;
     log(level: LogLevel, prefix: string, message: string, ...args: any[]): void;
     silly(prefix: string, message: string, ...args: any[]): void;
     verbose(prefix: string, message: string, ...args: any[]): void;
@@ -22,4 +24,3 @@ export declare class Logger {
     error(prefix: string, message: string, ...args: any[]): void;
     fatal(prefix: string, message: string, ...args: any[]): void;
 }
-export {};

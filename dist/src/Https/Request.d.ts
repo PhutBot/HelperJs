@@ -27,7 +27,8 @@ export declare type Headers = Record<string, string[]>;
 export declare type QueryParams = Record<string, string[]>;
 export declare class Body {
     private data;
-    constructor(data: string);
+    constructor(data: Buffer);
+    raw(): Promise<Buffer>;
     text(): Promise<string>;
     json(): Promise<any>;
 }

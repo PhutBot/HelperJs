@@ -4,3 +4,4 @@ export * from './Errors/5XX';
 export * from './Request';
 export * from './SimpleServer';
 export * from './Middleware';
+export * from './WebSocket';

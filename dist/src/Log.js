@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Logger = void 0;
+exports.Logger = exports.LogLevel = void 0;
 const ControlChars = {
     Reset: "\x1b[0m",
     Bright: "\x1b[1m",
@@ -35,7 +35,7 @@ var LogLevel;
     LogLevel[LogLevel["WARN"] = 4] = "WARN";
     LogLevel[LogLevel["ERROR"] = 5] = "ERROR";
     LogLevel[LogLevel["FATAL"] = 6] = "FATAL";
-})(LogLevel || (LogLevel = {}));
+})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
 const levelInfo = [
     { name: '  silly', color: ControlChars.BgCyan },
     { name: 'verbose', color: ControlChars.BgCyan },
@@ -64,7 +64,12 @@ class Logger {
             : (this.heading instanceof Function ? this.heading() : this.heading) + " ";
         return ControlChars.FgBlue + heading + ControlChars.Reset;
     }
+    setLevel(level) {
+        Logger.level = level;
+    }
     log(level, prefix, message, ...args) {
+        if (level < Logger.level)
+            return;
         console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
     }
     silly(prefix, message, ...args) {
@@ -90,5 +95,6 @@ class Logger {
     }
 }
 exports.Logger = Logger;
+Logger.level = LogLevel.ERROR;
 ;
 //# sourceMappingURL=Log.js.map

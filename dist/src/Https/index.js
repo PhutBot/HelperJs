@@ -16,4 +16,5 @@ __exportStar(require("./Errors/5XX"), exports);
 __exportStar(require("./Request"), exports);
 __exportStar(require("./SimpleServer"), exports);
 __exportStar(require("./Middleware"), exports);
+__exportStar(require("./WebSocket"), exports);
 //# sourceMappingURL=index.js.map

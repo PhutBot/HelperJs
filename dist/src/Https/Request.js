@@ -42,8 +42,9 @@ exports.RequestMethodsAllowingBody = [
 ];
 class Body {
     constructor(data) { this.data = data; }
-    text() { return Promise.resolve(this.data); }
-    json() { return Promise.resolve(JSON.parse(this.data)); }
+    raw() { return Promise.resolve(this.data); }
+    text() { return Promise.resolve(`${this.data.toString()}`); }
+    json() { return Promise.resolve(JSON.parse(this.data.toString())); }
 }
 exports.Body = Body;
 // PhutBot PLEASE remember to be careful when debugging this class on stream
@@ -92,12 +93,12 @@ function request(settings) {
                 statusCode: (_a = res.statusCode) !== null && _a !== void 0 ? _a : -1,
                 headers,
                 body: () => new Promise((resolve, reject) => {
-                    let body = '';
-                    res.on('data', (chunk) => {
-                        body += chunk;
+                    const chunks = [];
+                    req.on('data', (chunk) => {
+                        chunks.push(chunk);
                     });
-                    res.on('end', () => {
-                        resolve(new Body(body));
+                    req.on('end', () => {
+                        resolve(new Body(Buffer.concat(chunks)));
                     });
                     res.on('error', (err) => {
                         reject(err);

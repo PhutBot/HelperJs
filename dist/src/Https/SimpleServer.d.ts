@@ -4,6 +4,7 @@ import { EnvBackedValue } from '../Env';
 import { RequestMethod, Headers, HttpRequest } from './Request';
 import { PathMatcher } from './PathMatcher';
 import { Middleware } from './Middleware';
+import { WebSocketConnection } from './WebSocket';
 interface HandlerRecord {
     matcher: PathMatcher;
     handler: RequestHandler;
@@ -34,6 +35,7 @@ export declare class SimpleServer {
     private logger;
     private server;
     private sockets;
+    websockets: Array<WebSocketConnection>;
     private handlers;
     private _running;
     private middlewares;
@@ -66,6 +68,7 @@ export declare class SimpleServer {
         handler: null;
         pathParams: {};
     };
+    _translateRequest(req: http.IncomingMessage): HttpRequest;
     _rootHandler(req: http.IncomingMessage, res: http.ServerResponse): void;
 }
 export {};
