@@ -214,7 +214,7 @@ class SimpleServer {
                 return;
             }
         }
-        this.logger.info('SimpleServer', `created mapping for ${matcher.path}`);
+        this.logger.http('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method][matcher.path] = { matcher, handler };
     }
     removeHandler(method, path) {
@@ -236,7 +236,7 @@ class SimpleServer {
             }
             this.server.listen(this.port, this.hostname, () => {
                 this._running = true;
-                this.logger.info('SimpleServer', `server started @ ${this.address}`);
+                this.logger.http('SimpleServer', `server started @ ${this.address}`);
                 res(true);
             });
         });
@@ -251,7 +251,7 @@ class SimpleServer {
                 this.websockets.forEach(ws => ws.close());
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
-                    this.logger.info('SimpleServer', 'server stopped');
+                    this.logger.http('SimpleServer', 'server stopped');
                     this._running = false;
                     res(true);
                 });

@@ -33,7 +33,8 @@ export enum LogLevel {
     HTTP,
     WARN,
     ERROR,
-    FATAL
+    FATAL,
+    SILENT
 }
 
 const levelInfo = [
@@ -44,10 +45,11 @@ const levelInfo = [
     { name: 'warning', color: ControlChars.FgYellow },
     { name: '  error', color: ControlChars.FgRed },
     { name: '  fatal', color: ControlChars.BgRed + ControlChars.FgBlack },
+    { name: ' silent', color: ControlChars.FgWhite },
 ]
 
 export class Logger {
-    private static level = LogLevel.ERROR;
+    private level = LogLevel.ERROR;
     private heading?:Function|string;
 
     constructor(heading?:boolean|Function|string) {
@@ -73,13 +75,13 @@ export class Logger {
     }
 
     public setLevel(level:LogLevel) {
-        Logger.level = level;
+        this.level = level;
     }
 
     public log(level:LogLevel, prefix:string, message:string, ...args:any[]) {
-        if (level < Logger.level)
+        if (level < this.level)
             return;
-        console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
+        console.log(`${this.printHeading()}${this.printLevel(this.level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
     }
 
     public silly(prefix:string, message:string, ...args:any[]) {

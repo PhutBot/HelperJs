@@ -25,6 +25,7 @@ const Https_1 = require("../../src/Https");
 const decorators_2 = require("../../src/Https/decorators");
 const Rand_1 = require("../../src/Rand");
 const Middleware_1 = require("../../src/Https/Middleware");
+const Log_1 = require("../../src/Log");
 class SimpleServerTest extends TestCase_1.TestCase {
     constructor() {
         super(...arguments);
@@ -32,7 +33,7 @@ class SimpleServerTest extends TestCase_1.TestCase {
     }
     before(testcase) {
         return __awaiter(this, void 0, void 0, function* () {
-            const server = new Https_1.SimpleServer({ port: this.portItr++, loglevel: 'silent' });
+            const server = new Https_1.SimpleServer({ port: this.portItr++, loglevel: Log_1.LogLevel.SILENT });
             yield server.start();
             return { server };
         });
@@ -43,7 +44,7 @@ class SimpleServerTest extends TestCase_1.TestCase {
         });
     }
     settings(_) {
-        const server = new Https_1.SimpleServer({ port: 9999, loglevel: 'silent' });
+        const server = new Https_1.SimpleServer({ port: 9999, loglevel: Log_1.LogLevel.SILENT });
         assert_1.default.strictEqual(server.hostname, '0.0.0.0');
         assert_1.default.strictEqual(server.port, 9999);
         assert_1.default.strictEqual(server.address, 'http://0.0.0.0:9999');
@@ -160,7 +161,7 @@ class SimpleServerTest extends TestCase_1.TestCase {
     }
     serverStartAndStop(_) {
         return __awaiter(this, void 0, void 0, function* () {
-            const server = new Https_1.SimpleServer({ port: 9000, loglevel: 'silent' });
+            const server = new Https_1.SimpleServer({ port: 9000, loglevel: Log_1.LogLevel.SILENT });
             assert_1.default.ok(!server.running);
             yield server.start();
             assert_1.default.ok(server.running);

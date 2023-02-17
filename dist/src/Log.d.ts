@@ -5,10 +5,11 @@ export declare enum LogLevel {
     HTTP = 3,
     WARN = 4,
     ERROR = 5,
-    FATAL = 6
+    FATAL = 6,
+    SILENT = 7
 }
 export declare class Logger {
-    private static level;
+    private level;
     private heading?;
     constructor(heading?: boolean | Function | string);
     private printPrefix;

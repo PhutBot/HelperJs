@@ -35,6 +35,7 @@ var LogLevel;
     LogLevel[LogLevel["WARN"] = 4] = "WARN";
     LogLevel[LogLevel["ERROR"] = 5] = "ERROR";
     LogLevel[LogLevel["FATAL"] = 6] = "FATAL";
+    LogLevel[LogLevel["SILENT"] = 7] = "SILENT";
 })(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
 const levelInfo = [
     { name: '  silly', color: ControlChars.BgCyan },
@@ -44,9 +45,11 @@ const levelInfo = [
     { name: 'warning', color: ControlChars.FgYellow },
     { name: '  error', color: ControlChars.FgRed },
     { name: '  fatal', color: ControlChars.BgRed + ControlChars.FgBlack },
+    { name: ' silent', color: ControlChars.FgWhite },
 ];
 class Logger {
     constructor(heading) {
+        this.level = LogLevel.ERROR;
         if (heading instanceof Function || typeof heading === 'string')
             this.heading = heading;
         else if (!!heading)
@@ -65,12 +68,12 @@ class Logger {
         return ControlChars.FgBlue + heading + ControlChars.Reset;
     }
     setLevel(level) {
-        Logger.level = level;
+        this.level = level;
     }
     log(level, prefix, message, ...args) {
-        if (level < Logger.level)
+        if (level < this.level)
             return;
-        console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
+        console.log(`${this.printHeading()}${this.printLevel(this.level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
     }
     silly(prefix, message, ...args) {
         this.log(LogLevel.SILLY, prefix, message, args);
@@ -95,6 +98,5 @@ class Logger {
     }
 }
 exports.Logger = Logger;
-Logger.level = LogLevel.ERROR;
 ;
 //# sourceMappingURL=Log.js.map

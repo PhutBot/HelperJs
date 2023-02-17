@@ -5,12 +5,13 @@ import { HandlerResponse, HttpRequest, request, SimpleServer } from "../../src/H
 import { RequestMapping } from "../../src/Https/decorators";
 import { rString } from "../../src/Rand";
 import { Middleware, MiddlewareStage } from "../../src/Https/Middleware";
+import { LogLevel } from "../../src/Log";
 
 export default class SimpleServerTest extends TestCase {
     private portItr = 10000;
 
     async before(testcase:string) {
-        const server = new SimpleServer({ port: this.portItr++, loglevel: 'silent' });
+        const server = new SimpleServer({ port: this.portItr++, loglevel: LogLevel.SILENT });
         await server.start();
         return { server };
     }
@@ -21,7 +22,7 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     settings(_:any) {
-        const server = new SimpleServer({ port: 9999, loglevel: 'silent' });
+        const server = new SimpleServer({ port: 9999, loglevel: LogLevel.SILENT });
         assert.strictEqual(server.hostname, '0.0.0.0');
         assert.strictEqual(server.port, 9999);
         assert.strictEqual(server.address, 'http://0.0.0.0:9999');
@@ -160,7 +161,7 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     async serverStartAndStop(_:any) {
-        const server = new SimpleServer({ port: 9000, loglevel: 'silent' });
+        const server = new SimpleServer({ port: 9000, loglevel: LogLevel.SILENT });
         assert.ok(!server.running);
 
         await server.start();

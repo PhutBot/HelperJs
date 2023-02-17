@@ -69,7 +69,7 @@ export class SimpleServer {
         if (settings.loglevel)
             this.logger.setLevel(settings.loglevel)
     
-            this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
+        this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
         this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
 
@@ -235,7 +235,7 @@ export class SimpleServer {
             }
         }
         
-        this.logger.info('SimpleServer', `created mapping for ${matcher.path}`);
+        this.logger.http('SimpleServer', `created mapping for ${matcher.path}`);
         this.handlers[method as RequestMethod][matcher.path] = { matcher, handler };
     }
     
@@ -261,7 +261,7 @@ export class SimpleServer {
             
             this.server.listen(this.port, this.hostname, () => {
                 this._running = true;
-                this.logger.info('SimpleServer', `server started @ ${this.address}`);
+                this.logger.http('SimpleServer', `server started @ ${this.address}`);
                 res(true);
             });
         });
@@ -276,7 +276,7 @@ export class SimpleServer {
                 this.websockets.forEach(ws => ws.close());
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
-                    this.logger.info('SimpleServer', 'server stopped');
+                    this.logger.http('SimpleServer', 'server stopped');
                     this._running = false;
                     res(true);
                 });
