@@ -118,7 +118,7 @@ export default class SimpleServerTest extends TestCase {
         const requestObj2 = { ...requestObj, uri: `${requestObj.uri}/index.html` };
         const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
 
-        context.server.mapDirectory('./www', { alias: requestObj.uri });
+        context.server.mapDirectory('../../test/www', { alias: requestObj.uri });
 
         let response = await request(requestObj);
         let body = await (await response.body()).text();
