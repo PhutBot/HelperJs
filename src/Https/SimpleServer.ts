@@ -8,7 +8,7 @@ import { ErrorHttp } from './Errors/Error';
 import { ErrorHttp404NotFound } from './Errors/4XX';
 import { ErrorHttp500Internal } from './Errors/5XX';
 import { PathMatcher } from './PathMatcher';
-import { Logger } from '../Log';
+import { Logger, LogLevel } from '../Log';
 import { getMetadata } from '../Meta/Metadata';
 import { Middleware, MiddlewareStage } from './Middleware';
 import { WebSocketConnection } from './WebSocket';
@@ -36,7 +36,7 @@ export interface ServerSettings {
     hostname?:string|EnvBackedValue;
     port?:number|EnvBackedValue;
     useCache?:boolean|EnvBackedValue;
-    loglevel?:string;
+    loglevel?:LogLevel;
     preprocessor?: PreProcessor;
 }
 
@@ -66,7 +66,10 @@ export class SimpleServer {
 
     constructor(settings:ServerSettings = {}) {
         this.logger = new Logger();
-        this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
+        if (settings.loglevel)
+            this.logger.setLevel(settings.loglevel)
+    
+            this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
         this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
 

@@ -48,6 +48,8 @@ class SimpleServer {
         this.middlewares = { PRE_PROCESSOR: [], POST_PROCESSOR: [] };
         this.preprocessor = (_, view) => view;
         this.logger = new Log_1.Logger();
+        if (settings.loglevel)
+            this.logger.setLevel(settings.loglevel);
         this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
         this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
         this.useCache = (_c = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;

@@ -3,6 +3,7 @@ import * as http from 'http';
 import { EnvBackedValue } from '../Env';
 import { RequestMethod, Headers, HttpRequest } from './Request';
 import { PathMatcher } from './PathMatcher';
+import { LogLevel } from '../Log';
 import { Middleware } from './Middleware';
 import { WebSocketConnection } from './WebSocket';
 interface HandlerRecord {
@@ -21,7 +22,7 @@ export interface ServerSettings {
     hostname?: string | EnvBackedValue;
     port?: number | EnvBackedValue;
     useCache?: boolean | EnvBackedValue;
-    loglevel?: string;
+    loglevel?: LogLevel;
     preprocessor?: PreProcessor;
 }
 export declare class SimpleServer {
