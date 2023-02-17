@@ -49,7 +49,7 @@ const levelInfo = [
 ];
 class Logger {
     constructor(heading) {
-        this.level = LogLevel.ERROR;
+        this.level = LogLevel.INFO;
         if (heading instanceof Function || typeof heading === 'string')
             this.heading = heading;
         else if (!!heading)

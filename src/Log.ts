@@ -49,7 +49,7 @@ const levelInfo = [
 ]
 
 export class Logger {
-    private level = LogLevel.ERROR;
+    private level = LogLevel.INFO;
     private heading?:Function|string;
 
     constructor(heading?:boolean|Function|string) {
