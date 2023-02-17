@@ -3,7 +3,7 @@ import { ErrorHttp } from "./Error";
 
 export class ErrorHttp400BadRequest extends ErrorHttp {
     constructor(request:HttpRequest, msg?:string) {
-        super(request, 400, 'bad request', msg);
+        super(request, 400, 'Bad request', msg);
     }
 }
 
@@ -21,13 +21,19 @@ export class ErrorHttp403Forbidden extends ErrorHttp {
 
 export class ErrorHttp404NotFound extends ErrorHttp {
     constructor(request:HttpRequest, msg?:string) {
-        super(request, 404, `page not found (${request.url.pathname})`, msg);
+        super(request, 404, `Page not found (${request.url.pathname})`, msg);
     }
 }
 
 export class ErrorHttp405Method extends ErrorHttp {
     constructor(request:HttpRequest, msg?:string) {
         super(request, 405, 'Method not allowed', msg);
+    }
+}
+
+export class ErrorHttp409Conflict extends ErrorHttp {
+    constructor(request:HttpRequest, msg?:string) {
+        super(request, 409, 'Conflicting request', msg);
     }
 }
 

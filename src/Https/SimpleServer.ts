@@ -11,6 +11,7 @@ import { PathMatcher } from './PathMatcher';
 import { Logger } from '../Log';
 import { getMetadata } from '../Meta/Metadata';
 import { Middleware, MiddlewareStage } from './Middleware';
+import { WebSocketConnection } from './WebSocket';
 
 interface HandlerRecord {
     matcher:PathMatcher;
@@ -52,6 +53,7 @@ export class SimpleServer {
     private logger:Logger;
     private server:http.Server;
     private sockets:Array<Socket> = [];
+    public websockets:Array<WebSocketConnection> = [];
     private handlers:HandlerMap = { DELETE:{}, GET:{}, PATCH:{}, POST:{}, PUT:{} };
     // private errorHandlers:Record<number,RequestHandler> = {};
     private _running:boolean = false;
@@ -63,7 +65,7 @@ export class SimpleServer {
     get address() { return `http://${this.hostname}:${this.port}`; }
 
     constructor(settings:ServerSettings = {}) {
-        this.logger = new Logger(settings.loglevel ?? 'info');
+        this.logger = new Logger();
         this.hostname = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname) ?? '0.0.0.0';
         this.port = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port) ?? 8080;
         this.useCache = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache) ?? true;
@@ -76,6 +78,15 @@ export class SimpleServer {
         this.server.on('connection', (socket:Socket) => {
             this.sockets.push(socket);
             this.eventEmitter.emit('simple-server-connection', { detail: socket });
+        });
+        this.server.on('upgrade', (req:http.IncomingMessage, socket:Socket) => {
+            const request = this._translateRequest(req);
+            const ws = new WebSocketConnection(this.websockets.length, request, socket);
+            ws.on('text', (data:string) => {
+                this.eventEmitter.emit('simple-websocket-msg', { detail: { ws, data }});
+            });
+            this.websockets.push(ws);
+            this.eventEmitter.emit('simple-websocket-connection', { detail: ws });
         });
     }
 
@@ -259,6 +270,7 @@ export class SimpleServer {
                 this.logger.warn('SimpleServer', 'server already stopped');
                 rej(new Error('server already stopped'));
             } else {
+                this.websockets.forEach(ws => ws.close());
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
                     this.logger.info('SimpleServer', 'server stopped');
@@ -304,52 +316,100 @@ export class SimpleServer {
         }
     }
 
+    _translateRequest(req:http.IncomingMessage) {
+        const method = req.method as RequestMethod ?? RequestMethod.GET;
+        const url = new URL(req.url ?? '', this.address);
+        const path = url.pathname;
+
+        const headers:Headers = {};
+        Object.entries(req.headers).forEach(([key, val]) => {
+            headers[key] = headers[key] || [];
+            if (!!val) {
+                if (Array.isArray(val))
+                    headers[key].push(...val);
+                else
+                    headers[key].push(val);
+            }
+        });
+        
+        const queryParams:QueryParams = {};
+        for (const [key, val] of url.searchParams.entries()) {
+            queryParams[key] = queryParams[key] || [];
+            queryParams[key].push(val);
+        }
+
+        const request:HttpRequest = {
+            socket: req.socket,
+            method,
+            url,
+            path,
+            pathParams: {},
+            queryParams,
+            headers,
+            body: () => new Promise((resolve, reject) => {
+                const chunks:Buffer[] = [];
+                req.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                req.on('end', () => {
+                    resolve(new Body(Buffer.concat(chunks)));
+                });
+                req.on('error', (err) => {
+                    reject(err);
+                });
+            }),
+        };
+        return request;
+    }
+
     _rootHandler(req:http.IncomingMessage, res:http.ServerResponse) {
         try {
-            const method = req.method as RequestMethod ?? RequestMethod.GET;
-            const url = new URL(req.url ?? '', this.address);
-            const path = url.pathname;
+            // const method = req.method as RequestMethod ?? RequestMethod.GET;
+            // const url = new URL(req.url ?? '', this.address);
+            // const path = url.pathname;
 
-            const headers:Headers = {};
-            Object.entries(req.headers).forEach(([key, val]) => {
-                headers[key] = headers[key] || [];
-                if (!!val) {
-                    if (Array.isArray(val))
-                        headers[key].push(...val);
-                    else
-                        headers[key].push(val);
-                }
-            });
+            // const headers:Headers = {};
+            // Object.entries(req.headers).forEach(([key, val]) => {
+            //     headers[key] = headers[key] || [];
+            //     if (!!val) {
+            //         if (Array.isArray(val))
+            //             headers[key].push(...val);
+            //         else
+            //             headers[key].push(val);
+            //     }
+            // });
             
-            const queryParams:QueryParams = {};
-            for (const [key, val] of url.searchParams.entries()) {
-                queryParams[key] = queryParams[key] || [];
-                queryParams[key].push(val);
-            }
+            // const queryParams:QueryParams = {};
+            // for (const [key, val] of url.searchParams.entries()) {
+            //     queryParams[key] = queryParams[key] || [];
+            //     queryParams[key].push(val);
+            // }
 
-            const { handler, pathParams } = this._getHandler(method, url);
+            const request = this._translateRequest(req);
+            const { handler, pathParams } = this._getHandler(request.method, request.url);
+            request.pathParams = pathParams;
 
-            const request:HttpRequest = {
-                socket: req.socket,
-                method,
-                url,
-                path,
-                pathParams,
-                queryParams,
-                headers,
-                body: () => new Promise((resolve, reject) => {
-                    let body = '';
-                    req.on('data', (chunk) => {
-                        body += chunk;
-                    });
-                    req.on('end', () => {
-                        resolve(new Body(body));
-                    });
-                    req.on('error', (err) => {
-                        reject(err);
-                    });
-                }),
-            };
+            // const request:HttpRequest = {
+            //     socket: req.socket,
+            //     method,
+            //     url,
+            //     path,
+            //     pathParams,
+            //     queryParams,
+            //     headers,
+            //     body: () => new Promise((resolve, reject) => {
+            //         const chunks:Buffer[] = [];
+            //         req.on('data', (chunk) => {
+            //             chunks.push(chunk);
+            //         });
+            //         req.on('end', () => {
+            //             resolve(new Body(Buffer.concat(chunks)));
+            //         });
+            //         req.on('error', (err) => {
+            //             reject(err);
+            //         });
+            //     }),
+            // };
 
             if (handler === null) {            
                 throw new ErrorHttp404NotFound(request);

@@ -36,10 +36,11 @@ export interface RequestSettings {
 export type Headers = Record<string, string[]>;
 export type QueryParams = Record<string, string[]>;
 export class Body {
-    private data:string;
-    constructor(data:string) {this.data = data;}
-    text() { return Promise.resolve(this.data); }
-    json() { return Promise.resolve(JSON.parse(this.data)); }
+    private data:Buffer;
+    constructor(data:Buffer) {this.data = data;}
+    raw() { return Promise.resolve(this.data); }
+    text() { return Promise.resolve(`${this.data.toString()}`); }
+    json() { return Promise.resolve(JSON.parse(this.data.toString())); }
 }
 
 export interface HttpRequest {
@@ -107,12 +108,12 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
                 statusCode: res.statusCode ?? -1,
                 headers,
                 body: () => new Promise((resolve, reject) => {
-                    let body = '';
-                    res.on('data', (chunk) => {
-                        body += chunk;
+                    const chunks:Buffer[] = [];
+                    req.on('data', (chunk) => {
+                        chunks.push(chunk);
                     });
-                    res.on('end', () => {
-                        resolve(new Body(body));
+                    req.on('end', () => {
+                        resolve(new Body(Buffer.concat(chunks)));
                     });
                     res.on('error', (err) => {
                         reject(err);
