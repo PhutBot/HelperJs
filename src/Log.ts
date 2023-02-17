@@ -26,7 +26,7 @@ const ControlChars = {
     BgWhite: "\x1b[47m"
 };
 
-enum LogLevel {
+export enum LogLevel {
     SILLY,
     VERBOSE,
     INFO,
@@ -47,6 +47,7 @@ const levelInfo = [
 ]
 
 export class Logger {
+    private static level = LogLevel.ERROR;
     private heading?:Function|string;
 
     constructor(heading?:boolean|Function|string) {
@@ -71,7 +72,13 @@ export class Logger {
         return ControlChars.FgBlue + heading + ControlChars.Reset;
     }
 
+    public setLevel(level:LogLevel) {
+        Logger.level = level;
+    }
+
     public log(level:LogLevel, prefix:string, message:string, ...args:any[]) {
+        if (level < Logger.level)
+            return;
         console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
     }
 
