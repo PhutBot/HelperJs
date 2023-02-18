@@ -13,18 +13,19 @@ export declare enum RequestMethod {
     PUT = "PUT"
 }
 export declare const RequestMethodsAllowingBody: RequestMethod[];
+export declare type Headers = Record<string, string[]>;
+export declare type QueryParams = Record<string, string[]>;
 export interface RequestSettings {
     protocol?: RequestProtocol | string;
     method?: RequestMethod | string;
     hostname: string;
     port?: number;
     uri: string;
-    query?: object;
-    headers?: any;
+    query?: QueryParams;
+    headers?: Headers;
     body?: string;
+    timeout?: number;
 }
-export declare type Headers = Record<string, string[]>;
-export declare type QueryParams = Record<string, string[]>;
 export declare class Body {
     private data;
     constructor(data: Buffer);

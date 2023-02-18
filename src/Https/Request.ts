@@ -22,19 +22,20 @@ export const RequestMethodsAllowingBody = [
     RequestMethod.PATCH
 ];
 
+export type Headers = Record<string, string[]>;
+export type QueryParams = Record<string, string[]>;
 export interface RequestSettings {
     protocol?:RequestProtocol|string;
     method?:RequestMethod|string;
     hostname:string;
     port?:number;
     uri:string;
-    query?:object;
-    headers?:any;
+    query?:QueryParams;
+    headers?:Headers;
     body?:string;
+    timeout?:number;
 }
 
-export type Headers = Record<string, string[]>;
-export type QueryParams = Record<string, string[]>;
 export class Body {
     private data:Buffer;
     constructor(data:Buffer) {this.data = data;}
@@ -66,7 +67,8 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
     settings = Object.assign({
         method: RequestMethod.GET,
         protocol: RequestProtocol.HTTPS,
-        port: 443
+        port: 443,
+        timeout: 3000,
     }, settings);
 
     let path:string = settings.uri;
@@ -90,6 +92,7 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
     }
 
     return new Promise((resolve, reject) => {
+        let timeoutFn: NodeJS.Timeout|null = null;
         const proto = (settings.protocol as RequestProtocol) === RequestProtocol.HTTP ? http : https;
         const req = proto.request({
             path,
@@ -97,7 +100,10 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
             port: settings.port,
             method: settings.method as string,
             headers: settings.headers,
-        }, res => {
+        }, (res) => {
+            if (timeoutFn)
+                clearTimeout(timeoutFn);
+
             const headers = {} as Headers;
             Object.entries(res.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
@@ -109,10 +115,10 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
                 headers,
                 body: () => new Promise((resolve, reject) => {
                     const chunks:Buffer[] = [];
-                    req.on('data', (chunk) => {
+                    res.on('data', (chunk) => {
                         chunks.push(chunk);
                     });
-                    req.on('end', () => {
+                    res.on('end', () => {
                         resolve(new Body(Buffer.concat(chunks)));
                     });
                     res.on('error', (err) => {
@@ -122,8 +128,8 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
             });
         });
 
-        req.on('error', err => {
-            reject(new Error(`request - ${err}`));
+        req.on('error', (err) => {
+            reject(new Error(`request - ${err.message}`));
         });
 
         if (!!settings.body) {
@@ -135,5 +141,8 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
         }
 
         req.end();
+        timeoutFn = setTimeout(() => {
+            req.destroy(new Error('timeout'));
+        }, settings.timeout);
     });
 }

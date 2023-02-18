@@ -53,7 +53,8 @@ function request(settings) {
     settings = Object.assign({
         method: RequestMethod.GET,
         protocol: RequestProtocol.HTTPS,
-        port: 443
+        port: 443,
+        timeout: 3000,
     }, settings);
     let path = settings.uri;
     if (!!settings.query) {
@@ -74,6 +75,7 @@ function request(settings) {
         });
     }
     return new Promise((resolve, reject) => {
+        let timeoutFn = null;
         const proto = settings.protocol === RequestProtocol.HTTP ? http : https;
         const req = proto.request({
             path,
@@ -81,8 +83,10 @@ function request(settings) {
             port: settings.port,
             method: settings.method,
             headers: settings.headers,
-        }, res => {
+        }, (res) => {
             var _a;
+            if (timeoutFn)
+                clearTimeout(timeoutFn);
             const headers = {};
             Object.entries(res.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
@@ -94,10 +98,10 @@ function request(settings) {
                 headers,
                 body: () => new Promise((resolve, reject) => {
                     const chunks = [];
-                    req.on('data', (chunk) => {
+                    res.on('data', (chunk) => {
                         chunks.push(chunk);
                     });
-                    req.on('end', () => {
+                    res.on('end', () => {
                         resolve(new Body(Buffer.concat(chunks)));
                     });
                     res.on('error', (err) => {
@@ -106,8 +110,8 @@ function request(settings) {
                 })
             });
         });
-        req.on('error', err => {
-            reject(new Error(`request - ${err}`));
+        req.on('error', (err) => {
+            reject(new Error(`request - ${err.message}`));
         });
         if (!!settings.body) {
             if (typeof settings.body === 'object' || Array.isArray(settings.body)) {
@@ -118,6 +122,9 @@ function request(settings) {
             }
         }
         req.end();
+        timeoutFn = setTimeout(() => {
+            req.destroy(new Error('timeout'));
+        }, settings.timeout);
     });
 }
 exports.request = request;
