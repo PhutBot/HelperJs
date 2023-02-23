@@ -1,5 +1,5 @@
 import { AssertionError } from "assert";
-import npmlog from "npmlog";
+import { DefaultLogger } from "../../Log";
 import { DecoratorBuilder } from "../../Meta/DecoratorBuilder";
 import { TestCase } from "../TestCase";
 import { TestResult } from "../TestRunner";
@@ -14,18 +14,18 @@ export function Test(c?:{}) {
 
                 try {
                     await og.call(this, { context: ctx, testcase: key, ...c });
-                    npmlog.info(target.constructor.name, `pass - ${key}`);
+                    DefaultLogger.info(target.constructor.name, `pass - ${key}`);
                     return [ TestResult.PASS ];
                 } catch (err) {
                     if (err instanceof AssertionError) {
-                        npmlog.warn(target.constructor.name, `fail - ${key}`);
-                        npmlog.warn(target.constructor.name, JSON.stringify(c));
-                        npmlog.warn(target.constructor.name, `${err}`);
+                        DefaultLogger.warn(target.constructor.name, `fail - ${key}`);
+                        DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
+                        DefaultLogger.warn(target.constructor.name, `${err}`);
                         return [ TestResult.FAIL ];
                     } else {
-                        npmlog.error(target.constructor.name, `error - ${key}`);
-                        npmlog.error(target.constructor.name, JSON.stringify(c));
-                        npmlog.error(target.constructor.name, `${err}`);
+                        DefaultLogger.error(target.constructor.name, `error - ${key}`);
+                        DefaultLogger.error(target.constructor.name, JSON.stringify(c));
+                        DefaultLogger.error(target.constructor.name, `${err}`);
                         return [ TestResult.ERROR ];
                     }
                 } finally {
@@ -47,18 +47,18 @@ export function Unroll(cases:object[]) {
                         
                         try {
                             await og.call(this, { context: ctx, testcase, ...c });
-                            npmlog.info(target.constructor.name, `pass - ${testcase}`);
+                            DefaultLogger.info(target.constructor.name, `pass - ${testcase}`);
                             return TestResult.PASS;
                         } catch (err) {
                             if (err instanceof AssertionError) {
-                                npmlog.warn(target.constructor.name, `fail - ${testcase}`);
-                                npmlog.warn(target.constructor.name, JSON.stringify(c));
-                                npmlog.warn(target.constructor.name, `${err}`);
+                                DefaultLogger.warn(target.constructor.name, `fail - ${testcase}`);
+                                DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
+                                DefaultLogger.warn(target.constructor.name, `${err}`);
                                 return TestResult.FAIL;
                             } else {
-                                npmlog.error(target.constructor.name, `error - ${testcase}`);
-                                npmlog.error(target.constructor.name, JSON.stringify(c));
-                                npmlog.error(target.constructor.name, `${err}`);
+                                DefaultLogger.error(target.constructor.name, `error - ${testcase}`);
+                                DefaultLogger.error(target.constructor.name, JSON.stringify(c));
+                                DefaultLogger.error(target.constructor.name, `${err}`);
                                 return TestResult.ERROR;
                             }
                         } finally {

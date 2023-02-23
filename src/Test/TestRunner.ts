@@ -1,6 +1,6 @@
 import * as fs from "fs";
-import npmlog from "npmlog";
 import path from "path";
+import { DefaultLogger, LogLevel } from "../Log";
 import { getMetadata } from "../Meta/Metadata";
 import { TestCase } from "./TestCase";
 
@@ -35,11 +35,11 @@ async function walk(dir:string, action:(p:string)=>any, options:WalkOptions) {
 }
 
 function logResult(prefix:string, result:Record<TestResult,number>, spaces=0) {
-    const level = result.PASS != result.TOTAL ? 'warn' : 'info';
-    npmlog.log(level, prefix, '----------------------------------------------------------------');
-    npmlog.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
-    npmlog.log(level, prefix, '----------------------------------------------------------------');
-    npmlog.info('','');
+    const level = result.PASS != result.TOTAL ? LogLevel.WARN : LogLevel.INFO;
+    DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
+    DefaultLogger.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
+    DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
+    DefaultLogger.info('','');
 }
 
 export async function RunTests(dir:string) {

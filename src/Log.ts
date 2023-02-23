@@ -112,3 +112,6 @@ export class Logger {
         this.log(LogLevel.FATAL, prefix, message);
     }
 };
+
+export const DefaultLogger = new Logger(true);
+DefaultLogger.setLevel(LogLevel.INFO);

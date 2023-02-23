@@ -1,9 +1,9 @@
-import npmlog from 'npmlog';
+import { DefaultLogger } from "./Log";
 
 export function fatal(err:Error, name:string='Application') {
-    npmlog.error(name, `[FATAL]: ${err}`);
+    DefaultLogger.error(name, `[FATAL]: ${err}`);
     if (typeof err === 'object' && 'stack' in err) {
-        npmlog.error(name, err.stack!);
+        DefaultLogger.error(name, err.stack!);
     }
     process.abort();
 }
