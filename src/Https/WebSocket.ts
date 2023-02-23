@@ -379,7 +379,7 @@ export class WebSocketClient extends WebSocketBase {
                 'Upgrade: websocket',
                 'Connection: upgrade',
                 'sec-websocket-key: test',
-                'sec-websocket-version: 1.0',
+                'sec-websocket-version: 13',
                 `sec-websocket-protocol: ${this._protocol}`,
                 '', ''
             ];
