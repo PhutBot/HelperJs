@@ -13,6 +13,7 @@ export enum WebsocketOpcode {
 };
 
 export class WebSocketBase {
+    protected _protocol?: string; 
     protected _socket: Socket;
     protected _closing: boolean = false;
     protected _on: {[key: string]: null|Function} = {};
@@ -133,8 +134,9 @@ export class WebSocketBase {
 export class WebSocketConnection extends WebSocketBase {
     public id: number = -1;
 
-    constructor(id: number, req: HttpRequest, socket: Socket) {
+    constructor(id: number, req: HttpRequest, socket: Socket, protocol?: string) {
         super(socket, 'WebSocketConnection');
+        this._protocol = protocol;
         this.id = id;
         this._connect(req);
     }
@@ -263,8 +265,9 @@ export class WebSocketConnection extends WebSocketBase {
 export class WebSocketClient extends WebSocketBase {
     public address: URL;
 
-    constructor(address: string) {
+    constructor(address: string, protocol?: string) {
         super(new Socket({ allowHalfOpen: true, readable: true, writable: true }), 'WebSocketClient');
+        this._protocol = protocol;
         this.address = new URL(address);
         this._connect();
     }
@@ -377,7 +380,7 @@ export class WebSocketClient extends WebSocketBase {
                 'Connection: upgrade',
                 'sec-websocket-key: test',
                 'sec-websocket-version: 1.0',
-                'sec-websocket-protocol: test',
+                `sec-websocket-protocol: ${this._protocol}`,
                 '', ''
             ];
             const out = headers.join('\r\n');

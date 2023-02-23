@@ -87,8 +87,10 @@ export class SimpleServer {
                 socket.end('HTTP/1.1 400 Bad Request');
                 return;
             }
+
+            const protocol = req.headers['sec-websocket-protocol'];
             const request = this._translateRequest(req);
-            const ws = new WebSocketConnection(this.websockets.length, request, socket);
+            const ws = new WebSocketConnection(this.websockets.length, request, socket, protocol);
             ws.on('text', (data:string) => {
                 this.eventEmitter.emit('simple-websocket-msg', { detail: { ws, data }});
             });

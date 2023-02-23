@@ -88,7 +88,7 @@ function request(settings) {
             headers: settings.headers,
             timeout: settings.timeout
         }, (res) => {
-            var _a, _b, _c;
+            var _a;
             const headers = {};
             Object.entries(res.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
@@ -110,7 +110,6 @@ function request(settings) {
                         reject(err);
                     });
                 }),
-                socket: ((_b = req.socket) === null || _b === void 0 ? void 0 : _b.destroyed) ? undefined : ((_c = req.socket) !== null && _c !== void 0 ? _c : undefined),
             });
         });
         req.on('error', (err) => {

@@ -10,6 +10,7 @@ export declare enum WebsocketOpcode {
     PONG = 10
 }
 export declare class WebSocketBase {
+    protected _protocol?: string;
     protected _socket: Socket;
     protected _closing: boolean;
     protected _on: {
@@ -36,12 +37,12 @@ export declare class WebSocketBase {
 }
 export declare class WebSocketConnection extends WebSocketBase {
     id: number;
-    constructor(id: number, req: HttpRequest, socket: Socket);
+    constructor(id: number, req: HttpRequest, socket: Socket, protocol?: string);
     private _connect;
     _getWebsocketAcceptValue(key: string): string;
 }
 export declare class WebSocketClient extends WebSocketBase {
     address: URL;
-    constructor(address: string);
+    constructor(address: string, protocol?: string);
     private _connect;
 }

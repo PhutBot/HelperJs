@@ -48,6 +48,5 @@ export interface HttpResponse {
     statusCode: number;
     headers?: Headers;
     body: () => Promise<Body>;
-    socket?: net.Socket;
 }
 export declare function request(settings: RequestSettings): Promise<HttpResponse>;

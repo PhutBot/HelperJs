@@ -125,9 +125,10 @@ class WebSocketBase {
 exports.WebSocketBase = WebSocketBase;
 ;
 class WebSocketConnection extends WebSocketBase {
-    constructor(id, req, socket) {
+    constructor(id, req, socket, protocol) {
         super(socket, 'WebSocketConnection');
         this.id = -1;
+        this._protocol = protocol;
         this.id = id;
         this._connect(req);
     }
@@ -249,8 +250,9 @@ class WebSocketConnection extends WebSocketBase {
 exports.WebSocketConnection = WebSocketConnection;
 ;
 class WebSocketClient extends WebSocketBase {
-    constructor(address) {
+    constructor(address, protocol) {
         super(new net_1.Socket({ allowHalfOpen: true, readable: true, writable: true }), 'WebSocketClient');
+        this._protocol = protocol;
         this.address = new URL(address);
         this._connect();
     }
@@ -359,7 +361,7 @@ class WebSocketClient extends WebSocketBase {
                     'Connection: upgrade',
                     'sec-websocket-key: test',
                     'sec-websocket-version: 1.0',
-                    'sec-websocket-protocol: test',
+                    `sec-websocket-protocol: ${this._protocol}`,
                     '', ''
                 ];
                 const out = headers.join('\r\n');
