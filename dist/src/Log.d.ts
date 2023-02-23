@@ -25,3 +25,4 @@ export declare class Logger {
     error(prefix: string, message: string, ...args: any[]): void;
     fatal(prefix: string, message: string, ...args: any[]): void;
 }
+export declare const DefaultLogger: Logger;

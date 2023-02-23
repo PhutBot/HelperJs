@@ -1,31 +1,47 @@
 /// <reference types="node" />
 import { Socket } from 'net';
 import { HttpRequest } from "./Request";
-export declare class WebSocketConnection {
-    id: number;
-    _socket: Socket;
-    _closing: boolean;
-    _on: {
+export declare enum WebsocketOpcode {
+    CONTINUE = 0,
+    TEXT = 1,
+    BINARY = 2,
+    CLOSE = 8,
+    PING = 9,
+    PONG = 10
+}
+export declare class WebSocketBase {
+    protected _socket: Socket;
+    protected _closing: boolean;
+    protected _on: {
         [key: string]: null | Function;
     };
-    _keepAliveInterval?: NodeJS.Timer;
-    closureCodeMsgs: {
+    protected _keepAliveInterval?: NodeJS.Timer;
+    private subclass;
+    protected closureCodeMsgs: {
         [key: number]: string;
     };
-    constructor(id: number, req: HttpRequest, socket: Socket);
+    constructor(socket: Socket, subclass: string);
     on(eventType: string, handler: Function): this;
-    write(msg: string | Buffer, options?: {
-        op?: number;
-    }): void;
-    ping(): void;
+    write(opcode: WebsocketOpcode, msg?: string | Buffer): void;
+    protected ping(): void;
+    protected pong(): void;
     close(): void;
-    _connect(req: HttpRequest): void;
-    _getWebsocketAcceptValue(key: string): string;
     get socket(): Socket;
-    get _onOpen(): Function;
-    get _onText(): Function;
-    get _onData(): Function;
-    get _onClose(): Function;
-    get _onEnd(): Function;
-    get _onError(): Function;
+    protected get _onOpen(): Function;
+    protected get _onText(): Function;
+    protected get _onData(): Function;
+    protected get _onClose(): Function;
+    protected get _onEnd(): Function;
+    protected get _onError(): Function;
+}
+export declare class WebSocketConnection extends WebSocketBase {
+    id: number;
+    constructor(id: number, req: HttpRequest, socket: Socket);
+    private _connect;
+    _getWebsocketAcceptValue(key: string): string;
+}
+export declare class WebSocketClient extends WebSocketBase {
+    address: URL;
+    constructor(address: string);
+    private _connect;
 }

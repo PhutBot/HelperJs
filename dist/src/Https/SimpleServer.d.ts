@@ -15,9 +15,9 @@ export interface HandlerResponse {
     headers?: Headers;
     body?: string | Buffer;
 }
-export declare type RequestHandler = (request: HttpRequest, model?: {}) => Promise<HandlerResponse>;
-export declare type HandlerMap = Record<RequestMethod, Record<string, HandlerRecord>>;
-export declare type PreProcessor = (model: {} | Function | undefined, view: string) => string;
+export type RequestHandler = (request: HttpRequest, model?: {}) => Promise<HandlerResponse>;
+export type HandlerMap = Record<RequestMethod, Record<string, HandlerRecord>>;
+export type PreProcessor = (model: {} | Function | undefined, view: string) => string;
 export interface ServerSettings {
     hostname?: string | EnvBackedValue;
     port?: number | EnvBackedValue;

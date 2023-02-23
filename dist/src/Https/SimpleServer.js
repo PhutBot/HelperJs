@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -34,6 +38,8 @@ const Metadata_1 = require("../Meta/Metadata");
 const Middleware_1 = require("./Middleware");
 const WebSocket_1 = require("./WebSocket");
 class SimpleServer {
+    get running() { return this._running; }
+    get address() { return `http://${this.hostname}:${this.port}`; }
     constructor(settings = {}) {
         var _a, _b, _c;
         this.alias2Dir = {};
@@ -61,6 +67,10 @@ class SimpleServer {
             this.eventEmitter.emit('simple-server-connection', { detail: socket });
         });
         this.server.on('upgrade', (req, socket) => {
+            if (req.headers['upgrade'] !== 'websocket') {
+                socket.end('HTTP/1.1 400 Bad Request');
+                return;
+            }
             const request = this._translateRequest(req);
             const ws = new WebSocket_1.WebSocketConnection(this.websockets.length, request, socket);
             ws.on('text', (data) => {
@@ -70,8 +80,6 @@ class SimpleServer {
             this.eventEmitter.emit('simple-websocket-connection', { detail: ws });
         });
     }
-    get running() { return this._running; }
-    get address() { return `http://${this.hostname}:${this.port}`; }
     addMiddleware(middleware) {
         this.middlewares[middleware.stage].push(middleware);
     }

@@ -13,8 +13,8 @@ export declare enum RequestMethod {
     PUT = "PUT"
 }
 export declare const RequestMethodsAllowingBody: RequestMethod[];
-export declare type Headers = Record<string, string[]>;
-export declare type QueryParams = Record<string, string[]>;
+export type Headers = Record<string, string[]>;
+export type QueryParams = Record<string, string[]>;
 export interface RequestSettings {
     protocol?: RequestProtocol | string;
     method?: RequestMethod | string;
@@ -48,5 +48,6 @@ export interface HttpResponse {
     statusCode: number;
     headers?: Headers;
     body: () => Promise<Body>;
+    socket?: net.Socket;
 }
 export declare function request(settings: RequestSettings): Promise<HttpResponse>;

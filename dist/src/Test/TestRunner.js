@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -33,8 +37,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RunTests = exports.TestResult = void 0;
 const fs = __importStar(require("fs"));
-const npmlog_1 = __importDefault(require("npmlog"));
 const path_1 = __importDefault(require("path"));
+const Log_1 = require("../Log");
 const Metadata_1 = require("../Meta/Metadata");
 const TestCase_1 = require("./TestCase");
 ;
@@ -70,11 +74,11 @@ function walk(dir, action, options) {
     });
 }
 function logResult(prefix, result, spaces = 0) {
-    const level = result.PASS != result.TOTAL ? 'warn' : 'info';
-    npmlog_1.default.log(level, prefix, '----------------------------------------------------------------');
-    npmlog_1.default.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
-    npmlog_1.default.log(level, prefix, '----------------------------------------------------------------');
-    npmlog_1.default.info('', '');
+    const level = result.PASS != result.TOTAL ? Log_1.LogLevel.WARN : Log_1.LogLevel.INFO;
+    Log_1.DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
+    Log_1.DefaultLogger.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
+    Log_1.DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
+    Log_1.DefaultLogger.info('', '');
 }
 function RunTests(dir) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -86,10 +90,11 @@ function RunTests(dir) {
             ERROR: 0
         };
         yield walk(dir, (filePath) => __awaiter(this, void 0, void 0, function* () {
+            var _a;
             if (filePath === `${dir}/index.js`)
                 return;
             const location = path_1.default.join(root, filePath);
-            const module = yield Promise.resolve().then(() => __importStar(require(location)));
+            const module = yield (_a = location, Promise.resolve().then(() => __importStar(require(_a))));
             if (!!module.default && module.default.prototype instanceof TestCase_1.TestCase) {
                 const fileResults = {
                     TOTAL: 0,

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.elapsedToString = exports.inf = exports.toYrs = exports.toDay = exports.toHrs = exports.toMin = exports.toSec = exports.fromYrs = exports.fromDay = exports.fromHrs = exports.fromMin = exports.fromSec = void 0;
+exports.sleep = exports.elapsedToString = exports.inf = exports.toYrs = exports.toDay = exports.toHrs = exports.toMin = exports.toSec = exports.fromYrs = exports.fromDay = exports.fromHrs = exports.fromMin = exports.fromSec = void 0;
 function elapsedToStringHelper(elapsed, result, total, fmt, name, from, to, mul = 1) {
     if (name in fmt) {
         const value = Math.max(fmt[name], Math.floor(to(elapsed - total) / mul));
@@ -61,4 +61,8 @@ function elapsedToString(elapsed, fmt) {
     return result;
 }
 exports.elapsedToString = elapsedToString;
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+exports.sleep = sleep;
 //# sourceMappingURL=Millis.js.map

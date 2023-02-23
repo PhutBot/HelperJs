@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -75,7 +79,6 @@ function request(settings) {
         });
     }
     return new Promise((resolve, reject) => {
-        let timeoutFn = null;
         const proto = settings.protocol === RequestProtocol.HTTP ? http : https;
         const req = proto.request({
             path,
@@ -83,10 +86,9 @@ function request(settings) {
             port: settings.port,
             method: settings.method,
             headers: settings.headers,
+            timeout: settings.timeout
         }, (res) => {
-            var _a;
-            if (timeoutFn)
-                clearTimeout(timeoutFn);
+            var _a, _b, _c;
             const headers = {};
             Object.entries(res.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
@@ -107,7 +109,8 @@ function request(settings) {
                     res.on('error', (err) => {
                         reject(err);
                     });
-                })
+                }),
+                socket: ((_b = req.socket) === null || _b === void 0 ? void 0 : _b.destroyed) ? undefined : ((_c = req.socket) !== null && _c !== void 0 ? _c : undefined),
             });
         });
         req.on('error', (err) => {
@@ -122,9 +125,6 @@ function request(settings) {
             }
         }
         req.end();
-        timeoutFn = setTimeout(() => {
-            req.destroy(new Error('timeout'));
-        }, settings.timeout);
     });
 }
 exports.request = request;

@@ -1,8 +1,8 @@
 import { Metadata } from "./Metadata";
-declare type ParameterDecorator = (target: Object, propertyKey: string | symbol, parameterIndex: number, meta: Metadata) => void;
-declare type MethodDecorator = (target: any, propertyKey: string, descriptor: PropertyDescriptor, meta: Metadata) => PropertyDescriptor | void;
-declare type PropertyDecorator = (target: any, propertyKey: string, meta: Metadata) => void;
-declare type ClassDecorator = (constructor: Function, meta: Metadata) => any | void;
+type ParameterDecorator = (target: Object, propertyKey: string | symbol, parameterIndex: number, meta: Metadata) => void;
+type MethodDecorator = (target: any, propertyKey: string, descriptor: PropertyDescriptor, meta: Metadata) => PropertyDescriptor | void;
+type PropertyDecorator = (target: any, propertyKey: string, meta: Metadata) => void;
+type ClassDecorator = (constructor: Function, meta: Metadata) => any | void;
 export declare class DecoratorBuilder {
     private name;
     private onParameterFunc?;

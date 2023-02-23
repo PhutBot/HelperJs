@@ -8,13 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Unroll = exports.Test = void 0;
 const assert_1 = require("assert");
-const npmlog_1 = __importDefault(require("npmlog"));
+const Log_1 = require("../../Log");
 const DecoratorBuilder_1 = require("../../Meta/DecoratorBuilder");
 const TestRunner_1 = require("../TestRunner");
 function Test(c) {
@@ -27,20 +24,20 @@ function Test(c) {
                 const ctx = yield test.before(key);
                 try {
                     yield og.call(this, Object.assign({ context: ctx, testcase: key }, c));
-                    npmlog_1.default.info(target.constructor.name, `pass - ${key}`);
+                    Log_1.DefaultLogger.info(target.constructor.name, `pass - ${key}`);
                     return [TestRunner_1.TestResult.PASS];
                 }
                 catch (err) {
                     if (err instanceof assert_1.AssertionError) {
-                        npmlog_1.default.warn(target.constructor.name, `fail - ${key}`);
-                        npmlog_1.default.warn(target.constructor.name, JSON.stringify(c));
-                        npmlog_1.default.warn(target.constructor.name, `${err}`);
+                        Log_1.DefaultLogger.warn(target.constructor.name, `fail - ${key}`);
+                        Log_1.DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
+                        Log_1.DefaultLogger.warn(target.constructor.name, `${err}`);
                         return [TestRunner_1.TestResult.FAIL];
                     }
                     else {
-                        npmlog_1.default.error(target.constructor.name, `error - ${key}`);
-                        npmlog_1.default.error(target.constructor.name, JSON.stringify(c));
-                        npmlog_1.default.error(target.constructor.name, `${err}`);
+                        Log_1.DefaultLogger.error(target.constructor.name, `error - ${key}`);
+                        Log_1.DefaultLogger.error(target.constructor.name, JSON.stringify(c));
+                        Log_1.DefaultLogger.error(target.constructor.name, `${err}`);
                         return [TestRunner_1.TestResult.ERROR];
                     }
                 }
@@ -64,20 +61,20 @@ function Unroll(cases) {
                     const ctx = yield test.before(testcase);
                     try {
                         yield og.call(this, Object.assign({ context: ctx, testcase }, c));
-                        npmlog_1.default.info(target.constructor.name, `pass - ${testcase}`);
+                        Log_1.DefaultLogger.info(target.constructor.name, `pass - ${testcase}`);
                         return TestRunner_1.TestResult.PASS;
                     }
                     catch (err) {
                         if (err instanceof assert_1.AssertionError) {
-                            npmlog_1.default.warn(target.constructor.name, `fail - ${testcase}`);
-                            npmlog_1.default.warn(target.constructor.name, JSON.stringify(c));
-                            npmlog_1.default.warn(target.constructor.name, `${err}`);
+                            Log_1.DefaultLogger.warn(target.constructor.name, `fail - ${testcase}`);
+                            Log_1.DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
+                            Log_1.DefaultLogger.warn(target.constructor.name, `${err}`);
                             return TestRunner_1.TestResult.FAIL;
                         }
                         else {
-                            npmlog_1.default.error(target.constructor.name, `error - ${testcase}`);
-                            npmlog_1.default.error(target.constructor.name, JSON.stringify(c));
-                            npmlog_1.default.error(target.constructor.name, `${err}`);
+                            Log_1.DefaultLogger.error(target.constructor.name, `error - ${testcase}`);
+                            Log_1.DefaultLogger.error(target.constructor.name, JSON.stringify(c));
+                            Log_1.DefaultLogger.error(target.constructor.name, `${err}`);
                             return TestRunner_1.TestResult.ERROR;
                         }
                     }

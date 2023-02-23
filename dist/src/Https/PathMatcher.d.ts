@@ -1,4 +1,4 @@
-export declare type PathParams = Record<string, string>;
+export type PathParams = Record<string, string>;
 export declare class PathMatcher {
     readonly path: string;
     readonly isWild: boolean;

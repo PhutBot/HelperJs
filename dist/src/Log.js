@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Logger = exports.LogLevel = void 0;
+exports.DefaultLogger = exports.Logger = exports.LogLevel = void 0;
 const ControlChars = {
     Reset: "\x1b[0m",
     Bright: "\x1b[1m",
@@ -99,4 +99,6 @@ class Logger {
 }
 exports.Logger = Logger;
 ;
+exports.DefaultLogger = new Logger(true);
+exports.DefaultLogger.setLevel(LogLevel.INFO);
 //# sourceMappingURL=Log.js.map
