@@ -73,7 +73,7 @@ class Logger {
     log(level, prefix, message, ...args) {
         if (level < this.level)
             return;
-        console.log(`${this.printHeading()}${this.printLevel(this.level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
+        console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
     }
     silly(prefix, message, ...args) {
         this.log(LogLevel.SILLY, prefix, message, args);

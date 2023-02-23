@@ -45,4 +45,5 @@ export declare class WebSocketClient extends WebSocketBase {
     address: URL;
     constructor(address: string, protocol?: string);
     private _connect;
+    private handleData;
 }

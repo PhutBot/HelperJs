@@ -259,91 +259,15 @@ class WebSocketClient extends WebSocketBase {
     _connect() {
         return __awaiter(this, void 0, void 0, function* () {
             this.socket.once('data', (buffer) => {
-                let op = null;
-                let runningIdx = 0;
-                let len = 0;
-                let count = 0;
-                let mask = [];
-                let msg = null;
-                // DefaultLogger.info(buffer.toString());
-                this.socket.on('data', (buffer) => {
-                    var _a, _b;
-                    let byteIdx = 0;
-                    while (byteIdx < buffer.length) {
-                        if (len === 0) {
-                            let byte = buffer.readUInt8(byteIdx++);
-                            const fin = (byte & 0x80) >> 7;
-                            const res = (byte & 0x70) >> 4;
-                            op = (byte & 0x0F) >> 0;
-                            byte = buffer.readUInt8(byteIdx++);
-                            const hasMask = (byte & 0x80) >> 7;
-                            len = (byte & 0x7F) >> 0;
-                            if (len !== 0) {
-                                if (len === 126) {
-                                    len = buffer.readUInt16BE(byteIdx);
-                                    byteIdx += 2;
-                                }
-                                else if (len === 127) {
-                                    len = Number(buffer.readBigUInt64BE(byteIdx));
-                                    byteIdx += 8;
-                                }
-                                msg = Buffer.alloc(len);
-                                mask = [
-                                    buffer.readUInt8(byteIdx++),
-                                    buffer.readUInt8(byteIdx++),
-                                    buffer.readUInt8(byteIdx++),
-                                    buffer.readUInt8(byteIdx++),
-                                ];
-                            }
-                        }
-                        const end = typeof len === 'bigint'
-                            ? buffer.length
-                            : Math.min(buffer.length, byteIdx + len);
-                        buffer.subarray(byteIdx, end).forEach((byte, i) => {
-                            msg === null || msg === void 0 ? void 0 : msg.writeUInt8(byte ^ mask[runningIdx % 4], i);
-                            runningIdx++;
-                            byteIdx++;
-                        });
-                        count += buffer.length;
-                        if (count >= len) {
-                            if (op === WebsocketOpcode.TEXT) {
-                                this._onText(msg === null || msg === void 0 ? void 0 : msg.toString());
-                            }
-                            else if (op === WebsocketOpcode.BINARY) {
-                                this._onData(msg);
-                            }
-                            else if (op === WebsocketOpcode.CLOSE) {
-                                let code = 0;
-                                if (((_a = msg === null || msg === void 0 ? void 0 : msg.length) !== null && _a !== void 0 ? _a : 0) > 0) {
-                                    code = (_b = msg === null || msg === void 0 ? void 0 : msg.readUInt16BE()) !== null && _b !== void 0 ? _b : 0;
-                                    Log_1.DefaultLogger.verbose('WebSocketClient', `${code}: ` + this.closureCodeMsgs[code]);
-                                }
-                                this._onClose(code);
-                                if (!this._closing) {
-                                    this.write(WebsocketOpcode.CLOSE, Buffer.from([1001]));
-                                    this._closing = true;
-                                }
-                                this.socket.end();
-                            }
-                            else if (op === WebsocketOpcode.PING) {
-                                Log_1.DefaultLogger.verbose('WebSocketClient', 'ping');
-                                this.write(WebsocketOpcode.PONG);
-                            }
-                            else if (op === WebsocketOpcode.PONG) {
-                                Log_1.DefaultLogger.verbose('WebSocketClient', 'pong');
-                            }
-                            else {
-                                Log_1.DefaultLogger.error('WebSocketClient', `${op}`);
-                                throw new Error(`op, ${msg === null || msg === void 0 ? void 0 : msg.toString()}`);
-                            }
-                            len = 0;
-                            mask = [];
-                            runningIdx = 0;
-                            op = null;
-                            msg = null;
-                        }
-                    }
-                });
+                const httpEnd = buffer.indexOf('\r\n\r\n') + 4;
+                const httpStr = buffer.toString('utf8', 0, httpEnd);
+                if (httpStr.indexOf('101') < 0) {
+                    throw '!error!';
+                }
+                if (httpEnd < buffer.length) {
+                    this.handleData(buffer.subarray(httpEnd));
+                }
+                this.socket.on('data', this.handleData.bind(this));
             }).on('end', () => {
                 this._onEnd();
             }).on('error', (err) => {
@@ -369,6 +293,90 @@ class WebSocketClient extends WebSocketBase {
                 this._onOpen();
             });
         });
+    }
+    handleData(buffer) {
+        var _a, _b;
+        let op = null;
+        let runningIdx = 0;
+        let len = 0;
+        let count = 0;
+        let mask = [];
+        let msg = null;
+        let byteIdx = 0;
+        while (byteIdx < buffer.length) {
+            if (len === 0) {
+                let byte = buffer.readUInt8(byteIdx++);
+                const fin = (byte & 0x80) >> 7;
+                const res = (byte & 0x70) >> 4;
+                op = (byte & 0x0F) >> 0;
+                byte = buffer.readUInt8(byteIdx++);
+                const hasMask = (byte & 0x80) >> 7;
+                len = (byte & 0x7F) >> 0;
+                if (len !== 0) {
+                    if (len === 126) {
+                        len = buffer.readUInt16BE(byteIdx);
+                        byteIdx += 2;
+                    }
+                    else if (len === 127) {
+                        len = Number(buffer.readBigUInt64BE(byteIdx));
+                        byteIdx += 8;
+                    }
+                    msg = Buffer.alloc(len);
+                    mask = [
+                        buffer.readUInt8(byteIdx++),
+                        buffer.readUInt8(byteIdx++),
+                        buffer.readUInt8(byteIdx++),
+                        buffer.readUInt8(byteIdx++),
+                    ];
+                }
+            }
+            const end = typeof len === 'bigint'
+                ? buffer.length
+                : Math.min(buffer.length, byteIdx + len);
+            buffer.subarray(byteIdx, end).forEach((byte, i) => {
+                msg === null || msg === void 0 ? void 0 : msg.writeUInt8(byte ^ mask[runningIdx % 4], i);
+                runningIdx++;
+                byteIdx++;
+            });
+            count += buffer.length;
+            if (count >= len) {
+                if (op === WebsocketOpcode.TEXT) {
+                    this._onText(msg === null || msg === void 0 ? void 0 : msg.toString());
+                }
+                else if (op === WebsocketOpcode.BINARY) {
+                    this._onData(msg);
+                }
+                else if (op === WebsocketOpcode.CLOSE) {
+                    let code = 0;
+                    if (((_a = msg === null || msg === void 0 ? void 0 : msg.length) !== null && _a !== void 0 ? _a : 0) > 0) {
+                        code = (_b = msg === null || msg === void 0 ? void 0 : msg.readUInt16BE()) !== null && _b !== void 0 ? _b : 0;
+                        Log_1.DefaultLogger.verbose('WebSocketClient', `${code}: ` + this.closureCodeMsgs[code]);
+                    }
+                    this._onClose(code);
+                    if (!this._closing) {
+                        this.write(WebsocketOpcode.CLOSE, Buffer.from([1001]));
+                        this._closing = true;
+                    }
+                    this.socket.end();
+                }
+                else if (op === WebsocketOpcode.PING) {
+                    Log_1.DefaultLogger.verbose('WebSocketClient', 'ping');
+                    this.write(WebsocketOpcode.PONG);
+                }
+                else if (op === WebsocketOpcode.PONG) {
+                    Log_1.DefaultLogger.verbose('WebSocketClient', 'pong');
+                }
+                else {
+                    Log_1.DefaultLogger.error('WebSocketClient', `${op}`);
+                    throw new Error(`op, ${msg === null || msg === void 0 ? void 0 : msg.toString()}`);
+                }
+                len = 0;
+                mask = [];
+                runningIdx = 0;
+                op = null;
+                msg = null;
+            }
+        }
     }
 }
 exports.WebSocketClient = WebSocketClient;

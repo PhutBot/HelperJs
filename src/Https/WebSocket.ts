@@ -274,94 +274,17 @@ export class WebSocketClient extends WebSocketBase {
 
     private async _connect() {        
         this.socket.once('data', (buffer) => {
-            let op: null|number = null;
-            let runningIdx: number = 0;
-            let len: number = 0;
-            let count = 0;
-            let mask: number[] = [];
-            let msg: null|Buffer = null;
-            
-            // DefaultLogger.info(buffer.toString());
+            const httpEnd = buffer.indexOf('\r\n\r\n') + 4;
+            const httpStr = buffer.toString('utf8', 0, httpEnd);
+            if (httpStr.indexOf('101') < 0) {
+                throw '!error!';
+            }
 
-            this.socket.on('data', (buffer) => {
-                let byteIdx = 0;
-                while (byteIdx < buffer.length) {
-                    if (len === 0) {
-                        let byte = buffer.readUInt8(byteIdx++);
-                        const fin = (byte & 0x80) >> 7;
-                        const res = (byte & 0x70) >> 4;
-                        op = (byte & 0x0F) >> 0;
-    
-                        byte = buffer.readUInt8(byteIdx++);
-                        const hasMask = (byte & 0x80) >> 7;
-                        len = (byte & 0x7F) >> 0;
-    
-                        if (len !== 0) {
-                            if (len === 126) {
-                                len = buffer.readUInt16BE(byteIdx);
-                                byteIdx += 2;
-                            } else if (len === 127) {
-                                len = Number(buffer.readBigUInt64BE(byteIdx));
-                                byteIdx += 8;
-                            }
-                            msg = Buffer.alloc(len);
-        
-                            mask = [
-                                buffer.readUInt8(byteIdx++),
-                                buffer.readUInt8(byteIdx++),
-                                buffer.readUInt8(byteIdx++),
-                                buffer.readUInt8(byteIdx++),
-                            ];
-                        }
-                    }
-    
-                    const end = typeof len === 'bigint'
-                        ? buffer.length
-                        : Math.min(buffer.length, byteIdx + len);
-    
-                    buffer.subarray(byteIdx, end).forEach((byte, i) => {
-                        msg?.writeUInt8(byte ^ mask[runningIdx % 4], i);
-                        runningIdx++;
-                        byteIdx++;
-                    });
-    
-                    count += buffer.length;
-                    if (count >= len) {
-                        if (op === WebsocketOpcode.TEXT) {
-                            this._onText(msg?.toString());
-                        } else if (op === WebsocketOpcode.BINARY) {
-                            this._onData(msg);
-                        } else if (op === WebsocketOpcode.CLOSE) {
-                            let code = 0;
-                            if ((msg?.length ?? 0) > 0) {
-                                code = msg?.readUInt16BE() ?? 0;
-                                DefaultLogger.verbose('WebSocketClient', `${code}: ` + this.closureCodeMsgs[code]);
-                            }
-                            
-                            this._onClose(code);
-                            if (!this._closing) {
-                                this.write(WebsocketOpcode.CLOSE, Buffer.from([ 1001 ]));
-                                this._closing = true;
-                            }
-                            this.socket.end();
-                        } else if (op === WebsocketOpcode.PING) {
-                            DefaultLogger.verbose('WebSocketClient', 'ping');
-                            this.write(WebsocketOpcode.PONG);
-                        } else if (op === WebsocketOpcode.PONG) {
-                            DefaultLogger.verbose('WebSocketClient', 'pong');
-                        } else {
-                            DefaultLogger.error('WebSocketClient', `${op}`);
-                            throw new Error(`op, ${msg?.toString()}`);
-                        }
-    
-                        len = 0;
-                        mask = [];
-                        runningIdx = 0;
-                        op = null;
-                        msg = null;
-                    }
-                }
-            });
+            if (httpEnd < buffer.length) {
+                this.handleData(buffer.subarray(httpEnd));
+            }
+            
+            this.socket.on('data', this.handleData.bind(this));
         }).on('end', () => {
             this._onEnd();
         }).on('error', (err) => {
@@ -387,5 +310,91 @@ export class WebSocketClient extends WebSocketBase {
             this.socket.write(out);
             this._onOpen();
         });
+    }
+
+    private handleData(buffer: Buffer) {
+        let op: null|number = null;
+        let runningIdx: number = 0;
+        let len: number = 0;
+        let count = 0;
+        let mask: number[] = [];
+        let msg: null|Buffer = null;
+        let byteIdx = 0;
+        while (byteIdx < buffer.length) {
+            if (len === 0) {
+                let byte = buffer.readUInt8(byteIdx++);
+                const fin = (byte & 0x80) >> 7;
+                const res = (byte & 0x70) >> 4;
+                op = (byte & 0x0F) >> 0;
+
+                byte = buffer.readUInt8(byteIdx++);
+                const hasMask = (byte & 0x80) >> 7;
+                len = (byte & 0x7F) >> 0;
+
+                if (len !== 0) {
+                    if (len === 126) {
+                        len = buffer.readUInt16BE(byteIdx);
+                        byteIdx += 2;
+                    } else if (len === 127) {
+                        len = Number(buffer.readBigUInt64BE(byteIdx));
+                        byteIdx += 8;
+                    }
+                    msg = Buffer.alloc(len);
+
+                    mask = [
+                        buffer.readUInt8(byteIdx++),
+                        buffer.readUInt8(byteIdx++),
+                        buffer.readUInt8(byteIdx++),
+                        buffer.readUInt8(byteIdx++),
+                    ];
+                }
+            }
+
+            const end = typeof len === 'bigint'
+                ? buffer.length
+                : Math.min(buffer.length, byteIdx + len);
+
+            buffer.subarray(byteIdx, end).forEach((byte, i) => {
+                msg?.writeUInt8(byte ^ mask[runningIdx % 4], i);
+                runningIdx++;
+                byteIdx++;
+            });
+
+            count += buffer.length;
+            if (count >= len) {
+                if (op === WebsocketOpcode.TEXT) {
+                    this._onText(msg?.toString());
+                } else if (op === WebsocketOpcode.BINARY) {
+                    this._onData(msg);
+                } else if (op === WebsocketOpcode.CLOSE) {
+                    let code = 0;
+                    if ((msg?.length ?? 0) > 0) {
+                        code = msg?.readUInt16BE() ?? 0;
+                        DefaultLogger.verbose('WebSocketClient', `${code}: ` + this.closureCodeMsgs[code]);
+                    }
+                    
+                    this._onClose(code);
+                    if (!this._closing) {
+                        this.write(WebsocketOpcode.CLOSE, Buffer.from([ 1001 ]));
+                        this._closing = true;
+                    }
+                    this.socket.end();
+                } else if (op === WebsocketOpcode.PING) {
+                    DefaultLogger.verbose('WebSocketClient', 'ping');
+                    this.write(WebsocketOpcode.PONG);
+                } else if (op === WebsocketOpcode.PONG) {
+                    DefaultLogger.verbose('WebSocketClient', 'pong');
+                } else {
+                    DefaultLogger.error('WebSocketClient', `${op}`);
+                    throw new Error(`op, ${msg?.toString()}`);
+                }
+
+                len = 0;
+                mask = [];
+                runningIdx = 0;
+                op = null;
+                msg = null;
+            }
+        }
     }
 };

@@ -68,17 +68,27 @@ class SimpleServer {
         });
         this.server.on('upgrade', (req, socket) => {
             if (req.headers['upgrade'] !== 'websocket') {
-                socket.end('HTTP/1.1 400 Bad Request');
+                socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+                return;
+            }
+            const version = req.headers['sec-websocket-version'];
+            if (version !== '13') {
+                socket.end('HTTP/1.1 400 Bad Request\r\nsec-websocket-version: 13\r\n\r\n');
                 return;
             }
             const protocol = req.headers['sec-websocket-protocol'];
             const request = this._translateRequest(req);
-            const ws = new WebSocket_1.WebSocketConnection(this.websockets.length, request, socket, protocol);
-            ws.on('text', (data) => {
-                this.eventEmitter.emit('simple-websocket-msg', { detail: { ws, data } });
-            });
-            this.websockets.push(ws);
-            this.eventEmitter.emit('simple-websocket-connection', { detail: ws });
+            try {
+                const ws = new WebSocket_1.WebSocketConnection(this.websockets.length, request, socket, protocol);
+                ws.on('text', (data) => {
+                    this.eventEmitter.emit('simple-websocket-msg', { detail: { ws, data } });
+                });
+                this.websockets.push(ws);
+                this.eventEmitter.emit('simple-websocket-connection', { detail: ws });
+            }
+            catch (err) {
+                socket.end('HTTP/1.1 400 Bad Request\r\nsec-websocket-version: 13\r\n\r\n');
+            }
         });
     }
     addMiddleware(middleware) {
