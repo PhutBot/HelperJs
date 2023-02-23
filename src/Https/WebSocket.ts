@@ -172,13 +172,14 @@ export class WebSocketConnection extends WebSocketBase {
                     }
                     msg = Buffer.alloc(len);
 
-                    if (hasMask)
-                    mask = [
-                        buffer.readUInt8(byteIdx++),
-                        buffer.readUInt8(byteIdx++),
-                        buffer.readUInt8(byteIdx++),
-                        buffer.readUInt8(byteIdx++),
-                    ];
+                    if (hasMask) {
+                        mask = [
+                            buffer.readUInt8(byteIdx++),
+                            buffer.readUInt8(byteIdx++),
+                            buffer.readUInt8(byteIdx++),
+                            buffer.readUInt8(byteIdx++),
+                        ];
+                    }
                 }
 
                 const end = typeof len === 'bigint'
@@ -186,10 +187,11 @@ export class WebSocketConnection extends WebSocketBase {
                     : Math.min(buffer.length, byteIdx + len);
 
                 buffer.subarray(byteIdx, end).forEach((byte, i) => {
-                    if (hasMask)
-                    msg?.writeUInt8(byte ^ mask[runningIdx % 4], i);
-                    else
-                    msg?.writeUInt8(byte, i);
+                    if (hasMask) {
+                        msg?.writeUInt8(byte ^ mask[runningIdx % 4], i);
+                    } else {
+                        msg?.writeUInt8(byte, i);
+                    }
                     runningIdx++;
                     byteIdx++;
                 });
@@ -320,6 +322,8 @@ export class WebSocketClient extends WebSocketBase {
         let mask: number[] = [];
         let msg: null|Buffer = null;
         let byteIdx = 0;
+        let hasMask = false;
+
         while (byteIdx < buffer.length) {
             if (len === 0) {
                 let byte = buffer.readUInt8(byteIdx++);
@@ -328,7 +332,7 @@ export class WebSocketClient extends WebSocketBase {
                 op = (byte & 0x0F) >> 0;
 
                 byte = buffer.readUInt8(byteIdx++);
-                const hasMask = (byte & 0x80) >> 7;
+                hasMask = !!((byte & 0x80) >> 7);
                 len = (byte & 0x7F) >> 0;
 
                 if (len !== 0) {
@@ -341,12 +345,14 @@ export class WebSocketClient extends WebSocketBase {
                     }
                     msg = Buffer.alloc(len);
 
-                    mask = [
-                        buffer.readUInt8(byteIdx++),
-                        buffer.readUInt8(byteIdx++),
-                        buffer.readUInt8(byteIdx++),
-                        buffer.readUInt8(byteIdx++),
-                    ];
+                    if (hasMask) {
+                        mask = [
+                            buffer.readUInt8(byteIdx++),
+                            buffer.readUInt8(byteIdx++),
+                            buffer.readUInt8(byteIdx++),
+                            buffer.readUInt8(byteIdx++),
+                        ];
+                    }
                 }
             }
 
@@ -355,7 +361,11 @@ export class WebSocketClient extends WebSocketBase {
                 : Math.min(buffer.length, byteIdx + len);
 
             buffer.subarray(byteIdx, end).forEach((byte, i) => {
-                msg?.writeUInt8(byte ^ mask[runningIdx % 4], i);
+                if (hasMask) {
+                    msg?.writeUInt8(byte ^ mask[runningIdx % 4], i);
+                } else {
+                    msg?.writeUInt8(byte, i);
+                }
                 runningIdx++;
                 byteIdx++;
             });
