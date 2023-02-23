@@ -83,6 +83,10 @@ export class SimpleServer {
             this.eventEmitter.emit('simple-server-connection', { detail: socket });
         });
         this.server.on('upgrade', (req:http.IncomingMessage, socket:Socket) => {
+            if (req.headers['upgrade'] !== 'websocket') {
+                socket.end('HTTP/1.1 400 Bad Request');
+                return;
+            }
             const request = this._translateRequest(req);
             const ws = new WebSocketConnection(this.websockets.length, request, socket);
             ws.on('text', (data:string) => {
@@ -432,7 +436,7 @@ export class SimpleServer {
                         response.headers['content-type'] = [ 'text/plain' ];
                     for (const [key, value] of Object.entries(response.headers)) {
                         res.setHeader(key, value);
-                    }                    
+                    }
                     res.writeHead(response.statusCode);
                     res.end(response.body);
                 }).catch((error:any) => {
