@@ -18,10 +18,11 @@ export declare class WebSocketBase {
     };
     protected _keepAliveInterval?: NodeJS.Timer;
     private subclass;
+    private writeMask;
     protected closureCodeMsgs: {
         [key: number]: string;
     };
-    constructor(socket: Socket, subclass: string);
+    constructor(socket: Socket, subclass: string, writeMask: boolean);
     on(eventType: string, handler: Function): this;
     write(opcode: WebsocketOpcode, msg?: string | Buffer): void;
     protected ping(): void;

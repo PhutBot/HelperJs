@@ -19,6 +19,7 @@ export class WebSocketBase {
     protected _on: {[key: string]: null|Function} = {};
     protected _keepAliveInterval?: NodeJS.Timer;
     private subclass: string;
+    private writeMask: boolean = false;
 
     protected closureCodeMsgs: {[key: number]: string} = {
         0: 'unknown',
@@ -28,9 +29,10 @@ export class WebSocketBase {
         1003: 'indicates that an endpoint is terminating the connection because it has received a type of data it cannot accept (e.g., an endpoint that understands only text data MAY send this if it receives a binary message).',
     };
 
-    constructor(socket: Socket, subclass: string) {
-        this.subclass = subclass;
+    constructor(socket: Socket, subclass: string, writeMask: boolean) {
         this._socket = socket;
+        this.subclass = subclass;
+        this.writeMask = writeMask;
         this._on = {
             open: null,
             text: null,
@@ -48,12 +50,14 @@ export class WebSocketBase {
     }
 
     public write(opcode: WebsocketOpcode, msg?:string|Buffer) {
+        if (typeof msg === 'string')
+            msg = Buffer.from(msg);
         const fin = 1;
         const res = 0;
         const op = opcode ?? WebsocketOpcode.CONTINUE;
         let byte1 = ((fin & 0x1) << 7) | ((res & 0x7) << 4) | (op & 0xF);
         
-        const hasMask = 0;
+        const hasMask = this.writeMask ? 1 : 0;
         let lenEx:number = 0;
         let lenExSize = 0;
         let len = msg?.length ?? 0;
@@ -68,17 +72,40 @@ export class WebSocketBase {
         }
         let byte2 = ((hasMask & 0x1) << 7) | (len & 0x7F);
         
-        const buffer = Buffer.alloc(2 + lenExSize + (msg?.length ?? 0));
-        buffer.writeUInt8(byte1, 0);
-        buffer.writeUInt8(byte2, 1);
+        let bufferOffset = 0;
+        const buffer = Buffer.alloc(2 + lenExSize + (msg?.length ?? 0) + (hasMask ? 4 : 0));
+        buffer.writeUInt8(byte1, bufferOffset++);
+        buffer.writeUInt8(byte2, bufferOffset++);
 
         if (lenExSize === 2) {
-            buffer.writeUInt16BE(lenEx, 2);
+            buffer.writeUInt16BE(lenEx, bufferOffset);
+            bufferOffset += 2;
         } else if (lenExSize === 8) {
-            buffer.writeBigUInt64BE(BigInt(lenEx), 2);
+            buffer.writeBigUInt64BE(BigInt(lenEx), bufferOffset);
+            bufferOffset += 8;
         }
 
-        buffer.write(msg?.toString() ?? '', 2 + lenEx, 'utf-8');
+        const mask = [
+            0xa2,
+            0x34,
+            0xb4,
+            0x02
+        ];
+        if (hasMask) {
+            buffer.writeUInt8(mask[0], bufferOffset++);
+            buffer.writeUInt8(mask[1], bufferOffset++);
+            buffer.writeUInt8(mask[2], bufferOffset++);
+            buffer.writeUInt8(mask[3], bufferOffset++);
+        }
+
+        msg?.forEach((el, i) => {
+            if (hasMask) {
+                buffer.writeUInt8(el ^ mask[i % 4], bufferOffset++);
+            } else {
+                buffer.writeUInt8(el, bufferOffset++);
+            }
+        });
+        
         this.socket.write(buffer);
     }
 
@@ -135,7 +162,7 @@ export class WebSocketConnection extends WebSocketBase {
     public id: number = -1;
 
     constructor(id: number, req: HttpRequest, socket: Socket, protocol?: string) {
-        super(socket, 'WebSocketConnection');
+        super(socket, 'WebSocketConnection', false);
         this._protocol = protocol;
         this.id = id;
         this._connect(req);
@@ -268,7 +295,8 @@ export class WebSocketClient extends WebSocketBase {
     public address: URL;
 
     constructor(address: string, protocol?: string) {
-        super(new Socket({ allowHalfOpen: true, readable: true, writable: true }), 'WebSocketClient');
+        super(new Socket({ allowHalfOpen: true, readable: true, writable: true }),
+            'WebSocketClient', true);
         this._protocol = protocol;
         this.address = new URL(address);
         this._connect();

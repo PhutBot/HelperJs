@@ -24,9 +24,10 @@ var WebsocketOpcode;
 })(WebsocketOpcode = exports.WebsocketOpcode || (exports.WebsocketOpcode = {}));
 ;
 class WebSocketBase {
-    constructor(socket, subclass) {
+    constructor(socket, subclass, writeMask) {
         this._closing = false;
         this._on = {};
+        this.writeMask = false;
         this.closureCodeMsgs = {
             0: 'unknown',
             1000: 'indicates a normal closure, meaning that the purpose for which the connection was established has been fulfilled.',
@@ -34,8 +35,9 @@ class WebSocketBase {
             1002: 'indicates that an endpoint is terminating the connection due to a protocol error.',
             1003: 'indicates that an endpoint is terminating the connection because it has received a type of data it cannot accept (e.g., an endpoint that understands only text data MAY send this if it receives a binary message).',
         };
-        this.subclass = subclass;
         this._socket = socket;
+        this.subclass = subclass;
+        this.writeMask = writeMask;
         this._on = {
             open: null,
             text: null,
@@ -51,12 +53,14 @@ class WebSocketBase {
         return this;
     }
     write(opcode, msg) {
-        var _a, _b, _c;
+        var _a, _b;
+        if (typeof msg === 'string')
+            msg = Buffer.from(msg);
         const fin = 1;
         const res = 0;
         const op = opcode !== null && opcode !== void 0 ? opcode : WebsocketOpcode.CONTINUE;
         let byte1 = ((fin & 0x1) << 7) | ((res & 0x7) << 4) | (op & 0xF);
-        const hasMask = 0;
+        const hasMask = this.writeMask ? 1 : 0;
         let lenEx = 0;
         let lenExSize = 0;
         let len = (_a = msg === null || msg === void 0 ? void 0 : msg.length) !== null && _a !== void 0 ? _a : 0;
@@ -71,16 +75,41 @@ class WebSocketBase {
             len = 127;
         }
         let byte2 = ((hasMask & 0x1) << 7) | (len & 0x7F);
-        const buffer = Buffer.alloc(2 + lenExSize + ((_b = msg === null || msg === void 0 ? void 0 : msg.length) !== null && _b !== void 0 ? _b : 0));
-        buffer.writeUInt8(byte1, 0);
-        buffer.writeUInt8(byte2, 1);
+        let bufferOffset = 0;
+        const buffer = Buffer.alloc(2 + lenExSize + ((_b = msg === null || msg === void 0 ? void 0 : msg.length) !== null && _b !== void 0 ? _b : 0) + (hasMask ? 4 : 0));
+        buffer.writeUInt8(byte1, bufferOffset++);
+        buffer.writeUInt8(byte2, bufferOffset++);
         if (lenExSize === 2) {
-            buffer.writeUInt16BE(lenEx, 2);
+            buffer.writeUInt16BE(lenEx, bufferOffset);
+            bufferOffset += 2;
         }
         else if (lenExSize === 8) {
-            buffer.writeBigUInt64BE(BigInt(lenEx), 2);
+            buffer.writeBigUInt64BE(BigInt(lenEx), bufferOffset);
+            bufferOffset += 8;
         }
-        buffer.write((_c = msg === null || msg === void 0 ? void 0 : msg.toString()) !== null && _c !== void 0 ? _c : '', 2 + lenEx, 'utf-8');
+        const mask = [
+            0xa2,
+            0x34,
+            0xb4,
+            0x02
+        ];
+        if (hasMask) {
+            buffer.writeUInt8(mask[0], bufferOffset++);
+            buffer.writeUInt8(mask[1], bufferOffset++);
+            buffer.writeUInt8(mask[2], bufferOffset++);
+            buffer.writeUInt8(mask[3], bufferOffset++);
+        }
+        // msg = msg?.map((c, i) => c ^ mask[i % 4]);
+        msg === null || msg === void 0 ? void 0 : msg.forEach((el, i) => {
+            if (hasMask) {
+                buffer.writeUInt8(el ^ mask[i % 4], bufferOffset++);
+            }
+            else {
+                buffer.writeUInt8(el, bufferOffset++);
+            }
+        });
+        // data.forEach(item => buffer.writeUint8(item, bufferOffset++));
+        // buffer.write(data, bufferOffset, 'utf-8');
         this.socket.write(buffer);
     }
     ping() {
@@ -126,7 +155,7 @@ exports.WebSocketBase = WebSocketBase;
 ;
 class WebSocketConnection extends WebSocketBase {
     constructor(id, req, socket, protocol) {
-        super(socket, 'WebSocketConnection');
+        super(socket, 'WebSocketConnection', false);
         this.id = -1;
         this._protocol = protocol;
         this.id = id;
@@ -254,7 +283,7 @@ exports.WebSocketConnection = WebSocketConnection;
 ;
 class WebSocketClient extends WebSocketBase {
     constructor(address, protocol) {
-        super(new net_1.Socket({ allowHalfOpen: true, readable: true, writable: true }), 'WebSocketClient');
+        super(new net_1.Socket({ allowHalfOpen: true, readable: true, writable: true }), 'WebSocketClient', true);
         this._protocol = protocol;
         this.address = new URL(address);
         this._connect();
