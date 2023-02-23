@@ -57,9 +57,9 @@ export interface HttpRequest {
 }
 
 export interface HttpResponse {
-    statusCode:number;
-    headers?:Headers;
-    body:()=>Promise<Body>;
+    statusCode: number;
+    headers?: Headers;
+    body: ()=>Promise<Body>;
 }
 
 // PhutBot PLEASE remember to be careful when debugging this class on stream
@@ -92,7 +92,6 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
     }
 
     return new Promise((resolve, reject) => {
-        let timeoutFn: NodeJS.Timeout|null = null;
         const proto = (settings.protocol as RequestProtocol) === RequestProtocol.HTTP ? http : https;
         const req = proto.request({
             path,
@@ -100,10 +99,8 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
             port: settings.port,
             method: settings.method as string,
             headers: settings.headers,
+            timeout: settings.timeout
         }, (res) => {
-            if (timeoutFn)
-                clearTimeout(timeoutFn);
-
             const headers = {} as Headers;
             Object.entries(res.headers).forEach(([key, val]) => {
                 headers[key] = headers[key] || [];
@@ -124,7 +121,7 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
                     res.on('error', (err) => {
                         reject(err);
                     });
-                })
+                }),
             });
         });
 
@@ -141,8 +138,5 @@ export function request(settings:RequestSettings):Promise<HttpResponse> {
         }
 
         req.end();
-        timeoutFn = setTimeout(() => {
-            req.destroy(new Error('timeout'));
-        }, settings.timeout);
     });
 }
