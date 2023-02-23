@@ -1,7 +1,7 @@
 import assert from "assert";
 import { TestCase } from "../../src/Test/TestCase";
 import { Test, Unroll } from "../../src/Test/decorators";
-import { HandlerResponse, HttpRequest, request, SimpleServer } from "../../src/Https";
+import { HandlerResponse, HttpRequest, request, RequestSettings, SimpleServer } from "../../src/Https";
 import { RequestMapping } from "../../src/Https/decorators";
 import { rString } from "../../src/Rand";
 import { Middleware, MiddlewareStage } from "../../src/Https/Middleware";
@@ -36,12 +36,12 @@ export default class SimpleServerTest extends TestCase {
         { method: 'PUT',    path: '/put',    statusCode: 200, expect: 'content' },
     ])
     async handlers({ context, method, path, statusCode, expect }:any) {
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method,
             hostname: context.server.hostname,
             port: context.server.port,
-            uri: path
+            uri: path,
         };
 
         context.server.defineHandler(method, path, async () => ({ statusCode, body: expect }));
@@ -57,7 +57,7 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     async error404({ context }:any) {
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method: 'GET',
             hostname: context.server.hostname,
@@ -72,7 +72,7 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     async error500({ context }:any) {
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method: 'GET',
             hostname: context.server.hostname,
@@ -88,7 +88,7 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     async requestMapping({ context }:any) {
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method: 'PUT',
             hostname: context.server.hostname,
@@ -109,7 +109,7 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     async dirMapping200({ context }:any) {
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method: 'GET',
             hostname: context.server.hostname,
@@ -119,7 +119,7 @@ export default class SimpleServerTest extends TestCase {
         const requestObj2 = { ...requestObj, uri: `${requestObj.uri}/index.html` };
         const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
 
-        context.server.mapDirectory('../../test/www', { alias: requestObj.uri });
+        context.server.mapDirectory('./test/www', { alias: requestObj.uri });
 
         let response = await request(requestObj);
         let body = await (await response.body()).text();
@@ -145,7 +145,7 @@ export default class SimpleServerTest extends TestCase {
 
     @Test()
     async dirMapping404({ context }:any) {
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method: 'GET',
             hostname: context.server.hostname,
@@ -181,7 +181,7 @@ export default class SimpleServerTest extends TestCase {
     async preMiddleware({ context }:any) {
         context.server.addMiddleware(new PreMiddleware('custom-model-key', 'custom-model-value'));
 
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method: 'PUT',
             hostname: context.server.hostname,
@@ -205,7 +205,7 @@ export default class SimpleServerTest extends TestCase {
     async postMiddleware({ context }:any) {
         context.server.addMiddleware(new PostMiddleware('REPLACE_ME', 'NEW_VALUE'));
 
-        const requestObj = {
+        const requestObj: RequestSettings = {
             protocol: 'HTTP',
             method: 'PUT',
             hostname: context.server.hostname,

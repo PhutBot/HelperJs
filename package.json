@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "tsc && cd dist/test && node index.js"
+    "test": "tsc && node dist/test/index.js",
+    "debug": "tsc && node --inspect=0.0.0.0 --inspect-brk dist/test/index.js"
   },
   "repository": {
     "type": "git",
@@ -26,12 +27,10 @@
     "test": "test"
   },
   "dependencies": {
-    "@types/node": "^17.0.16",
-    "@types/npmlog": "^4.1.4",
-    "npmlog": "^6.0.0"
+    "@types/node": "^18.14.0"
   },
   "devDependencies": {
-    "ts-node": "^10.5.0",
-    "typescript": "^4.5.5"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
   }
 }

@@ -1,3 +1,3 @@
 import { RunTests } from "../src/Test/TestRunner";
 
-RunTests('./');
+RunTests('./dist/test');
