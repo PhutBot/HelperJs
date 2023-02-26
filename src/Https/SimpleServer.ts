@@ -21,6 +21,7 @@ export interface HandlerResponse {
     statusCode:number;
     headers?:Headers;
     body?:string|Buffer;
+    model?:any;
 }
 
 export type RequestHandler = (request:HttpRequest, model?:{}) => Promise<HandlerResponse>;
@@ -443,7 +444,7 @@ export class SimpleServer {
             handler(request, model).then((response:HandlerResponse) => {
                     response.headers = response.headers || {};
                     this.middlewares[MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
-                        middleware.process(model, response);  
+                        middleware.process(response.model ?? model, response);  
                     });
                     if (!response.headers.hasOwnProperty('content-type'))
                         response.headers['content-type'] = [ 'text/plain' ];

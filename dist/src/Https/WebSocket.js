@@ -99,7 +99,6 @@ class WebSocketBase {
             buffer.writeUInt8(mask[2], bufferOffset++);
             buffer.writeUInt8(mask[3], bufferOffset++);
         }
-        // msg = msg?.map((c, i) => c ^ mask[i % 4]);
         msg === null || msg === void 0 ? void 0 : msg.forEach((el, i) => {
             if (hasMask) {
                 buffer.writeUInt8(el ^ mask[i % 4], bufferOffset++);
@@ -108,8 +107,6 @@ class WebSocketBase {
                 buffer.writeUInt8(el, bufferOffset++);
             }
         });
-        // data.forEach(item => buffer.writeUint8(item, bufferOffset++));
-        // buffer.write(data, bufferOffset, 'utf-8');
         this.socket.write(buffer);
     }
     ping() {

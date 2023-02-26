@@ -411,7 +411,8 @@ class SimpleServer {
             handler(request, model).then((response) => {
                 response.headers = response.headers || {};
                 this.middlewares[Middleware_1.MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
-                    middleware.process(model, response);
+                    var _a;
+                    middleware.process((_a = response.model) !== null && _a !== void 0 ? _a : model, response);
                 });
                 if (!response.headers.hasOwnProperty('content-type'))
                     response.headers['content-type'] = ['text/plain'];

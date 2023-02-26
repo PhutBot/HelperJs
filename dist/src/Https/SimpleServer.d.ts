@@ -14,6 +14,7 @@ export interface HandlerResponse {
     statusCode: number;
     headers?: Headers;
     body?: string | Buffer;
+    model?: any;
 }
 export type RequestHandler = (request: HttpRequest, model?: {}) => Promise<HandlerResponse>;
 export type HandlerMap = Record<RequestMethod, Record<string, HandlerRecord>>;
