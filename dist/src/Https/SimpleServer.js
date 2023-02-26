@@ -179,7 +179,7 @@ class SimpleServer {
                 : file.content;
             resolve({
                 statusCode: 200,
-                headers, body
+                headers, body, model
             });
         }), options);
     }
