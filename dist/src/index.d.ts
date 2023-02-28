@@ -6,3 +6,4 @@ export * as Rand from './Rand';
 export * as Serializable from './Serializable';
 export * as Error from './Error';
 export * as Log from './Log';
+export * as PluginManager from './PluginManager';
