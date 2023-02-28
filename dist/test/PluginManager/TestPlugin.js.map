@@ -1,0 +1,1 @@
+{"version":3,"file":"TestPlugin.js","sourceRoot":"","sources":["../../../test/PluginManager/TestPlugin.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,2DAAyD;AAEzD,MAAa,MAAO,SAAQ,8BAAc;IACtC,IAAW,IAAI,KAAK,OAAO,YAAY,CAAC,CAAC,CAAC;IAC1C,IAAW,WAAW,KAAK,OAAO,mBAAmB,CAAC,CAAC,CAAC;IAC3C,MAAM;8DAAI,CAAC;KAAA;IACX,QAAQ;8DAAI,CAAC;KAAA;CAC7B;AALD,wBAKC"}

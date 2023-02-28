@@ -54,7 +54,7 @@ export async function RunTests(dir:string) {
     await walk(dir, async (filePath:string) => {
         if (filePath === `${dir}/index.js`)
             return;
-
+            
         const location = path.join(root, filePath);
         const module = await import(location);
         if (!!module.default && module.default.prototype instanceof TestCase) {
