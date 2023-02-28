@@ -43,7 +43,7 @@ exports.AbstractPlugin = AbstractPlugin;
 class PluginManager {
     constructor(config) {
         this.config = {
-            localDir: '.',
+            localDir: './plugins',
             moduleDir: '../node_modules',
         };
         this.plugins = {};
@@ -63,7 +63,7 @@ class PluginManager {
             if (this.plugins[pluginDesc.name])
                 throw new Error(`Cannot add existing plugin ${pluginDesc.name}`);
             const location = pluginDesc.isLocal
-                ? `${this.config.localDir}/${pluginDesc.package}.js`
+                ? `${this.config.localDir}/${pluginDesc.package}/index.js`
                 : `${this.config.moduleDir}/${pluginDesc.package}`;
             if (!(0, fs_1.existsSync)(location)) {
                 throw new Error(`Could not find plugin ${pluginDesc.name} at ${location}`);

@@ -30,7 +30,7 @@ export interface PluginManagerConfig {
 
 export class PluginManager<PluginType extends AbstractPlugin> {
     private config: PluginManagerConfig = {
-        localDir: '.',
+        localDir: './plugins',
         moduleDir: '../node_modules',
     };
     private plugins: Record<string, PluginType> = {};
@@ -54,7 +54,7 @@ export class PluginManager<PluginType extends AbstractPlugin> {
             throw new Error(`Cannot add existing plugin ${pluginDesc.name}`);
         
         const location = pluginDesc.isLocal
-            ? `${this.config.localDir}/${pluginDesc.package}.js`
+            ? `${this.config.localDir}/${pluginDesc.package}/index.js`
             : `${this.config.moduleDir}/${pluginDesc.package}`;
         if (!existsSync(location)) {
             throw new Error(`Could not find plugin ${pluginDesc.name} at ${location}`);
