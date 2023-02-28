@@ -1,0 +1,1 @@
+{"version":3,"file":"TestPluginWithNamedDeps.d.ts","sourceRoot":"","sources":["../../../test/PluginManager/TestPluginWithNamedDeps.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,4BAA4B,CAAC;AAE5D,qBAAa,MAAO,SAAQ,cAAc;;IAMtC,IAAW,IAAI,WAAmC;IAClD,IAAW,WAAW,WAAmC;IAC5C,MAAM;IACN,QAAQ;CACxB"}

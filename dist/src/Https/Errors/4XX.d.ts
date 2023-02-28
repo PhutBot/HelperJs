@@ -1,5 +1,5 @@
-import { HttpRequest } from "../Request";
-import { ErrorHttp } from "./Error";
+import { HttpRequest } from "../Request.js";
+import { ErrorHttp } from "./Error.js";
 export declare class ErrorHttp400BadRequest extends ErrorHttp {
     constructor(request: HttpRequest, msg?: string);
 }
@@ -21,3 +21,4 @@ export declare class ErrorHttp409Conflict extends ErrorHttp {
 export declare class ErrorHttp418Teapot extends ErrorHttp {
     constructor(request: HttpRequest, msg?: string);
 }
+//# sourceMappingURL=4XX.d.ts.map

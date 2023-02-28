@@ -4,3 +4,4 @@ export declare class TestCase {
     before(testcase: string): Promise<any>;
     after(testcase: string, ctx: any): Promise<void>;
 }
+//# sourceMappingURL=TestCase.d.ts.map

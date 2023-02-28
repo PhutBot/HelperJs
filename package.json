@@ -4,6 +4,7 @@
   "description": "PhutBot's js helper library",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "type": "module",
   "files": [
     "dist/src",
     "dist/test"
@@ -27,10 +28,9 @@
     "test": "test"
   },
   "dependencies": {
-    "@types/node": "^18.14.0"
   },
   "devDependencies": {
-    "ts-node": "^10.9.1",
+    "@types/node": "^18.8.5",
     "typescript": "^4.9.5"
   }
 }

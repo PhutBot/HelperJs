@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DecoratorBuilder = void 0;
-const Metadata_1 = require("./Metadata");
-class DecoratorBuilder {
+import { defineMetadata, getMetadata } from "./Metadata.js";
+export class DecoratorBuilder {
     constructor() {
         try {
             throw new Error();
@@ -38,7 +35,7 @@ class DecoratorBuilder {
                 const og = arg1;
                 const meta = this.addMeta(og, og.name);
                 const target = this.onClassFunc(og, meta[this.name]);
-                (0, Metadata_1.defineMetadata)(target !== null && target !== void 0 ? target : og, meta);
+                defineMetadata(target !== null && target !== void 0 ? target : og, meta);
                 if (!!target)
                     return target;
             }
@@ -67,7 +64,7 @@ class DecoratorBuilder {
                 const og = arg3;
                 const meta = this.addMeta(og.value, propertyKey);
                 const descriptor = this.onMethodFunc(target, propertyKey, og, meta[this.name]);
-                (0, Metadata_1.defineMetadata)((_a = descriptor === null || descriptor === void 0 ? void 0 : descriptor.value) !== null && _a !== void 0 ? _a : og.value, meta);
+                defineMetadata((_a = descriptor === null || descriptor === void 0 ? void 0 : descriptor.value) !== null && _a !== void 0 ? _a : og.value, meta);
                 if (!!descriptor)
                     return descriptor;
             }
@@ -78,10 +75,9 @@ class DecoratorBuilder {
     }
     addMeta(target, name) {
         var _a;
-        const meta = (_a = (0, Metadata_1.getMetadata)(target)) !== null && _a !== void 0 ? _a : {};
+        const meta = (_a = getMetadata(target)) !== null && _a !== void 0 ? _a : {};
         meta[this.name] = { targetName: name };
         return meta;
     }
 }
-exports.DecoratorBuilder = DecoratorBuilder;
 //# sourceMappingURL=DecoratorBuilder.js.map

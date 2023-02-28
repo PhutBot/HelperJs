@@ -1,7 +1,7 @@
-import assert from "assert";
-import { Test, Unroll } from "../../src/Test/decorators";
-import { TestCase } from "../../src/Test/TestCase";
-import { PluginManager } from "../../src/PluginManager";
+import * as assert from 'assert';
+import { Test, Unroll } from "../../src/Test/decorators/index.js";
+import { TestCase } from "../../src/Test/TestCase.js";
+import { PluginManager } from "../../src/PluginManager.js";
 
 const localDir = '/home/node/app/dist/test/PluginManager';
 export default class PluginManagerTest extends TestCase {

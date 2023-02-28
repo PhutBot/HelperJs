@@ -1,43 +1,17 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SimpleServer = void 0;
-const http = __importStar(require("http"));
-const fs = __importStar(require("fs"));
-const events = __importStar(require("events"));
-const Env_1 = require("../Env");
-const Request_1 = require("./Request");
-const Error_1 = require("./Errors/Error");
-const _4XX_1 = require("./Errors/4XX");
-const _5XX_1 = require("./Errors/5XX");
-const PathMatcher_1 = require("./PathMatcher");
-const Log_1 = require("../Log");
-const Metadata_1 = require("../Meta/Metadata");
-const Middleware_1 = require("./Middleware");
-const WebSocket_1 = require("./WebSocket");
-class SimpleServer {
+import * as http from 'http';
+import * as fs from 'fs';
+import * as events from 'events';
+import { EnvBackedValue } from "../Env.js";
+import { RequestMethod, Body } from "./Request.js";
+import { ErrorHttp } from "./Errors/Error.js";
+import { ErrorHttp404NotFound } from "./Errors/4XX.js";
+import { ErrorHttp500Internal } from "./Errors/5XX.js";
+import { PathMatcher } from "./PathMatcher.js";
+import { Logger } from "../Log.js";
+import { getMetadata } from "../Meta/Metadata.js";
+import { MiddlewareStage } from "./Middleware.js";
+import { WebSocketConnection } from "./WebSocket.js";
+export class SimpleServer {
     get running() { return this._running; }
     get address() { return `http://${this.hostname}:${this.port}`; }
     constructor(settings = {}) {
@@ -53,12 +27,12 @@ class SimpleServer {
         this._running = false;
         this.middlewares = { PRE_PROCESSOR: [], POST_PROCESSOR: [] };
         this.preprocessor = (_, view) => view;
-        this.logger = new Log_1.Logger();
+        this.logger = new Logger();
         if (settings.loglevel)
             this.logger.setLevel(settings.loglevel);
-        this.hostname = (_a = ((settings.hostname instanceof Env_1.EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
-        this.port = (_b = ((settings.port instanceof Env_1.EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
-        this.useCache = (_c = ((settings.useCache instanceof Env_1.EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;
+        this.hostname = (_a = ((settings.hostname instanceof EnvBackedValue) ? settings.hostname.get() : settings.hostname)) !== null && _a !== void 0 ? _a : '0.0.0.0';
+        this.port = (_b = ((settings.port instanceof EnvBackedValue) ? settings.port.asInt() : settings.port)) !== null && _b !== void 0 ? _b : 8080;
+        this.useCache = (_c = ((settings.useCache instanceof EnvBackedValue) ? settings.useCache.asBool() : settings.useCache)) !== null && _c !== void 0 ? _c : true;
         if (!!settings.preprocessor)
             this.preprocessor = settings.preprocessor;
         this.server = http.createServer(this._rootHandler.bind(this));
@@ -79,7 +53,7 @@ class SimpleServer {
             const protocol = req.headers['sec-websocket-protocol'];
             const request = this._translateRequest(req);
             try {
-                const ws = new WebSocket_1.WebSocketConnection(this.websockets.length, request, socket, protocol);
+                const ws = new WebSocketConnection(this.websockets.length, request, socket, protocol);
                 ws.on('text', (data) => {
                     this.eventEmitter.emit('simple-websocket-msg', { detail: { ws, data } });
                 });
@@ -103,10 +77,10 @@ class SimpleServer {
         var _a;
         dirName = dirName.endsWith('/') ? dirName : `${dirName}/`;
         options.cache = options.cache === undefined ? true : options.cache;
-        const _alias = PathMatcher_1.PathMatcher.prepPath((_a = options.alias) !== null && _a !== void 0 ? _a : dirName.replace(/^\./, ''));
+        const _alias = PathMatcher.prepPath((_a = options.alias) !== null && _a !== void 0 ? _a : dirName.replace(/^\./, ''));
         this.dir2Alias[dirName] = _alias;
         this.alias2Dir[_alias] = dirName;
-        this.defineHandler(Request_1.RequestMethod.GET, `${_alias}/*`, (request) => new Promise((resolve, reject) => {
+        this.defineHandler(RequestMethod.GET, `${_alias}/*`, (request) => new Promise((resolve, reject) => {
             const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
             const headers = {};
             request.filePath = path;
@@ -152,7 +126,7 @@ class SimpleServer {
                     }
                 }
                 else {
-                    reject(new _5XX_1.ErrorHttp500Internal(request, 'how is this not a file or a directory??'));
+                    reject(new ErrorHttp500Internal(request, 'how is this not a file or a directory??'));
                     return;
                 }
                 if (this.useCache && !!options.cache && !!file) {
@@ -167,7 +141,7 @@ class SimpleServer {
                 }
             }
             else {
-                reject(new _4XX_1.ErrorHttp404NotFound(request));
+                reject(new ErrorHttp404NotFound(request));
                 return;
             }
             headers['content-type'] = [file.type];
@@ -184,19 +158,19 @@ class SimpleServer {
         }), options);
     }
     unmapDirectory(alias) {
-        this.removeHandler(Request_1.RequestMethod.GET, `${alias}/*`);
+        this.removeHandler(RequestMethod.GET, `${alias}/*`);
         delete this.dir2Alias[this.alias2Dir[alias]];
         delete this.alias2Dir[alias];
     }
     mapHandler(target) {
-        const clazzMeta = (0, Metadata_1.getMetadata)(target.prototype, '@RequestMapping');
+        const clazzMeta = getMetadata(target.prototype, '@RequestMapping');
         if (!!clazzMeta) {
             if (!!clazzMeta.mapping) {
                 this.defineHandler(clazzMeta.method, clazzMeta.location, target);
             }
             else {
                 Object.entries(Object.getOwnPropertyDescriptors(target)).forEach(([name, desc]) => {
-                    const funcMeta = (0, Metadata_1.getMetadata)(desc.value, '@RequestMapping');
+                    const funcMeta = getMetadata(desc.value, '@RequestMapping');
                     if (typeof desc.value === 'function' && !!funcMeta) {
                         const path = [clazzMeta.location, funcMeta.location].join('/');
                         this.defineHandler(funcMeta.method, path, desc.value);
@@ -206,14 +180,14 @@ class SimpleServer {
         }
     }
     unmapHandler(target) {
-        const clazzMeta = (0, Metadata_1.getMetadata)(target.prototype, '@RequestMapping');
+        const clazzMeta = getMetadata(target.prototype, '@RequestMapping');
         if (!!clazzMeta) {
             if (!!clazzMeta.mapping) {
                 this.removeHandler(clazzMeta.method, clazzMeta.location);
             }
             else {
                 Object.entries(Object.getOwnPropertyDescriptors(target)).forEach(([name, desc]) => {
-                    const funcMeta = (0, Metadata_1.getMetadata)(desc.value, '@RequestMapping');
+                    const funcMeta = getMetadata(desc.value, '@RequestMapping');
                     if (typeof desc.value === 'function' && !!funcMeta) {
                         const path = [clazzMeta.location, funcMeta.location].join('/');
                         this.removeHandler(funcMeta.method, path);
@@ -223,7 +197,7 @@ class SimpleServer {
         }
     }
     defineHandler(method, path, handler, options = {}) {
-        const matcher = new PathMatcher_1.PathMatcher(path);
+        const matcher = new PathMatcher(path);
         if (matcher.path in this.handlers[method]) {
             if (!!options.force) {
                 this.logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
@@ -237,12 +211,12 @@ class SimpleServer {
         this.handlers[method][matcher.path] = { matcher, handler };
     }
     removeHandler(method, path) {
-        delete this.handlers[method][PathMatcher_1.PathMatcher.prepPath(path)];
+        delete this.handlers[method][PathMatcher.prepPath(path)];
     }
     removeAllHandlers() {
         Object.entries(this.handlers).forEach(([method, handlers]) => {
             Object.entries(handlers).forEach(([path, handler]) => {
-                delete this.handlers[method][PathMatcher_1.PathMatcher.prepPath(path)];
+                delete this.handlers[method][PathMatcher.prepPath(path)];
             });
         });
     }
@@ -315,7 +289,7 @@ class SimpleServer {
     }
     _translateRequest(req) {
         var _a, _b;
-        const method = (_a = req.method) !== null && _a !== void 0 ? _a : Request_1.RequestMethod.GET;
+        const method = (_a = req.method) !== null && _a !== void 0 ? _a : RequestMethod.GET;
         const url = new URL((_b = req.url) !== null && _b !== void 0 ? _b : '', this.address);
         const path = url.pathname;
         const headers = {};
@@ -347,7 +321,7 @@ class SimpleServer {
                     chunks.push(chunk);
                 });
                 req.on('end', () => {
-                    resolve(new Request_1.Body(Buffer.concat(chunks)));
+                    resolve(new Body(Buffer.concat(chunks)));
                 });
                 req.on('error', (err) => {
                     reject(err);
@@ -402,15 +376,15 @@ class SimpleServer {
             //     }),
             // };
             if (handler === null) {
-                throw new _4XX_1.ErrorHttp404NotFound(request);
+                throw new ErrorHttp404NotFound(request);
             }
             const model = { request };
-            this.middlewares[Middleware_1.MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
+            this.middlewares[MiddlewareStage.PRE_PROCESSOR].forEach(middleware => {
                 middleware.process(model);
             });
             handler(request, model).then((response) => {
                 response.headers = response.headers || {};
-                this.middlewares[Middleware_1.MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
+                this.middlewares[MiddlewareStage.POST_PROCESSOR].forEach(middleware => {
                     var _a;
                     middleware.process((_a = response.model) !== null && _a !== void 0 ? _a : model, response);
                 });
@@ -423,8 +397,8 @@ class SimpleServer {
                 res.end(response.body);
             }).catch((error) => {
                 var _a;
-                if (!(error instanceof Error_1.ErrorHttp)) {
-                    error = new _5XX_1.ErrorHttp500Internal(request, error instanceof Error
+                if (!(error instanceof ErrorHttp)) {
+                    error = new ErrorHttp500Internal(request, error instanceof Error
                         ? error.message : `${error}`);
                 }
                 const httpError = error;
@@ -435,10 +409,10 @@ class SimpleServer {
             });
         }
         catch (error) {
-            if (!(error instanceof Error_1.ErrorHttp)) {
+            if (!(error instanceof ErrorHttp)) {
                 const dummyRequest = {
                     headers: {},
-                    method: (_a = req.method) !== null && _a !== void 0 ? _a : Request_1.RequestMethod.GET,
+                    method: (_a = req.method) !== null && _a !== void 0 ? _a : RequestMethod.GET,
                     path: '',
                     pathParams: {},
                     queryParams: {},
@@ -446,10 +420,10 @@ class SimpleServer {
                     url: new URL((_b = req.url) !== null && _b !== void 0 ? _b : '', this.address),
                 };
                 if (error instanceof Error) {
-                    error = new _5XX_1.ErrorHttp500Internal(dummyRequest, error.message);
+                    error = new ErrorHttp500Internal(dummyRequest, error.message);
                 }
                 else {
-                    error = new _5XX_1.ErrorHttp500Internal(dummyRequest, `${error}`);
+                    error = new ErrorHttp500Internal(dummyRequest, `${error}`);
                 }
             }
             const httpError = error;
@@ -460,5 +434,4 @@ class SimpleServer {
         }
     }
 }
-exports.SimpleServer = SimpleServer;
 //# sourceMappingURL=SimpleServer.js.map

@@ -1,1 +1,1 @@
-{"version":3,"file":"5XX.js","sourceRoot":"","sources":["../../../../src/Https/Errors/5XX.ts"],"names":[],"mappings":";;;AACA,mCAAoC;AAEpC,MAAa,oBAAqB,SAAQ,iBAAS;IAC/C,YAAY,OAAmB,EAAE,GAAW;QACxC,KAAK,CAAC,OAAO,EAAE,GAAG,EAAE,uBAAuB,EAAE,GAAG,CAAC,CAAC;IACtD,CAAC;CACJ;AAJD,oDAIC"}
+{"version":3,"file":"5XX.js","sourceRoot":"","sources":["../../../../src/Https/Errors/5XX.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,SAAS,EAAE,MAAM,YAAY,CAAC;AAEvC,MAAM,OAAO,oBAAqB,SAAQ,SAAS;IAC/C,YAAY,OAAmB,EAAE,GAAW;QACxC,KAAK,CAAC,OAAO,EAAE,GAAG,EAAE,uBAAuB,EAAE,GAAG,CAAC,CAAC;IACtD,CAAC;CACJ"}

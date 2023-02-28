@@ -30,3 +30,4 @@ export declare class PluginManager<PluginType extends AbstractPlugin> {
     unloadPlugin(name: string): Promise<void>;
     unloadAll(): Promise<void>;
 }
+//# sourceMappingURL=PluginManager.d.ts.map

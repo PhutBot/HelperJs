@@ -1,4 +1,4 @@
-export declare function get(name: string, def?: string): string | undefined;
+export declare function get(name: string, def?: string): string;
 export declare function set(name: string, value: string): void;
 export declare function load(file: string): void;
 export declare function save(): void;
@@ -9,10 +9,11 @@ export declare class EnvBackedValue {
     private key;
     private def?;
     constructor(key: string, def?: string);
-    get(): string | undefined;
+    get(): string;
     asBool(): boolean;
     asInt(): number;
     asFloat(): number;
     set(val: string): void;
     commit(val?: string): void;
 }
+//# sourceMappingURL=Env.d.ts.map

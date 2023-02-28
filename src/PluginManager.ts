@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { existsSync } from 'fs';
 
 export interface IPluginDesc {
     name: string;

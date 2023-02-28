@@ -1,8 +1,8 @@
-import assert from "assert";
-import { Test, Unroll } from "../src/Test/decorators";
-import { TestCase } from "../src/Test/TestCase";
-import { Env } from "../src";
-import { EnvBackedValue } from "../src/Env";
+import * as assert from 'assert';
+import { TestCase } from "../src/Test/TestCase.js";
+import { Env } from "../src/index.js";
+import { EnvBackedValue } from "../src/Env.js";
+import { Test, Unroll } from "../src/Test/decorators/index.js"; 
 
 export default class EnvTest extends TestCase {
     readonly filename = './.env';

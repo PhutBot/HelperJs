@@ -1,11 +1,12 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import * as http from 'http';
-import { EnvBackedValue } from '../Env';
-import { RequestMethod, Headers, HttpRequest } from './Request';
-import { PathMatcher } from './PathMatcher';
-import { LogLevel } from '../Log';
-import { Middleware } from './Middleware';
-import { WebSocketConnection } from './WebSocket';
+import { EnvBackedValue } from "../Env.js";
+import { RequestMethod, Headers, HttpRequest } from "./Request.js";
+import { PathMatcher } from "./PathMatcher.js";
+import { LogLevel } from "../Log.js";
+import { Middleware } from "./Middleware.js";
+import { WebSocketConnection } from "./WebSocket.js";
 interface HandlerRecord {
     matcher: PathMatcher;
     handler: RequestHandler;
@@ -65,12 +66,10 @@ export declare class SimpleServer {
     stop(): Promise<unknown>;
     _getHandler(m: string | RequestMethod, url: URL): {
         handler: RequestHandler;
-        pathParams: import("./PathMatcher").PathParams;
-    } | {
-        handler: null;
-        pathParams: {};
+        pathParams: import("./PathMatcher.js").PathParams;
     };
     _translateRequest(req: http.IncomingMessage): HttpRequest;
     _rootHandler(req: http.IncomingMessage, res: http.ServerResponse): void;
 }
 export {};
+//# sourceMappingURL=SimpleServer.d.ts.map

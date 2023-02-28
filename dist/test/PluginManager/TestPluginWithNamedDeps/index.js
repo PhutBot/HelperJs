@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,12 +7,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plugin = void 0;
-const PluginManager_1 = require("../../src/PluginManager");
-class Plugin extends PluginManager_1.AbstractPlugin {
-    get name() { return "TestPlugin1"; }
-    get description() { return "First Test Plugin"; }
+import { AbstractPlugin } from "../../../src/PluginManager.js";
+export class Plugin extends AbstractPlugin {
+    constructor() {
+        super();
+        this.dependencies.push({ pluginName: "TestPlugin", instanceName: "TestPlugin" });
+    }
+    get name() { return "TestPluginWithDeps"; }
+    get description() { return "Second Test Plugin"; }
     onLoad() {
         return __awaiter(this, void 0, void 0, function* () { });
     }
@@ -21,5 +22,4 @@ class Plugin extends PluginManager_1.AbstractPlugin {
         return __awaiter(this, void 0, void 0, function* () { });
     }
 }
-exports.Plugin = Plugin;
-//# sourceMappingURL=TestPlugin1.js.map
+//# sourceMappingURL=index.js.map

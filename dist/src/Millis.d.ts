@@ -11,3 +11,4 @@ export declare function toYrs(time: number): number;
 export declare function inf(_: number): number;
 export declare function elapsedToString(elapsed: number, fmt: any): string;
 export declare function sleep(ms: number): Promise<unknown>;
+//# sourceMappingURL=Millis.d.ts.map

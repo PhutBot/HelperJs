@@ -1,8 +1,8 @@
-import { AssertionError } from "assert";
-import { DefaultLogger } from "../../Log";
-import { DecoratorBuilder } from "../../Meta/DecoratorBuilder";
-import { TestCase } from "../TestCase";
-import { TestResult } from "../TestRunner";
+import { AssertionError } from 'assert';
+import { DefaultLogger } from "../../Log.js";
+import { DecoratorBuilder } from "../../Meta/DecoratorBuilder.js";
+import { TestCase } from "../TestCase.js";
+import { TestResult } from "../TestRunner.js";
 
 export function Test(c?:{}) {
     return new DecoratorBuilder()
@@ -32,6 +32,7 @@ export function Test(c?:{}) {
                     await test.after(key, ctx);
                 }
             };
+            return null;
         }).build();
 }
 
@@ -66,5 +67,6 @@ export function Unroll(cases:object[]) {
                         }
                     }));
             };
+            return null;
         }).build();
 }

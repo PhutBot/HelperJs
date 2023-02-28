@@ -1,5 +1,5 @@
-import { HttpRequest } from "./Request";
-import { HandlerResponse } from "./SimpleServer";
+import { HttpRequest } from "./Request.js";
+import { HandlerResponse } from "./SimpleServer.js";
 
 export enum MiddlewareStage {
     PRE_PROCESSOR = 'PRE_PROCESSOR',

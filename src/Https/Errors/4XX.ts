@@ -1,5 +1,5 @@
-import { HttpRequest } from "../Request";
-import { ErrorHttp } from "./Error";
+import { HttpRequest } from "../Request.js";
+import { ErrorHttp } from "./Error.js";
 
 export class ErrorHttp400BadRequest extends ErrorHttp {
     constructor(request:HttpRequest, msg?:string) {

@@ -1,39 +1,34 @@
-"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const assert_1 = __importDefault(require("assert"));
-const TestCase_1 = require("../../src/Test/TestCase");
-const decorators_1 = require("../../src/Test/decorators");
-const PathMatcher_1 = require("../../src/Https/PathMatcher");
-class PathMatcherTest extends TestCase_1.TestCase {
+import * as assert from 'assert';
+import { TestCase } from "../../src/Test/TestCase.js";
+import { Unroll } from "../../src/Test/decorators/index.js";
+import { PathMatcher } from "../../src/Https/PathMatcher.js";
+export default class PathMatcherTest extends TestCase {
     match({ pattern, path, isWild, isDynamic, vars }) {
-        const matcher = new PathMatcher_1.PathMatcher(pattern);
+        const matcher = new PathMatcher(pattern);
         const match = matcher.match(path);
-        assert_1.default.strictEqual(match.isMatch, true);
+        assert.strictEqual(match.isMatch, true);
         Object.entries(vars).forEach(([key, val]) => {
-            assert_1.default.strictEqual(match.vars[key], val);
+            assert.strictEqual(match.vars[key], val);
         });
-        assert_1.default.strictEqual(matcher.isWild, isWild);
-        assert_1.default.strictEqual(matcher.isDynamic, isDynamic);
+        assert.strictEqual(matcher.isWild, isWild);
+        assert.strictEqual(matcher.isDynamic, isDynamic);
     }
     notMatch({ pattern, path, isWild, isDynamic }) {
-        const matcher = new PathMatcher_1.PathMatcher(pattern);
+        const matcher = new PathMatcher(pattern);
         const match = matcher.match(path);
-        assert_1.default.notStrictEqual(match.isMatch, true);
-        assert_1.default.strictEqual(matcher.isWild, isWild);
-        assert_1.default.strictEqual(matcher.isDynamic, isDynamic);
+        assert.notStrictEqual(match.isMatch, true);
+        assert.strictEqual(matcher.isWild, isWild);
+        assert.strictEqual(matcher.isDynamic, isDynamic);
     }
 }
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { pattern: '/', path: '/', isWild: false, isDynamic: false, vars: {} },
         { pattern: '/*', path: '/', isWild: true, isDynamic: false, vars: { _: '' } },
         { pattern: '/*', path: '/a', isWild: true, isDynamic: false, vars: { _: 'a' } },
@@ -49,7 +44,7 @@ __decorate([
     ])
 ], PathMatcherTest.prototype, "match", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { pattern: '/', path: '/b', isWild: false, isDynamic: false, },
         { pattern: '/a', path: '/b', isWild: false, isDynamic: false, },
         { pattern: '/{v}', path: '/1/a', isWild: false, isDynamic: true, },
@@ -60,5 +55,4 @@ __decorate([
         { pattern: '/a/{v}/*', path: '/c/b/a', isWild: true, isDynamic: true, },
     ])
 ], PathMatcherTest.prototype, "notMatch", null);
-exports.default = PathMatcherTest;
 //# sourceMappingURL=PathMatcher.test.js.map

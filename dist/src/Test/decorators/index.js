@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,14 +7,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Unroll = exports.Test = void 0;
-const assert_1 = require("assert");
-const Log_1 = require("../../Log");
-const DecoratorBuilder_1 = require("../../Meta/DecoratorBuilder");
-const TestRunner_1 = require("../TestRunner");
-function Test(c) {
-    return new DecoratorBuilder_1.DecoratorBuilder()
+import { AssertionError } from 'assert';
+import { DefaultLogger } from "../../Log.js";
+import { DecoratorBuilder } from "../../Meta/DecoratorBuilder.js";
+import { TestResult } from "../TestRunner.js";
+export function Test(c) {
+    return new DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
         const og = descriptor.value;
         descriptor.value = function (_) {
@@ -24,21 +21,21 @@ function Test(c) {
                 const ctx = yield test.before(key);
                 try {
                     yield og.call(this, Object.assign({ context: ctx, testcase: key }, c));
-                    Log_1.DefaultLogger.info(target.constructor.name, `pass - ${key}`);
-                    return [TestRunner_1.TestResult.PASS];
+                    DefaultLogger.info(target.constructor.name, `pass - ${key}`);
+                    return [TestResult.PASS];
                 }
                 catch (err) {
-                    if (err instanceof assert_1.AssertionError) {
-                        Log_1.DefaultLogger.warn(target.constructor.name, `fail - ${key}`);
-                        Log_1.DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
-                        Log_1.DefaultLogger.warn(target.constructor.name, `${err}`);
-                        return [TestRunner_1.TestResult.FAIL];
+                    if (err instanceof AssertionError) {
+                        DefaultLogger.warn(target.constructor.name, `fail - ${key}`);
+                        DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
+                        DefaultLogger.warn(target.constructor.name, `${err}`);
+                        return [TestResult.FAIL];
                     }
                     else {
-                        Log_1.DefaultLogger.error(target.constructor.name, `error - ${key}`);
-                        Log_1.DefaultLogger.error(target.constructor.name, JSON.stringify(c));
-                        Log_1.DefaultLogger.error(target.constructor.name, `${err}`);
-                        return [TestRunner_1.TestResult.ERROR];
+                        DefaultLogger.error(target.constructor.name, `error - ${key}`);
+                        DefaultLogger.error(target.constructor.name, JSON.stringify(c));
+                        DefaultLogger.error(target.constructor.name, `${err}`);
+                        return [TestResult.ERROR];
                     }
                 }
                 finally {
@@ -46,11 +43,11 @@ function Test(c) {
                 }
             });
         };
+        return null;
     }).build();
 }
-exports.Test = Test;
-function Unroll(cases) {
-    return new DecoratorBuilder_1.DecoratorBuilder()
+export function Unroll(cases) {
+    return new DecoratorBuilder()
         .onMethod((target, key, descriptor, meta) => {
         const og = descriptor.value;
         descriptor.value = function (_) {
@@ -61,21 +58,21 @@ function Unroll(cases) {
                     const ctx = yield test.before(testcase);
                     try {
                         yield og.call(this, Object.assign({ context: ctx, testcase }, c));
-                        Log_1.DefaultLogger.info(target.constructor.name, `pass - ${testcase}`);
-                        return TestRunner_1.TestResult.PASS;
+                        DefaultLogger.info(target.constructor.name, `pass - ${testcase}`);
+                        return TestResult.PASS;
                     }
                     catch (err) {
-                        if (err instanceof assert_1.AssertionError) {
-                            Log_1.DefaultLogger.warn(target.constructor.name, `fail - ${testcase}`);
-                            Log_1.DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
-                            Log_1.DefaultLogger.warn(target.constructor.name, `${err}`);
-                            return TestRunner_1.TestResult.FAIL;
+                        if (err instanceof AssertionError) {
+                            DefaultLogger.warn(target.constructor.name, `fail - ${testcase}`);
+                            DefaultLogger.warn(target.constructor.name, JSON.stringify(c));
+                            DefaultLogger.warn(target.constructor.name, `${err}`);
+                            return TestResult.FAIL;
                         }
                         else {
-                            Log_1.DefaultLogger.error(target.constructor.name, `error - ${testcase}`);
-                            Log_1.DefaultLogger.error(target.constructor.name, JSON.stringify(c));
-                            Log_1.DefaultLogger.error(target.constructor.name, `${err}`);
-                            return TestRunner_1.TestResult.ERROR;
+                            DefaultLogger.error(target.constructor.name, `error - ${testcase}`);
+                            DefaultLogger.error(target.constructor.name, JSON.stringify(c));
+                            DefaultLogger.error(target.constructor.name, `${err}`);
+                            return TestResult.ERROR;
                         }
                     }
                     finally {
@@ -84,7 +81,7 @@ function Unroll(cases) {
                 })));
             });
         };
+        return null;
     }).build();
 }
-exports.Unroll = Unroll;
 //# sourceMappingURL=index.js.map

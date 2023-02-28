@@ -1,27 +1,3 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -31,38 +7,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.RunTests = exports.TestResult = void 0;
-const fs = __importStar(require("fs"));
-const path_1 = __importDefault(require("path"));
-const Log_1 = require("../Log");
-const Metadata_1 = require("../Meta/Metadata");
-const TestCase_1 = require("./TestCase");
+import * as fs from 'fs';
+import * as path from 'path';
+import { DefaultLogger, LogLevel } from "../Log.js";
+import { getMetadata } from "../Meta/Metadata.js";
+import { TestCase } from "./TestCase.js";
 ;
-var TestResult;
+export var TestResult;
 (function (TestResult) {
     TestResult["PASS"] = "PASS";
     TestResult["FAIL"] = "FAIL";
     TestResult["ERROR"] = "ERROR";
     TestResult["_TOTAL"] = "TOTAL";
-})(TestResult = exports.TestResult || (exports.TestResult = {}));
+})(TestResult || (TestResult = {}));
 function walk(dir, action, options) {
     return __awaiter(this, void 0, void 0, function* () {
         if (fs.statSync(dir).isDirectory()) {
             const files = !options.filter
                 ? fs.readdirSync(dir)
                 : fs.readdirSync(dir).filter((p) => {
-                    return fs.statSync(path_1.default.join(dir, p)).isDirectory()
+                    return fs.statSync(path.join(dir, p)).isDirectory()
                         || options.filter(p);
                 });
             for (const file of files) {
                 if (options.step)
-                    yield walk(path_1.default.join(dir, file), action, options);
+                    yield walk(path.join(dir, file), action, options);
                 else
-                    walk(path_1.default.join(dir, file), action, options);
+                    walk(path.join(dir, file), action, options);
             }
         }
         else {
@@ -74,13 +45,13 @@ function walk(dir, action, options) {
     });
 }
 function logResult(prefix, result, spaces = 0) {
-    const level = result.PASS != result.TOTAL ? Log_1.LogLevel.WARN : Log_1.LogLevel.INFO;
-    Log_1.DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
-    Log_1.DefaultLogger.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
-    Log_1.DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
-    Log_1.DefaultLogger.info('', '');
+    const level = result.PASS != result.TOTAL ? LogLevel.WARN : LogLevel.INFO;
+    DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
+    DefaultLogger.log(level, prefix, `Results: ${JSON.stringify(result, null, spaces)}`);
+    DefaultLogger.log(level, prefix, '----------------------------------------------------------------');
+    DefaultLogger.info('', '');
 }
-function RunTests(dir) {
+export function RunTests(dir) {
     return __awaiter(this, void 0, void 0, function* () {
         const root = process.cwd();
         const fullResults = {
@@ -90,12 +61,11 @@ function RunTests(dir) {
             ERROR: 0
         };
         yield walk(dir, (filePath) => __awaiter(this, void 0, void 0, function* () {
-            var _a;
             if (filePath === `${dir}/index.js`)
                 return;
-            const location = path_1.default.join(root, filePath);
-            const module = yield (_a = location, Promise.resolve().then(() => __importStar(require(_a))));
-            if (!!module.default && module.default.prototype instanceof TestCase_1.TestCase) {
+            const location = path.join(root, filePath);
+            const module = yield import(location);
+            if (!!module.default && module.default.prototype instanceof TestCase) {
                 const fileResults = {
                     TOTAL: 0,
                     PASS: 0,
@@ -105,7 +75,7 @@ function RunTests(dir) {
                 const test = new module.default();
                 yield test.setup();
                 const promises = Object.values(Object.getOwnPropertyDescriptors(module.default.prototype))
-                    .filter((desc) => !!(0, Metadata_1.getMetadata)(desc.value, '@Test') || !!(0, Metadata_1.getMetadata)(desc.value, '@Unroll'))
+                    .filter((desc) => !!getMetadata(desc.value, '@Test') || !!getMetadata(desc.value, '@Unroll'))
                     .map((desc) => __awaiter(this, void 0, void 0, function* () {
                     const result = yield desc.value.apply(test);
                     result.forEach((res) => {
@@ -127,6 +97,5 @@ function RunTests(dir) {
         logResult('Final', fullResults);
     });
 }
-exports.RunTests = RunTests;
 ;
 //# sourceMappingURL=TestRunner.js.map

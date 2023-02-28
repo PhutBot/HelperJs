@@ -1,7 +1,5 @@
-import http from "http";
-import { resolve } from "path/posix";
-import { DecoratorBuilder } from "../../Meta/DecoratorBuilder";
-import { RequestMethod } from "../Request";
+import { DecoratorBuilder } from "../../Meta/DecoratorBuilder.js";
+import { RequestMethod } from "../Request.js";
 
 class BaseHandler {
     readonly location:string;
@@ -24,11 +22,12 @@ export function RequestMapping(mapping:RequestMapping) {
 
     return new DecoratorBuilder()
         .onClass((constructor, meta) => {
-            meta.location = mapping.location
+            meta.location = mapping.location;
         })
         .onMethod((target, propertyKey, descriptor, meta) => {
-            meta.method = mapping.method
-            meta.location = mapping.location
+            meta.method = mapping.method;
+            meta.location = mapping.location;
+            return null;
         })
         .build();
 }

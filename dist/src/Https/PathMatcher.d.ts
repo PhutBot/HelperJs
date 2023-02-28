@@ -11,3 +11,4 @@ export declare class PathMatcher {
     };
     static prepPath(path: string): string;
 }
+//# sourceMappingURL=PathMatcher.d.ts.map

@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMetadata = exports.defineMetadata = void 0;
 // const metaPropName = '$';
 const metaPropName = '__meta';
-function defineMetadata(target, key, value) {
+export function defineMetadata(target, key, value) {
     if (typeof target !== 'function' && typeof target !== 'object')
         return;
     if ('prototype' in target) {
@@ -32,8 +29,7 @@ function defineMetadata(target, key, value) {
         }
     }
 }
-exports.defineMetadata = defineMetadata;
-function getMetadata(target, key) {
+export function getMetadata(target, key) {
     var _a;
     if (typeof target !== 'function' && typeof target !== 'object')
         return;
@@ -62,5 +58,4 @@ function getMetadata(target, key) {
         }
     }
 }
-exports.getMetadata = getMetadata;
 //# sourceMappingURL=Metadata.js.map

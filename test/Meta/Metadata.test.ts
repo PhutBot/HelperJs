@@ -1,7 +1,7 @@
-import assert from "assert";
-import { TestCase } from "../../src/Test/TestCase";
-import { Unroll } from "../../src/Test/decorators";
-import { defineMetadata, getMetadata } from "../../src/Meta/Metadata";
+import * as assert from 'assert';
+import { TestCase } from "../../src/Test/TestCase.js";
+import { Unroll } from "../../src/Test/decorators/index.js";
+import { defineMetadata, getMetadata } from "../../src/Meta/Metadata.js";
 
 class PlaceHolder {}
 export default class MetadataTest extends TestCase {

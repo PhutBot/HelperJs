@@ -1,7 +1,7 @@
-import assert from "assert";
-import { TestCase } from "../../src/Test/TestCase";
-import { Unroll } from "../../src/Test/decorators";
-import { PathMatcher } from "../../src/Https/PathMatcher";
+import * as assert from 'assert';
+import { TestCase } from "../../src/Test/TestCase.js";
+import { Unroll } from "../../src/Test/decorators/index.js";
+import { PathMatcher } from "../../src/Https/PathMatcher.js";
 
 export default class PathMatcherTest extends TestCase {
 

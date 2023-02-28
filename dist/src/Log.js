@@ -1,6 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DefaultLogger = exports.Logger = exports.LogLevel = void 0;
 const ControlChars = {
     Reset: "\x1b[0m",
     Bright: "\x1b[1m",
@@ -26,7 +23,7 @@ const ControlChars = {
     BgCyan: "\x1b[46m",
     BgWhite: "\x1b[47m"
 };
-var LogLevel;
+export var LogLevel;
 (function (LogLevel) {
     LogLevel[LogLevel["SILLY"] = 0] = "SILLY";
     LogLevel[LogLevel["VERBOSE"] = 1] = "VERBOSE";
@@ -36,7 +33,7 @@ var LogLevel;
     LogLevel[LogLevel["ERROR"] = 5] = "ERROR";
     LogLevel[LogLevel["FATAL"] = 6] = "FATAL";
     LogLevel[LogLevel["SILENT"] = 7] = "SILENT";
-})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
+})(LogLevel || (LogLevel = {}));
 const levelInfo = [
     { name: '  silly', color: ControlChars.BgCyan },
     { name: 'verbose', color: ControlChars.BgCyan },
@@ -47,7 +44,7 @@ const levelInfo = [
     { name: '  fatal', color: ControlChars.BgRed + ControlChars.FgBlack },
     { name: ' silent', color: ControlChars.FgWhite },
 ];
-class Logger {
+export class Logger {
     constructor(heading) {
         this.level = LogLevel.INFO;
         if (heading instanceof Function || typeof heading === 'string')
@@ -97,8 +94,7 @@ class Logger {
         this.log(LogLevel.FATAL, prefix, message);
     }
 }
-exports.Logger = Logger;
 ;
-exports.DefaultLogger = new Logger(true);
-exports.DefaultLogger.setLevel(LogLevel.INFO);
+export const DefaultLogger = new Logger(true);
+DefaultLogger.setLevel(LogLevel.INFO);
 //# sourceMappingURL=Log.js.map

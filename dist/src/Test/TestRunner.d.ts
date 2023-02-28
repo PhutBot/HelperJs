@@ -5,3 +5,4 @@ export declare enum TestResult {
     _TOTAL = "TOTAL"
 }
 export declare function RunTests(dir: string): Promise<void>;
+//# sourceMappingURL=TestRunner.d.ts.map

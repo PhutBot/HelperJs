@@ -1,4 +1,4 @@
-import { AbstractPlugin } from "../../src/PluginManager";
+import { AbstractPlugin } from "../../../src/PluginManager.js";
 
 export class Plugin extends AbstractPlugin {
     constructor() {

@@ -26,3 +26,4 @@ export declare class Logger {
     fatal(prefix: string, message: string, ...args: any[]): void;
 }
 export declare const DefaultLogger: Logger;
+//# sourceMappingURL=Log.d.ts.map

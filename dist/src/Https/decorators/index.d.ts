@@ -1,7 +1,8 @@
-import { RequestMethod } from "../Request";
+import { RequestMethod } from "../Request.js";
 interface RequestMapping {
     method?: RequestMethod | string;
     location?: string;
 }
 export declare function RequestMapping(mapping: RequestMapping): (arg1: any, arg2?: any, arg3?: any) => any;
 export {};
+//# sourceMappingURL=index.d.ts.map

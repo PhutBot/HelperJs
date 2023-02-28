@@ -1,6 +1,8 @@
 /// <reference types="node" />
+/// <reference types="node" />
+/// <reference types="node" />
 import { Socket } from 'net';
-import { HttpRequest } from "./Request";
+import { HttpRequest } from "./Request.js";
 export declare enum WebsocketOpcode {
     CONTINUE = 0,
     TEXT = 1,
@@ -48,3 +50,4 @@ export declare class WebSocketClient extends WebSocketBase {
     private _connect;
     private handleData;
 }
+//# sourceMappingURL=WebSocket.d.ts.map

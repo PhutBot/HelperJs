@@ -1,4 +1,4 @@
-import { AbstractPlugin } from "../../src/PluginManager";
+import { AbstractPlugin } from "../../src/PluginManager.js";
 export declare class Plugin extends AbstractPlugin {
     constructor();
     get name(): string;
@@ -6,3 +6,4 @@ export declare class Plugin extends AbstractPlugin {
     onLoad(): Promise<void>;
     onUnload(): Promise<void>;
 }
+//# sourceMappingURL=TestPluginWithDeps.d.ts.map

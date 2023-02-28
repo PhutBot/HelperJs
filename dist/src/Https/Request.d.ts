@@ -1,6 +1,7 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import * as net from 'net';
-import { PathParams } from './PathMatcher';
+import { PathParams } from "./PathMatcher.js";
 export declare enum RequestProtocol {
     HTTP = "HTTP",
     HTTPS = "HTTPS"
@@ -50,3 +51,4 @@ export interface HttpResponse {
     body: () => Promise<Body>;
 }
 export declare function request(settings: RequestSettings): Promise<HttpResponse>;
+//# sourceMappingURL=Request.d.ts.map

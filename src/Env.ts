@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as Millis from './Millis';
+import * as Millis from "./Millis.js";
 
 let modified:boolean = false;
 let vars:Array<string> = [];

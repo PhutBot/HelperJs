@@ -2,16 +2,16 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as events from 'events';
 import { Socket } from 'net';
-import { EnvBackedValue } from '../Env';
-import { RequestMethod, Headers, QueryParams, Body, HttpRequest } from './Request';
-import { ErrorHttp } from './Errors/Error';
-import { ErrorHttp404NotFound } from './Errors/4XX';
-import { ErrorHttp500Internal } from './Errors/5XX';
-import { PathMatcher } from './PathMatcher';
-import { Logger, LogLevel } from '../Log';
-import { getMetadata } from '../Meta/Metadata';
-import { Middleware, MiddlewareStage } from './Middleware';
-import { WebSocketConnection } from './WebSocket';
+import { EnvBackedValue } from "../Env.js";
+import { RequestMethod, Headers, QueryParams, Body, HttpRequest } from "./Request.js";
+import { ErrorHttp } from "./Errors/Error.js";
+import { ErrorHttp404NotFound } from "./Errors/4XX.js";
+import { ErrorHttp500Internal } from "./Errors/5XX.js";
+import { PathMatcher } from "./PathMatcher.js";
+import { Logger, LogLevel } from "../Log.js";
+import { getMetadata } from "../Meta/Metadata.js";
+import { Middleware, MiddlewareStage } from "./Middleware.js";
+import { WebSocketConnection } from "./WebSocket.js";
 
 interface HandlerRecord {
     matcher:PathMatcher;

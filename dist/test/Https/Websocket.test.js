@@ -1,4 +1,3 @@
-"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -14,20 +13,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const TestCase_1 = require("../../src/Test/TestCase");
-const decorators_1 = require("../../src/Test/decorators");
-const Https_1 = require("../../src/Https");
-const Log_1 = require("../../src/Log");
-const Millis_1 = require("../../src/Millis");
-const assert_1 = __importDefault(require("assert"));
-class WebSocketTest extends TestCase_1.TestCase {
+import * as assert from 'assert';
+import { TestCase } from "../../src/Test/TestCase.js";
+import { Test } from "../../src/Test/decorators/index.js";
+import { SimpleServer, WebSocketClient, WebsocketOpcode } from "../../src/Https/index.js";
+import { LogLevel } from "../../src/Log.js";
+import { sleep } from "../../src/Millis.js";
+export default class WebSocketTest extends TestCase {
     constructor() {
         super(...arguments);
-        this.server = new Https_1.SimpleServer({ port: 9999, loglevel: Log_1.LogLevel.SILENT });
+        this.server = new SimpleServer({ port: 9999, loglevel: LogLevel.SILENT });
     }
     setup() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -46,19 +41,18 @@ class WebSocketTest extends TestCase_1.TestCase {
     }
     websocket(_) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield (0, Millis_1.sleep)(100);
-            const ws = new Https_1.WebSocketClient(`http://127.0.0.1:${this.server.port}/ws`);
+            yield sleep(100);
+            const ws = new WebSocketClient(`http://127.0.0.1:${this.server.port}/ws`);
             this.server.addEventListener('simple-websocket-msg', ({ detail }) => {
-                assert_1.default.equal(detail.data, 'hello, world');
+                assert.equal(detail.data, 'hello, world');
             });
-            yield (0, Millis_1.sleep)(100);
-            ws.write(Https_1.WebsocketOpcode.TEXT, "hello, world");
-            yield (0, Millis_1.sleep)(100);
+            yield sleep(100);
+            ws.write(WebsocketOpcode.TEXT, "hello, world");
+            yield sleep(100);
         });
     }
 }
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], WebSocketTest.prototype, "websocket", null);
-exports.default = WebSocketTest;
 //# sourceMappingURL=Websocket.test.js.map

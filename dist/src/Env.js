@@ -1,46 +1,18 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EnvBackedValue = exports.waitForVar = exports.save = exports.load = exports.set = exports.get = void 0;
-const fs = __importStar(require("fs"));
-const Millis = __importStar(require("./Millis"));
+import * as fs from 'fs';
+import * as Millis from "./Millis.js";
 let modified = false;
 let vars = [];
 let filename = null;
-function get(name, def) {
+export function get(name, def) {
     var _a;
     return (_a = process.env[name]) !== null && _a !== void 0 ? _a : def;
 }
-exports.get = get;
-function set(name, value) {
+export function set(name, value) {
     if (vars.includes(name))
         modified = true;
     process.env[name] = value;
 }
-exports.set = set;
-function load(file) {
+export function load(file) {
     filename = file;
     const filecontent = fs.readFileSync(file).toString();
     vars = [];
@@ -56,8 +28,7 @@ function load(file) {
         }
     });
 }
-exports.load = load;
-function save() {
+export function save() {
     if (!!filename && modified) {
         let filecontent = '';
         vars.forEach(key => {
@@ -68,8 +39,7 @@ function save() {
         modified = false;
     }
 }
-exports.save = save;
-function waitForVar(name, timeout = -1) {
+export function waitForVar(name, timeout = -1) {
     return new Promise((resolve, reject) => {
         let counter = 0;
         const interval = setInterval(() => {
@@ -85,8 +55,7 @@ function waitForVar(name, timeout = -1) {
         }, 100);
     });
 }
-exports.waitForVar = waitForVar;
-class EnvBackedValue {
+export class EnvBackedValue {
     constructor(key, def) {
         this.key = key;
         this.def = def;
@@ -123,6 +92,5 @@ class EnvBackedValue {
         }
     }
 }
-exports.EnvBackedValue = EnvBackedValue;
 EnvBackedValue.timeout = Millis.fromSec(5);
 //# sourceMappingURL=Env.js.map

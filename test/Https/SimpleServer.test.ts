@@ -1,11 +1,11 @@
-import assert from "assert";
-import { TestCase } from "../../src/Test/TestCase";
-import { Test, Unroll } from "../../src/Test/decorators";
-import { HandlerResponse, HttpRequest, request, RequestSettings, SimpleServer } from "../../src/Https";
-import { RequestMapping } from "../../src/Https/decorators";
-import { rString } from "../../src/Rand";
-import { Middleware, MiddlewareStage } from "../../src/Https/Middleware";
-import { LogLevel } from "../../src/Log";
+import * as assert from 'assert';
+import { TestCase } from "../../src/Test/TestCase.js";
+import { Test, Unroll } from "../../src/Test/decorators/index.js";
+import { HandlerResponse, HttpRequest, request, RequestSettings, SimpleServer } from "../../src/Https/index.js";
+import { RequestMapping } from "../../src/Https/decorators/index.js";
+import { rString } from "../../src/Rand.js";
+import { Middleware, MiddlewareStage } from "../../src/Https/Middleware.js";
+import { LogLevel } from "../../src/Log.js";
 
 export default class SimpleServerTest extends TestCase {
     private portItr = 10000;

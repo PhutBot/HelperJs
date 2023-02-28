@@ -1,4 +1,4 @@
-import { HttpRequest } from "../Request";
+import { HttpRequest } from "../Request.js";
 
 export class ErrorHttp extends Error {
     readonly statusCode:number;

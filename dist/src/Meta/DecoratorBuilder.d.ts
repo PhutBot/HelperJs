@@ -1,6 +1,6 @@
-import { Metadata } from "./Metadata";
+import { Metadata } from "./Metadata.js";
 type ParameterDecorator = (target: Object, propertyKey: string | symbol, parameterIndex: number, meta: Metadata) => void;
-type MethodDecorator = (target: any, propertyKey: string, descriptor: PropertyDescriptor, meta: Metadata) => PropertyDescriptor | void;
+type MethodDecorator = (target: any, propertyKey: string, descriptor: PropertyDescriptor, meta: Metadata) => undefined | PropertyDescriptor;
 type PropertyDecorator = (target: any, propertyKey: string, meta: Metadata) => void;
 type ClassDecorator = (constructor: Function, meta: Metadata) => any | void;
 export declare class DecoratorBuilder {
@@ -18,3 +18,4 @@ export declare class DecoratorBuilder {
     private addMeta;
 }
 export {};
+//# sourceMappingURL=DecoratorBuilder.d.ts.map

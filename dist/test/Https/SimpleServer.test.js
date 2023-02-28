@@ -1,4 +1,3 @@
-"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -14,26 +13,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const assert_1 = __importDefault(require("assert"));
-const TestCase_1 = require("../../src/Test/TestCase");
-const decorators_1 = require("../../src/Test/decorators");
-const Https_1 = require("../../src/Https");
-const decorators_2 = require("../../src/Https/decorators");
-const Rand_1 = require("../../src/Rand");
-const Middleware_1 = require("../../src/Https/Middleware");
-const Log_1 = require("../../src/Log");
-class SimpleServerTest extends TestCase_1.TestCase {
+import * as assert from 'assert';
+import { TestCase } from "../../src/Test/TestCase.js";
+import { Test, Unroll } from "../../src/Test/decorators/index.js";
+import { request, SimpleServer } from "../../src/Https/index.js";
+import { RequestMapping } from "../../src/Https/decorators/index.js";
+import { rString } from "../../src/Rand.js";
+import { Middleware, MiddlewareStage } from "../../src/Https/Middleware.js";
+import { LogLevel } from "../../src/Log.js";
+export default class SimpleServerTest extends TestCase {
     constructor() {
         super(...arguments);
         this.portItr = 10000;
     }
     before(testcase) {
         return __awaiter(this, void 0, void 0, function* () {
-            const server = new Https_1.SimpleServer({ port: this.portItr++, loglevel: Log_1.LogLevel.SILENT });
+            const server = new SimpleServer({ port: this.portItr++, loglevel: LogLevel.SILENT });
             yield server.start();
             return { server };
         });
@@ -44,10 +39,10 @@ class SimpleServerTest extends TestCase_1.TestCase {
         });
     }
     settings(_) {
-        const server = new Https_1.SimpleServer({ port: 9999, loglevel: Log_1.LogLevel.SILENT });
-        assert_1.default.strictEqual(server.hostname, '0.0.0.0');
-        assert_1.default.strictEqual(server.port, 9999);
-        assert_1.default.strictEqual(server.address, 'http://0.0.0.0:9999');
+        const server = new SimpleServer({ port: 9999, loglevel: LogLevel.SILENT });
+        assert.strictEqual(server.hostname, '0.0.0.0');
+        assert.strictEqual(server.port, 9999);
+        assert.strictEqual(server.address, 'http://0.0.0.0:9999');
     }
     handlers({ context, method, path, statusCode, expect }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -59,13 +54,13 @@ class SimpleServerTest extends TestCase_1.TestCase {
                 uri: path,
             };
             context.server.defineHandler(method, path, () => __awaiter(this, void 0, void 0, function* () { return ({ statusCode, body: expect }); }));
-            let response = yield (0, Https_1.request)(requestObj);
+            let response = yield request(requestObj);
             const body = yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, statusCode);
-            assert_1.default.strictEqual(body, expect);
+            assert.strictEqual(response.statusCode, statusCode);
+            assert.strictEqual(body, expect);
             context.server.removeHandler(method, path);
-            response = yield (0, Https_1.request)(requestObj);
-            assert_1.default.strictEqual(response.statusCode, 404);
+            response = yield request(requestObj);
+            assert.strictEqual(response.statusCode, 404);
         });
     }
     error404({ context }) {
@@ -77,9 +72,9 @@ class SimpleServerTest extends TestCase_1.TestCase {
                 port: context.server.port,
                 uri: '/error404'
             };
-            let response = yield (0, Https_1.request)(requestObj);
+            let response = yield request(requestObj);
             yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, 404);
+            assert.strictEqual(response.statusCode, 404);
         });
     }
     error500({ context }) {
@@ -92,9 +87,9 @@ class SimpleServerTest extends TestCase_1.TestCase {
                 uri: '/error500'
             };
             context.server.defineHandler(requestObj.method, requestObj.uri, () => __awaiter(this, void 0, void 0, function* () { throw 'error'; }));
-            let response = yield (0, Https_1.request)(requestObj);
+            let response = yield request(requestObj);
             yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, 500);
+            assert.strictEqual(response.statusCode, 500);
         });
     }
     requestMapping({ context }) {
@@ -107,13 +102,13 @@ class SimpleServerTest extends TestCase_1.TestCase {
                 uri: '/request/mapping/test'
             };
             context.server.mapHandler(Mapping);
-            let response = yield (0, Https_1.request)(requestObj);
+            let response = yield request(requestObj);
             const body = yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, 200);
-            assert_1.default.strictEqual(body, 'request mapping test');
+            assert.strictEqual(response.statusCode, 200);
+            assert.strictEqual(body, 'request mapping test');
             context.server.unmapHandler(Mapping);
-            response = yield (0, Https_1.request)(requestObj);
-            assert_1.default.strictEqual(response.statusCode, 404);
+            response = yield request(requestObj);
+            assert.strictEqual(response.statusCode, 404);
         });
     }
     dirMapping200({ context }) {
@@ -128,21 +123,21 @@ class SimpleServerTest extends TestCase_1.TestCase {
             const requestObj2 = Object.assign(Object.assign({}, requestObj), { uri: `${requestObj.uri}/index.html` });
             const expect = '<html><head><title>TestHomePage!</title></head><body><h1>Welcometothephuthub!</h1></body></html>';
             context.server.mapDirectory('./test/www', { alias: requestObj.uri });
-            let response = yield (0, Https_1.request)(requestObj);
+            let response = yield request(requestObj);
             let body = yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, 200);
-            assert_1.default.strictEqual(body, expect);
-            response = yield (0, Https_1.request)(requestObj2);
+            assert.strictEqual(response.statusCode, 200);
+            assert.strictEqual(body, expect);
+            response = yield request(requestObj2);
             body = yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, 200);
-            assert_1.default.strictEqual(body, expect);
-            response = yield (0, Https_1.request)(Object.assign(Object.assign({}, requestObj), { uri: `/dir/${(0, Rand_1.rString)(32)}` }));
-            assert_1.default.strictEqual(response.statusCode, 404);
+            assert.strictEqual(response.statusCode, 200);
+            assert.strictEqual(body, expect);
+            response = yield request(Object.assign(Object.assign({}, requestObj), { uri: `/dir/${rString(32)}` }));
+            assert.strictEqual(response.statusCode, 404);
             context.server.unmapDirectory(requestObj.uri);
-            response = yield (0, Https_1.request)(requestObj);
-            assert_1.default.strictEqual(response.statusCode, 404);
-            response = yield (0, Https_1.request)(requestObj2);
-            assert_1.default.strictEqual(response.statusCode, 404);
+            response = yield request(requestObj);
+            assert.strictEqual(response.statusCode, 404);
+            response = yield request(requestObj2);
+            assert.strictEqual(response.statusCode, 404);
         });
     }
     dirMapping404({ context }) {
@@ -152,25 +147,25 @@ class SimpleServerTest extends TestCase_1.TestCase {
                 method: 'GET',
                 hostname: context.server.hostname,
                 port: context.server.port,
-                uri: `/dir/${(0, Rand_1.rString)(32)}`
+                uri: `/dir/${rString(32)}`
             };
             context.server.mapDirectory('./www', { alias: '/dir' });
-            let response = yield (0, Https_1.request)(requestObj);
-            assert_1.default.strictEqual(response.statusCode, 404);
+            let response = yield request(requestObj);
+            assert.strictEqual(response.statusCode, 404);
         });
     }
     serverStartAndStop(_) {
         return __awaiter(this, void 0, void 0, function* () {
-            const server = new Https_1.SimpleServer({ port: 9000, loglevel: Log_1.LogLevel.SILENT });
-            assert_1.default.ok(!server.running);
+            const server = new SimpleServer({ port: 9000, loglevel: LogLevel.SILENT });
+            assert.ok(!server.running);
             yield server.start();
-            assert_1.default.ok(server.running);
-            yield assert_1.default.rejects(server.start(), {
+            assert.ok(server.running);
+            yield assert.rejects(server.start(), {
                 message: 'server already started'
             });
             yield server.stop();
-            assert_1.default.ok(!server.running);
-            yield assert_1.default.rejects(server.stop(), {
+            assert.ok(!server.running);
+            yield assert.rejects(server.stop(), {
                 message: 'server already stopped'
             });
         });
@@ -190,11 +185,11 @@ class SimpleServerTest extends TestCase_1.TestCase {
                 value = model['custom-model-key'];
                 return { statusCode: 200, body: 'content' };
             }));
-            let response = yield (0, Https_1.request)(requestObj);
+            let response = yield request(requestObj);
             const body = yield (yield response.body()).text();
-            assert_1.default.strictEqual(response.statusCode, 200);
-            assert_1.default.strictEqual(body, 'content');
-            assert_1.default.strictEqual(value, 'custom-model-value');
+            assert.strictEqual(response.statusCode, 200);
+            assert.strictEqual(body, 'content');
+            assert.strictEqual(value, 'custom-model-value');
         });
     }
     postMiddleware({ context }) {
@@ -210,18 +205,18 @@ class SimpleServerTest extends TestCase_1.TestCase {
             context.server.defineHandler(requestObj.method, requestObj.uri, (_, model) => __awaiter(this, void 0, void 0, function* () {
                 return { statusCode: 200, body: 'REPLACE_ME' };
             }));
-            let response = yield (0, Https_1.request)(requestObj);
-            assert_1.default.strictEqual(response.statusCode, 200);
+            let response = yield request(requestObj);
+            assert.strictEqual(response.statusCode, 200);
             const body = yield (yield response.body()).text();
-            assert_1.default.strictEqual(body, 'NEW_VALUE');
+            assert.strictEqual(body, 'NEW_VALUE');
         });
     }
 }
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "settings", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { method: 'DELETE', path: '/delete', statusCode: 200, expect: 'content' },
         { method: 'GET', path: '/get', statusCode: 200, expect: 'content' },
         { method: 'PATCH', path: '/patch', statusCode: 200, expect: 'content' },
@@ -230,30 +225,29 @@ __decorate([
     ])
 ], SimpleServerTest.prototype, "handlers", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "error404", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "error500", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "requestMapping", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "dirMapping200", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "dirMapping404", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "serverStartAndStop", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "preMiddleware", null);
 __decorate([
-    (0, decorators_1.Test)()
+    Test()
 ], SimpleServerTest.prototype, "postMiddleware", null);
-exports.default = SimpleServerTest;
 let Mapping = class Mapping {
     static test() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -265,30 +259,30 @@ let Mapping = class Mapping {
     }
 };
 __decorate([
-    (0, decorators_2.RequestMapping)({ method: 'PUT', location: '/test' })
+    RequestMapping({ method: 'PUT', location: '/test' })
 ], Mapping, "test", null);
 Mapping = __decorate([
-    (0, decorators_2.RequestMapping)({ location: '/request/mapping' })
+    RequestMapping({ location: '/request/mapping' })
 ], Mapping);
-class PreMiddleware extends Middleware_1.Middleware {
+class PreMiddleware extends Middleware {
     constructor(key, value) {
         super();
         this.key = key;
         this.value = value;
     }
-    get stage() { return Middleware_1.MiddlewareStage.PRE_PROCESSOR; }
+    get stage() { return MiddlewareStage.PRE_PROCESSOR; }
     ;
     process(model) {
         model[this.key] = this.value;
     }
 }
-class PostMiddleware extends Middleware_1.Middleware {
+class PostMiddleware extends Middleware {
     constructor(key, value) {
         super();
         this.key = key;
         this.value = value;
     }
-    get stage() { return Middleware_1.MiddlewareStage.POST_PROCESSOR; }
+    get stage() { return MiddlewareStage.POST_PROCESSOR; }
     ;
     process(model, response) {
         var _a;

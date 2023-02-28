@@ -1,9 +1,9 @@
-import { TestCase } from "../../src/Test/TestCase";
-import { Test } from "../../src/Test/decorators";
-import { HandlerResponse, SimpleServer, WebSocketClient, WebsocketOpcode } from "../../src/Https";
-import { LogLevel } from "../../src/Log";
-import { sleep } from "../../src/Millis";
-import assert from "assert";
+import * as assert from 'assert';
+import { TestCase } from "../../src/Test/TestCase.js";
+import { Test } from "../../src/Test/decorators/index.js";
+import { HandlerResponse, SimpleServer, WebSocketClient, WebsocketOpcode } from "../../src/Https/index.js";
+import { LogLevel } from "../../src/Log.js";
+import { sleep } from "../../src/Millis.js";
 
 export default class WebSocketTest extends TestCase {
     private server = new SimpleServer({port: 9999, loglevel: LogLevel.SILENT});

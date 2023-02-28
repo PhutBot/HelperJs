@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as https from 'https';
 import * as net from 'net';
-import { PathParams } from './PathMatcher';
+import { PathParams } from "./PathMatcher.js";
 
 export enum RequestProtocol {
     HTTP = 'HTTP',

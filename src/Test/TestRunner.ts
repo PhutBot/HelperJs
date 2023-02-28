@@ -1,8 +1,8 @@
-import * as fs from "fs";
-import path from "path";
-import { DefaultLogger, LogLevel } from "../Log";
-import { getMetadata } from "../Meta/Metadata";
-import { TestCase } from "./TestCase";
+import * as fs from 'fs';
+import * as path from 'path';
+import { DefaultLogger, LogLevel } from "../Log.js";
+import { getMetadata } from "../Meta/Metadata.js";
+import { TestCase } from "./TestCase.js";
 
 interface WalkOptions {
     filter?:(p:string)=>boolean;

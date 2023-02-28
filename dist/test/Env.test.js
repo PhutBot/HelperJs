@@ -1,4 +1,3 @@
-"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -14,90 +13,86 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const assert_1 = __importDefault(require("assert"));
-const decorators_1 = require("../src/Test/decorators");
-const TestCase_1 = require("../src/Test/TestCase");
-const src_1 = require("../src");
-const Env_1 = require("../src/Env");
-class EnvTest extends TestCase_1.TestCase {
+import * as assert from 'assert';
+import { TestCase } from "../src/Test/TestCase.js";
+import { Env } from "../src/index.js";
+import { EnvBackedValue } from "../src/Env.js";
+import { Test, Unroll } from "../src/Test/decorators/index.js";
+export default class EnvTest extends TestCase {
     constructor() {
         super(...arguments);
         this.filename = './.env';
     }
     before(testcase) {
         return __awaiter(this, void 0, void 0, function* () {
-            src_1.Env.load(this.filename);
+            Env.load(this.filename);
         });
     }
     getEnv({ key, val }) {
-        assert_1.default.equal(src_1.Env.get(key), `${val}`);
+        assert.equal(Env.get(key), `${val}`);
     }
     setEnv({ testcase, key, val }) {
         key += testcase;
-        src_1.Env.set(key, val);
-        assert_1.default.strictEqual(src_1.Env.get(key), `${val}`);
+        Env.set(key, val);
+        assert.strictEqual(Env.get(key), `${val}`);
     }
     getBackedValue({ key, val }) {
-        const value = new Env_1.EnvBackedValue(key);
-        assert_1.default.strictEqual(value.get(), val);
+        const value = new EnvBackedValue(key);
+        assert.strictEqual(value.get(), val);
     }
     setBackedValue({ testcase, key, val }) {
         key += testcase;
-        const value = new Env_1.EnvBackedValue(key);
+        const value = new EnvBackedValue(key);
         value.set(val);
-        assert_1.default.strictEqual(src_1.Env.get(key), val);
+        assert.strictEqual(Env.get(key), val);
     }
     getBackedValueDefault({ testcase, key, val }) {
         key += testcase;
-        const value = new Env_1.EnvBackedValue(key, val);
-        assert_1.default.strictEqual(value.get(), val);
+        const value = new EnvBackedValue(key, val);
+        assert.strictEqual(value.get(), val);
     }
     getBackedValueAsBool({ testcase, key, val, expect }) {
         key += testcase;
-        const value = new Env_1.EnvBackedValue(key, val);
-        assert_1.default.strictEqual(value.asBool(), expect);
+        const value = new EnvBackedValue(key, val);
+        assert.strictEqual(value.asBool(), expect);
     }
     getBackedValueAsInt({ testcase, key, val, expect }) {
         key += testcase;
-        const value = new Env_1.EnvBackedValue(key, val);
-        assert_1.default.strictEqual(value.asInt(), expect);
+        const value = new EnvBackedValue(key, val);
+        assert.strictEqual(value.asInt(), expect);
     }
     getBackedValueAsFloat({ testcase, key, val, expect }) {
         key += testcase;
-        const value = new Env_1.EnvBackedValue(key, val);
-        assert_1.default.strictEqual(value.asFloat(), expect);
+        const value = new EnvBackedValue(key, val);
+        assert.strictEqual(value.asFloat(), expect);
     }
     getBackedValueAs({ key, val }) {
-        const value = new Env_1.EnvBackedValue(key.toUpperCase());
-        assert_1.default.strictEqual(value[`as${key}`](), val);
+        const value = new EnvBackedValue(key.toUpperCase());
+        assert.strictEqual(value[`as${key}`](), val);
     }
     getBackedValueAsNan({ testcase, key }) {
-        const value = new Env_1.EnvBackedValue(testcase + key, 'sdfj');
-        assert_1.default.ok(Number.isNaN(value[`as${key}`]()));
+        const value = new EnvBackedValue(testcase + key, 'sdfj');
+        assert.ok(Number.isNaN(value[`as${key}`]()));
     }
     wait({ testcase, key, val, timeout }) {
         return __awaiter(this, void 0, void 0, function* () {
             key += testcase;
-            setTimeout(() => { src_1.Env.set(key, val); }, 50);
-            yield src_1.Env.waitForVar(key, timeout);
-            assert_1.default.strictEqual(src_1.Env.get(key), val);
+            setTimeout(() => { Env.set(key, val); }, 50);
+            yield Env.waitForVar(key, timeout);
+            assert.strictEqual(Env.get(key), val);
         });
     }
     timeout({ testcase, key, timeout }) {
         return __awaiter(this, void 0, void 0, function* () {
             key += testcase;
-            yield assert_1.default.rejects(src_1.Env.waitForVar(key, timeout), {
+            yield assert.rejects(Env.waitForVar(key, timeout), {
                 message: `Env.waitForVar - timed out waiting for environment var '${key}'`
             });
         });
     }
 }
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'STRING', val: 'test' },
         { key: 'BOOL', val: true, },
         { key: 'INT', val: 8090, },
@@ -105,7 +100,7 @@ __decorate([
     ])
 ], EnvTest.prototype, "getEnv", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'STRING', val: 'diff' },
         { key: 'BOOL', val: false, },
         { key: 'INT', val: 1234, },
@@ -113,7 +108,7 @@ __decorate([
     ])
 ], EnvTest.prototype, "setEnv", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'STRING', val: 'test' },
         { key: 'BOOL', val: 'true', },
         { key: 'INT', val: '8090', },
@@ -122,13 +117,13 @@ __decorate([
     ])
 ], EnvTest.prototype, "getBackedValue", null);
 __decorate([
-    (0, decorators_1.Test)({ key: 'EXTRA', val: 'default' })
+    Test({ key: 'EXTRA', val: 'default' })
 ], EnvTest.prototype, "setBackedValue", null);
 __decorate([
-    (0, decorators_1.Test)({ key: 'EXTRA', val: 'default' })
+    Test({ key: 'EXTRA', val: 'default' })
 ], EnvTest.prototype, "getBackedValueDefault", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'Bool', val: '1', expect: true },
         { key: 'Bool', val: 'true', expect: true },
         { key: 'Bool', val: 'yes', expect: true },
@@ -147,7 +142,7 @@ __decorate([
     ])
 ], EnvTest.prototype, "getBackedValueAsBool", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'Int', val: '1', expect: 1 },
         { key: 'Int', val: '123', expect: 123 },
         { key: 'Int', val: '1.34', expect: 1 },
@@ -156,7 +151,7 @@ __decorate([
     ])
 ], EnvTest.prototype, "getBackedValueAsInt", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'Float', val: '1', expect: 1 },
         { key: 'Float', val: '123', expect: 123 },
         { key: 'Float', val: '1.34', expect: 1.34 },
@@ -165,23 +160,22 @@ __decorate([
     ])
 ], EnvTest.prototype, "getBackedValueAsFloat", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'Bool', val: true },
         { key: 'Int', val: 8090 },
         { key: 'Float', val: 0.123 },
     ])
 ], EnvTest.prototype, "getBackedValueAs", null);
 __decorate([
-    (0, decorators_1.Unroll)([
+    Unroll([
         { key: 'Int' },
         { key: 'Float' },
     ])
 ], EnvTest.prototype, "getBackedValueAsNan", null);
 __decorate([
-    (0, decorators_1.Test)({ key: 'WAIT', val: 'VAL', timeout: 150 })
+    Test({ key: 'WAIT', val: 'VAL', timeout: 150 })
 ], EnvTest.prototype, "wait", null);
 __decorate([
-    (0, decorators_1.Test)({ key: 'TIMEOUT', timeout: 150 })
+    Test({ key: 'TIMEOUT', timeout: 150 })
 ], EnvTest.prototype, "timeout", null);
-exports.default = EnvTest;
 //# sourceMappingURL=Env.test.js.map

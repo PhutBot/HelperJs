@@ -1,4 +1,4 @@
-import { DefaultLogger } from "./Log";
+import { DefaultLogger } from "./Log.js";
 
 export function fatal(err:Error, name:string='Application') {
     DefaultLogger.error(name, `[FATAL]: ${err}`);

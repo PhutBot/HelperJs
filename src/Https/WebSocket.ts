@@ -1,7 +1,7 @@
-import { createHash } from "crypto";
+import { createHash } from 'crypto';
 import { Socket } from 'net';
-import { DefaultLogger } from "../Log";
-import { HttpRequest } from "./Request";
+import { DefaultLogger } from "../Log.js";
+import { HttpRequest } from "./Request.js";
 
 export enum WebsocketOpcode {
     CONTINUE = 0x0,

@@ -1,4 +1,4 @@
-import { TestCase } from "../../src/Test/TestCase";
+import { TestCase } from "../../src/Test/TestCase.js";
 export default class PluginManagerTest extends TestCase {
     loadPlugin(testCase: any): Promise<void>;
     unloadPlugin(testCase: any): Promise<void>;
@@ -7,3 +7,4 @@ export default class PluginManagerTest extends TestCase {
     pluginWithDependencies(testCase: any): Promise<void>;
     pluginWithMissingDependencies(testCase: any): Promise<void>;
 }
+//# sourceMappingURL=PluginManager.test.d.ts.map

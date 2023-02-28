@@ -1,4 +1,4 @@
-import { TestCase } from "../src/Test/TestCase";
+import { TestCase } from "../src/Test/TestCase.js";
 export default class EnvTest extends TestCase {
     readonly filename = "./.env";
     before(testcase: string): Promise<void>;
@@ -15,3 +15,4 @@ export default class EnvTest extends TestCase {
     wait({ testcase, key, val, timeout }: any): Promise<void>;
     timeout({ testcase, key, timeout }: any): Promise<void>;
 }
+//# sourceMappingURL=Env.test.d.ts.map

@@ -1,5 +1,5 @@
-import { TestCase } from "../../src/Test/TestCase";
-import { SimpleServer } from "../../src/Https";
+import { TestCase } from "../../src/Test/TestCase.js";
+import { SimpleServer } from "../../src/Https/index.js";
 export default class SimpleServerTest extends TestCase {
     private portItr;
     before(testcase: string): Promise<{
@@ -17,3 +17,4 @@ export default class SimpleServerTest extends TestCase {
     preMiddleware({ context }: any): Promise<void>;
     postMiddleware({ context }: any): Promise<void>;
 }
+//# sourceMappingURL=SimpleServer.test.d.ts.map

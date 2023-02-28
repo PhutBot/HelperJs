@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PathMatcher = void 0;
-class PathMatcher {
+export class PathMatcher {
     constructor(path) {
         this.path = PathMatcher.prepPath(path);
         this.regex = new RegExp(prepPattern(path), 'g');
@@ -43,7 +40,6 @@ class PathMatcher {
         return fixSlashes(path).replace(/\{([_a-zA-Z][_a-zA-Z0-9]*)\}/g, '{}');
     }
 }
-exports.PathMatcher = PathMatcher;
 function escapeRegex(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
