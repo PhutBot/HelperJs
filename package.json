@@ -12,7 +12,8 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc && node dist/test/index.js",
-    "debug": "tsc && node --inspect=0.0.0.0 --inspect-brk dist/test/index.js"
+    "debug": "tsc && node --inspect=0.0.0.0 --inspect-brk dist/test/index.js",
+    "preview": "tsc && node --inspect=0.0.0.0 dist/preview/index.js"
   },
   "repository": {
     "type": "git",

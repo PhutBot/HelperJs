@@ -17,7 +17,7 @@ export class WebSocketBase {
     protected _socket: Socket;
     protected _closing: boolean = false;
     protected _on: {[key: string]: null|Function} = {};
-    protected _keepAliveInterval?: NodeJS.Timer;
+    protected _keepAliveInterval?: NodeJS.Timeout;
     private subclass: string;
     private writeMask: boolean = false;
 
