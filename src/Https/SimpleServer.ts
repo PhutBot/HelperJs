@@ -121,18 +121,19 @@ export class SimpleServer {
         });
     }
 
-    mapDirectory(dirName:string, options:{ alias?:string, force?:boolean, cache?:boolean, model?:{} } = {}) {
+    mapDirectory(dirName:string, options:{ alias?:string, force?:boolean, cache?:boolean, model?:any } = {}) {
         dirName = dirName.endsWith('/') ? dirName : `${dirName}/`;
         options.cache = options.cache === undefined ? true : options.cache;
         const _alias = PathMatcher.prepPath(options.alias ?? dirName.replace(/^\./, ''));
 
         this.dir2Alias[dirName] = _alias;
         this.alias2Dir[_alias] = dirName;
+
         
         this.defineHandler(RequestMethod.GET, `${_alias}/*`,
             (request:HttpRequest) => new Promise((resolve, reject) => {
                 const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
-                const headers = {} as Headers;
+                const headers = (options.model?.headers ?? {}) as Headers;
                 request.filePath = path;
                 
                 let encoding:BufferEncoding = 'utf8'

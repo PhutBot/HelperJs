@@ -52,7 +52,7 @@ export declare class SimpleServer {
         alias?: string;
         force?: boolean;
         cache?: boolean;
-        model?: {};
+        model?: any;
     }): void;
     unmapDirectory(alias: string): void;
     mapHandler(target: Function): void;

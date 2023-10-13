@@ -81,8 +81,9 @@ export class SimpleServer {
         this.dir2Alias[dirName] = _alias;
         this.alias2Dir[_alias] = dirName;
         this.defineHandler(RequestMethod.GET, `${_alias}/*`, (request) => new Promise((resolve, reject) => {
+            var _a, _b;
             const path = request.url.pathname.replace(_alias, this.alias2Dir[_alias]);
-            const headers = {};
+            const headers = ((_b = (_a = options.model) === null || _a === void 0 ? void 0 : _a.headers) !== null && _b !== void 0 ? _b : {});
             request.filePath = path;
             let encoding = 'utf8';
             let file = {
