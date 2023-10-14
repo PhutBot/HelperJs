@@ -8,5 +8,5 @@ export enum MiddlewareStage {
 
 export abstract class Middleware {
     abstract get stage(): MiddlewareStage;
-    abstract process(model:{}, response?:HandlerResponse):void;
+    abstract process(model: any, response?:HandlerResponse):void;
 }

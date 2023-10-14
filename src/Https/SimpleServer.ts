@@ -66,7 +66,7 @@ export class SimpleServer {
     get address() { return `http://${this.hostname}:${this.port}`; }
 
     constructor(settings:ServerSettings = {}) {
-        this.logger = new Logger();
+        this.logger = new Logger('SimpleServer');
         if (settings.loglevel)
             this.logger.setLevel(settings.loglevel)
     
@@ -247,14 +247,14 @@ export class SimpleServer {
         const matcher = new PathMatcher(path);
         if (matcher.path in this.handlers[method as RequestMethod]) {
             if (!!options.force) {
-                this.logger.warn('SimpleServer', `overriding handler ${method} ${matcher.path}`);
+                this.logger.warn(`overriding handler ${method} ${matcher.path}`);
             } else {
-                this.logger.error('SimpleServer', `method already has endpoint ${matcher.path}`);
+                this.logger.error(`method already has endpoint ${matcher.path}`);
                 return;
             }
         }
         
-        this.logger.http('SimpleServer', `created mapping for ${matcher.path}`);
+        this.logger.http(`created mapping for ${matcher.path}`);
         this.handlers[method as RequestMethod][matcher.path] = { matcher, handler };
     }
     
@@ -273,14 +273,14 @@ export class SimpleServer {
     start() {
         return new Promise((res, rej) => {
             if (this._running) {
-                this.logger.warn('SimpleServer', 'server already started');
+                this.logger.warn('server already started');
                 rej(new Error('server already started'));
                 return;
             }
             
             this.server.listen(this.port, this.hostname, () => {
                 this._running = true;
-                this.logger.http('SimpleServer', `server started @ ${this.address}`);
+                this.logger.http(`server started @ ${this.address}`);
                 res(true);
             });
         });
@@ -289,13 +289,13 @@ export class SimpleServer {
     stop() {
         return new Promise((res, rej) => {
             if (!this._running) {
-                this.logger.warn('SimpleServer', 'server already stopped');
+                this.logger.warn('server already stopped');
                 rej(new Error('server already stopped'));
             } else {
                 this.websockets.forEach(ws => ws.close());
                 this.sockets.forEach(socket => socket.destroy());
                 this.server.close(() => {
-                    this.logger.http('SimpleServer', 'server stopped');
+                    this.logger.http('server stopped');
                     this._running = false;
                     res(true);
                 });
@@ -324,7 +324,7 @@ export class SimpleServer {
             }, null);
         
         if (!!record) {
-            this.logger.http('SimpleServer', `${method} - ${path}`);
+            this.logger.http(`${method} - ${path}`);
             const match = record.matcher.match(path);
             return {
                 handler: record.handler,
@@ -463,8 +463,8 @@ export class SimpleServer {
                     const httpError = error as ErrorHttp;
                     res.writeHead(httpError.statusCode);
                     res.end(httpError.description);
-                    this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-                    this.logger.error('SimpleServer', httpError.stack ?? httpError.message);
+                    this.logger.error(`[${httpError.statusCode}] ${httpError.description}`);
+                    this.logger.error(httpError.stack ?? httpError.message);
                 });
         } catch (error) {
             if (!(error instanceof ErrorHttp)) {
@@ -487,8 +487,8 @@ export class SimpleServer {
             const httpError = error as ErrorHttp;
             res.writeHead(httpError.statusCode);
             res.end(httpError.description);
-            this.logger.error('SimpleServer', `[${httpError.statusCode}] ${httpError.description}`);
-            this.logger.error('SimpleServer', httpError.stack ?? httpError.message);
+            this.logger.error(`[${httpError.statusCode}] ${httpError.description}`);
+            this.logger.error(httpError.stack ?? httpError.message);
         }
     }
 }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { createHash } from 'crypto';
 import { Socket } from 'net';
-import { DefaultLogger } from "../Log.js";
+import { Logger } from "../Log.js";
 export var WebsocketOpcode;
 (function (WebsocketOpcode) {
     WebsocketOpcode[WebsocketOpcode["CONTINUE"] = 0] = "CONTINUE";
@@ -21,7 +21,7 @@ export var WebsocketOpcode;
 })(WebsocketOpcode || (WebsocketOpcode = {}));
 ;
 export class WebSocketBase {
-    constructor(socket, subclass, writeMask) {
+    constructor(socket, logger, writeMask) {
         this._closing = false;
         this._on = {};
         this.writeMask = false;
@@ -33,7 +33,7 @@ export class WebSocketBase {
             1003: 'indicates that an endpoint is terminating the connection because it has received a type of data it cannot accept (e.g., an endpoint that understands only text data MAY send this if it receives a binary message).',
         };
         this._socket = socket;
-        this.subclass = subclass;
+        this.logger = logger;
         this.writeMask = writeMask;
         this._on = {
             open: null,
@@ -122,7 +122,7 @@ export class WebSocketBase {
         return this._socket;
     }
     get _onOpen() {
-        DefaultLogger.verbose(this.subclass, 'connection opened');
+        this.logger.verbose('connection opened');
         return !!this._on['open'] ? this._on['open'] : () => { };
     }
     get _onText() {
@@ -132,13 +132,13 @@ export class WebSocketBase {
         return !!this._on['data'] ? this._on['data'] : () => { };
     }
     get _onClose() {
-        DefaultLogger.verbose(this.subclass, 'connection closed');
+        this.logger.verbose('connection closed');
         if (this._keepAliveInterval)
             clearInterval(this._keepAliveInterval);
         return !!this._on['close'] ? this._on['close'] : () => { };
     }
     get _onEnd() {
-        DefaultLogger.verbose(this.subclass, 'connection ended');
+        this.logger.verbose('connection ended');
         return !!this._on['end'] ? this._on['end'] : () => { };
     }
     get _onError() {
@@ -148,7 +148,7 @@ export class WebSocketBase {
 ;
 export class WebSocketConnection extends WebSocketBase {
     constructor(id, req, socket, protocol) {
-        super(socket, 'WebSocketConnection', false);
+        super(socket, new Logger('WebSocketConnection'), false);
         this.id = -1;
         this._protocol = protocol;
         this.id = id;
@@ -217,7 +217,7 @@ export class WebSocketConnection extends WebSocketBase {
                         let code = 0;
                         if (((_a = msg === null || msg === void 0 ? void 0 : msg.length) !== null && _a !== void 0 ? _a : 0) > 0) {
                             code = (_b = msg === null || msg === void 0 ? void 0 : msg.readUInt16BE()) !== null && _b !== void 0 ? _b : 0;
-                            DefaultLogger.verbose('WebSocketConnection', `${code}: ` + this.closureCodeMsgs[code]);
+                            this.logger.verbose(`${code}: ` + this.closureCodeMsgs[code]);
                         }
                         this._onClose(code);
                         if (!this._closing) {
@@ -227,14 +227,14 @@ export class WebSocketConnection extends WebSocketBase {
                         this.socket.end();
                     }
                     else if (op === WebsocketOpcode.PING) {
-                        DefaultLogger.verbose('WebSocketConnection', 'ping');
+                        this.logger.verbose('ping');
                         this.write(WebsocketOpcode.PONG);
                     }
                     else if (op === WebsocketOpcode.PONG) {
-                        DefaultLogger.verbose('WebSocketConnection', 'pong');
+                        this.logger.verbose('pong');
                     }
                     else {
-                        DefaultLogger.error('WebSocketConnection', `${op}`);
+                        this.logger.error(`${op}`);
                         throw new Error(`op, ${msg === null || msg === void 0 ? void 0 : msg.toString()}`);
                     }
                     len = 0;
@@ -263,7 +263,7 @@ export class WebSocketConnection extends WebSocketBase {
         this._onOpen();
         this._keepAliveInterval = setInterval(() => {
             this.ping();
-            DefaultLogger.verbose('WebSocketConnection', 'ping');
+            this.logger.verbose('ping');
         }, 1000);
     }
     _getWebsocketAcceptValue(key) {
@@ -275,7 +275,7 @@ export class WebSocketConnection extends WebSocketBase {
 ;
 export class WebSocketClient extends WebSocketBase {
     constructor(address, protocol) {
-        super(new Socket({ allowHalfOpen: true, readable: true, writable: true }), 'WebSocketClient', true);
+        super(new Socket({ allowHalfOpen: true, readable: true, writable: true }), new Logger('WebSocketClient'), true);
         this._protocol = protocol;
         this.address = new URL(address);
         this._connect();
@@ -382,7 +382,7 @@ export class WebSocketClient extends WebSocketBase {
                     let code = 0;
                     if (((_a = msg === null || msg === void 0 ? void 0 : msg.length) !== null && _a !== void 0 ? _a : 0) > 0) {
                         code = (_b = msg === null || msg === void 0 ? void 0 : msg.readUInt16BE()) !== null && _b !== void 0 ? _b : 0;
-                        DefaultLogger.verbose('WebSocketClient', `${code}: ` + this.closureCodeMsgs[code]);
+                        this.logger.verbose(`${code}: ` + this.closureCodeMsgs[code]);
                     }
                     this._onClose(code);
                     if (!this._closing) {
@@ -392,14 +392,14 @@ export class WebSocketClient extends WebSocketBase {
                     this.socket.end();
                 }
                 else if (op === WebsocketOpcode.PING) {
-                    DefaultLogger.verbose('WebSocketClient', 'ping');
+                    this.logger.verbose('ping');
                     this.write(WebsocketOpcode.PONG);
                 }
                 else if (op === WebsocketOpcode.PONG) {
-                    DefaultLogger.verbose('WebSocketClient', 'pong');
+                    this.logger.verbose('pong');
                 }
                 else {
-                    DefaultLogger.error('WebSocketClient', `${op}`);
+                    this.logger.error(`${op}`);
                     throw new Error(`op, ${msg === null || msg === void 0 ? void 0 : msg.toString()}`);
                 }
                 len = 0;

@@ -8,22 +8,24 @@ export declare enum LogLevel {
     FATAL = 6,
     SILENT = 7
 }
+type StringGenerator = () => string;
 export declare class Logger {
     private level;
     private heading?;
-    constructor(heading?: boolean | Function | string);
+    private prefix?;
+    constructor(prefix?: StringGenerator | string, heading?: boolean | StringGenerator | string);
     private printPrefix;
     private printLevel;
-    private printHeading;
     setLevel(level: LogLevel): void;
-    log(level: LogLevel, prefix: string, message: string, ...args: any[]): void;
-    silly(prefix: string, message: string, ...args: any[]): void;
-    verbose(prefix: string, message: string, ...args: any[]): void;
-    info(prefix: string, message: string, ...args: any[]): void;
-    http(prefix: string, message: string, ...args: any[]): void;
-    warn(prefix: string, message: string, ...args: any[]): void;
-    error(prefix: string, message: string, ...args: any[]): void;
-    fatal(prefix: string, message: string, ...args: any[]): void;
+    log(level: LogLevel, message: string, ...args: any[]): void;
+    silly(message: string, ...args: any[]): void;
+    verbose(message: string, ...args: any[]): void;
+    info(message: string, ...args: any[]): void;
+    http(message: string, ...args: any[]): void;
+    warn(message: string, ...args: any[]): void;
+    error(message: string, ...args: any[]): void;
+    fatal(message: string, ...args: any[]): void;
 }
 export declare const DefaultLogger: Logger;
+export {};
 //# sourceMappingURL=Log.d.ts.map

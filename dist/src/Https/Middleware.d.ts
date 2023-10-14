@@ -5,6 +5,6 @@ export declare enum MiddlewareStage {
 }
 export declare abstract class Middleware {
     abstract get stage(): MiddlewareStage;
-    abstract process(model: {}, response?: HandlerResponse): void;
+    abstract process(model: any, response?: HandlerResponse): void;
 }
 //# sourceMappingURL=Middleware.d.ts.map

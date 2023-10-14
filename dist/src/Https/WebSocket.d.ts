@@ -2,6 +2,7 @@
 /// <reference types="node" />
 /// <reference types="node" />
 import { Socket } from 'net';
+import { Logger } from "../Log.js";
 import { HttpRequest } from "./Request.js";
 export declare enum WebsocketOpcode {
     CONTINUE = 0,
@@ -19,12 +20,12 @@ export declare class WebSocketBase {
         [key: string]: null | Function;
     };
     protected _keepAliveInterval?: NodeJS.Timeout;
-    private subclass;
+    protected logger: Logger;
     private writeMask;
     protected closureCodeMsgs: {
         [key: number]: string;
     };
-    constructor(socket: Socket, subclass: string, writeMask: boolean);
+    constructor(socket: Socket, logger: Logger, writeMask: boolean);
     on(eventType: string, handler: Function): this;
     write(opcode: WebsocketOpcode, msg?: string | Buffer): void;
     protected ping(): void;

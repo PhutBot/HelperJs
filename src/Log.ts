@@ -48,19 +48,26 @@ const levelInfo = [
     { name: ' silent', color: ControlChars.FgWhite },
 ]
 
+type StringGenerator = ()=>string;
+
 export class Logger {
     private level = LogLevel.INFO;
-    private heading?:Function|string;
+    private heading?: StringGenerator|string;
+    private prefix?: StringGenerator|string;
 
-    constructor(heading?:boolean|Function|string) {
+    constructor(prefix?: StringGenerator|string, heading?:boolean|StringGenerator|string) {
+        this.prefix = prefix;
         if (heading instanceof Function || typeof heading === 'string')
             this.heading = heading;
         else if (!!heading)
             this.heading = () => new Date().toISOString();
     }
 
-    private printPrefix(text:string) {
-        return !text ? "" : `${ControlChars.FgMagenta}${text} `;
+    private printPrefix(color: string, value?: StringGenerator | string) {
+        const prefix = !value ? ""
+            : (value instanceof Function ? value()
+            : value) + " ";
+        return color + prefix + ControlChars.Reset;
     }
 
     private printLevel(level:LogLevel) {
@@ -68,50 +75,50 @@ export class Logger {
         return `${info.color}${info.name}${ControlChars.Reset}`;
     }
 
-    private printHeading() {
-        const heading = !this.heading ? ""
-            : (this.heading instanceof Function ? this.heading() : this.heading) + " ";
-        return ControlChars.FgBlue + heading + ControlChars.Reset;
-    }
-
     public setLevel(level:LogLevel) {
         this.level = level;
     }
 
-    public log(level:LogLevel, prefix:string, message:string, ...args:any[]) {
+    public log(level:LogLevel, message:string, ...args:any[]) {
         if (level < this.level)
             return;
-        console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
+        const msg = this.printPrefix(ControlChars.FgBlue, this.heading)
+            + this.printLevel(level) + " "
+            + this.printPrefix(ControlChars.FgMagenta, this.prefix)
+            + ControlChars.FgWhite
+            + message
+            + ControlChars.Reset;
+        console.log(msg, ...args);
     }
 
-    public silly(prefix:string, message:string, ...args:any[]) {
-        this.log(LogLevel.SILLY, prefix, message, args);
+    public silly(message:string, ...args:any[]) {
+        this.log(LogLevel.SILLY, message, args);
     }
 
-    public verbose(prefix:string, message:string, ...args:any[]) {
-        this.log(LogLevel.VERBOSE, prefix, message);
+    public verbose(message:string, ...args:any[]) {
+        this.log(LogLevel.VERBOSE, message, args);
     }
 
-    public info(prefix:string, message:string, ...args:any[]) {
-        this.log(LogLevel.INFO, prefix, message);
+    public info(message:string, ...args:any[]) {
+        this.log(LogLevel.INFO, message, args);
     }
 
-    public http(prefix:string, message:string, ...args:any[]) {
-        this.log(LogLevel.HTTP, prefix, message);
+    public http(message:string, ...args:any[]) {
+        this.log(LogLevel.HTTP, message, args);
     }
 
-    public warn(prefix:string, message:string, ...args:any[]) {
-        this.log(LogLevel.WARN, prefix, message);
+    public warn(message:string, ...args:any[]) {
+        this.log(LogLevel.WARN, message, args);
     }
 
-    public error(prefix:string, message:string, ...args:any[]) {
-        this.log(LogLevel.ERROR, prefix, message);
+    public error(message:string, ...args:any[]) {
+        this.log(LogLevel.ERROR, message, args);
     }
 
-    public fatal(prefix:string, message:string, ...args:any[]) {
-        this.log(LogLevel.FATAL, prefix, message);
+    public fatal(message:string, ...args:any[]) {
+        this.log(LogLevel.FATAL, message, args);
     }
 };
 
-export const DefaultLogger = new Logger(true);
+export const DefaultLogger = new Logger("DefaultLogger", true);
 DefaultLogger.setLevel(LogLevel.INFO);

@@ -45,56 +45,61 @@ const levelInfo = [
     { name: ' silent', color: ControlChars.FgWhite },
 ];
 export class Logger {
-    constructor(heading) {
+    constructor(prefix, heading) {
         this.level = LogLevel.INFO;
+        this.prefix = prefix;
         if (heading instanceof Function || typeof heading === 'string')
             this.heading = heading;
         else if (!!heading)
             this.heading = () => new Date().toISOString();
     }
-    printPrefix(text) {
-        return !text ? "" : `${ControlChars.FgMagenta}${text} `;
+    printPrefix(color, value) {
+        const prefix = !value ? ""
+            : (value instanceof Function ? value()
+                : value) + " ";
+        return color + prefix + ControlChars.Reset;
     }
     printLevel(level) {
         const info = levelInfo[level];
         return `${info.color}${info.name}${ControlChars.Reset}`;
     }
-    printHeading() {
-        const heading = !this.heading ? ""
-            : (this.heading instanceof Function ? this.heading() : this.heading) + " ";
-        return ControlChars.FgBlue + heading + ControlChars.Reset;
-    }
     setLevel(level) {
         this.level = level;
     }
-    log(level, prefix, message, ...args) {
+    log(level, message, ...args) {
         if (level < this.level)
             return;
-        console.log(`${this.printHeading()}${this.printLevel(level)} ${this.printPrefix(prefix)}${ControlChars.FgWhite}${message}${ControlChars.Reset}`, ...args);
+        const msg = this.printPrefix(ControlChars.FgBlue, this.heading)
+            + this.printLevel(level) + " "
+            + this.printPrefix(ControlChars.FgMagenta, this.prefix)
+            + ControlChars.FgWhite
+            + message
+            + ControlChars.Reset;
+        console.log(msg, ...args);
     }
-    silly(prefix, message, ...args) {
-        this.log(LogLevel.SILLY, prefix, message, args);
+    silly(message, ...args) {
+        this.log(LogLevel.SILLY, message, args);
     }
-    verbose(prefix, message, ...args) {
-        this.log(LogLevel.VERBOSE, prefix, message);
+    verbose(message, ...args) {
+        this.log(LogLevel.VERBOSE, message, args);
     }
-    info(prefix, message, ...args) {
-        this.log(LogLevel.INFO, prefix, message);
+    info(message, ...args) {
+        this.log(LogLevel.INFO, message, args);
     }
-    http(prefix, message, ...args) {
-        this.log(LogLevel.HTTP, prefix, message);
+    http(message, ...args) {
+        this.log(LogLevel.HTTP, message, args);
     }
-    warn(prefix, message, ...args) {
-        this.log(LogLevel.WARN, prefix, message);
+    warn(message, ...args) {
+        this.log(LogLevel.WARN, message, args);
     }
-    error(prefix, message, ...args) {
-        this.log(LogLevel.ERROR, prefix, message);
+    error(message, ...args) {
+        this.log(LogLevel.ERROR, message, args);
     }
-    fatal(prefix, message, ...args) {
-        this.log(LogLevel.FATAL, prefix, message);
+    fatal(message, ...args) {
+        this.log(LogLevel.FATAL, message, args);
     }
 }
 ;
-export const DefaultLogger = new Logger(true);
+export const DefaultLogger = new Logger("DefaultLogger", true);
 DefaultLogger.setLevel(LogLevel.INFO);
 //# sourceMappingURL=Log.js.map
