@@ -1,16 +1,6 @@
 import { DecoratorBuilder } from "../../Meta/DecoratorBuilder.js";
 import { RequestMethod } from "../Request.js";
 
-class BaseHandler {
-    readonly location:string;
-    readonly method:RequestMethod;
-
-    constructor() {
-        this.location = '/';
-        this.method = RequestMethod.GET;
-    }
-}
-
 interface RequestMapping {
     method?:RequestMethod|string;
     location?:string;
@@ -30,4 +20,24 @@ export function RequestMapping(mapping:RequestMapping) {
             return null;
         })
         .build();
+}
+
+export function Controller<T>(path?: string) {
+    return RequestMapping({ location: path });
+}
+
+export function Get(path?: string) {
+    return RequestMapping({ method: RequestMethod.GET, location: path ?? "/" });
+}
+
+export function Put(path?: string) {
+    return RequestMapping({ method: RequestMethod.PUT, location: path ?? "/" });
+}
+
+export function Post(path?: string) {
+    return RequestMapping({ method: RequestMethod.POST, location: path ?? "/" });
+}
+
+export function Delete(path?: string) {
+    return RequestMapping({ method: RequestMethod.DELETE, location: path ?? "/" });
 }

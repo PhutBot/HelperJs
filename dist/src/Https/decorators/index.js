@@ -1,11 +1,5 @@
 import { DecoratorBuilder } from "../../Meta/DecoratorBuilder.js";
 import { RequestMethod } from "../Request.js";
-class BaseHandler {
-    constructor() {
-        this.location = '/';
-        this.method = RequestMethod.GET;
-    }
-}
 export function RequestMapping(mapping) {
     var _a, _b;
     mapping.method = (_a = mapping.method) !== null && _a !== void 0 ? _a : RequestMethod.GET;
@@ -20,5 +14,20 @@ export function RequestMapping(mapping) {
         return null;
     })
         .build();
+}
+export function Controller(path) {
+    return RequestMapping({ location: path });
+}
+export function Get(path) {
+    return RequestMapping({ method: RequestMethod.GET, location: path !== null && path !== void 0 ? path : "/" });
+}
+export function Put(path) {
+    return RequestMapping({ method: RequestMethod.PUT, location: path !== null && path !== void 0 ? path : "/" });
+}
+export function Post(path) {
+    return RequestMapping({ method: RequestMethod.POST, location: path !== null && path !== void 0 ? path : "/" });
+}
+export function Delete(path) {
+    return RequestMapping({ method: RequestMethod.DELETE, location: path !== null && path !== void 0 ? path : "/" });
 }
 //# sourceMappingURL=index.js.map
