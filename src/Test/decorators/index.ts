@@ -5,7 +5,7 @@ import { TestCase } from "../TestCase.js";
 import { TestResult } from "../TestRunner.js";
 
 export function Test(c?:{}) {
-    return new DecoratorBuilder()
+    return new DecoratorBuilder("Test")
         .onMethod((target, key, descriptor, meta) => {
             const og = descriptor.value;
             descriptor.value = async function(_:any) {
@@ -37,7 +37,7 @@ export function Test(c?:{}) {
 }
 
 export function Unroll(cases:object[]) {
-    return new DecoratorBuilder()
+    return new DecoratorBuilder("Unroll")
         .onMethod((target, key, descriptor, meta) => {
             const og = descriptor.value;
             descriptor.value = async function(_:any) {
