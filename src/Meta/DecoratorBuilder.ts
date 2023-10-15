@@ -12,15 +12,8 @@ export class DecoratorBuilder {
     private onPropertyFunc?:PropertyDecorator;
     private onClassFunc?:ClassDecorator;
 
-    constructor() {
-        try { throw new Error(); }
-        catch (err) {
-            const allMatches = (err as Error)!.stack!.match(/(\w+)@|at (\w+) \(/g);
-            // match parent function name
-            const parentMatches = allMatches![0].match(/(\w+)@|at (\w+) \(/);
-            // return only name
-            this.name = `@${parentMatches![1] || parentMatches![2]}`;
-        }
+    constructor(name: string) {
+        this.name = `@${name}`;
     }
     
     onParameter(func:ParameterDecorator) {
