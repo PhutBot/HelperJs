@@ -10,7 +10,7 @@ export function RequestMapping(mapping:RequestMapping) {
     mapping.method = mapping.method as RequestMethod ?? RequestMethod.GET;
     mapping.location = mapping.location ?? '/';
 
-    return new DecoratorBuilder()
+    return new DecoratorBuilder("RequestMapping")
         .onClass((constructor, meta) => {
             meta.location = mapping.location;
         })
