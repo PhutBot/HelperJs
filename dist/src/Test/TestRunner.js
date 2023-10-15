@@ -61,7 +61,7 @@ export function RunTests(dir) {
             ERROR: 0
         };
         yield walk(dir, (filePath) => __awaiter(this, void 0, void 0, function* () {
-            if (filePath === `${dir}/index.js`)
+            if (path.normalize(filePath) === path.normalize(path.join(dir, "index.js")))
                 return;
             const location = path.join(root, filePath);
             const module = yield import(location);

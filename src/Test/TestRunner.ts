@@ -52,7 +52,7 @@ export async function RunTests(dir:string) {
     };
 
     await walk(dir, async (filePath:string) => {
-        if (filePath === `${dir}/index.js`)
+        if (path.normalize(filePath) === path.normalize(path.join(dir, "index.js")))
             return;
             
         const location = path.join(root, filePath);
